@@ -20,7 +20,7 @@ namespace hardwares
     class DIANARobot : public hardware_interface::RobotInterface
     {
     public:
-        DIANARobot():pre_dq_(7),prev_torque_(7,0.0)
+        DIANARobot() : pre_dq_(7), prev_torque_(7, 0.0)
         {
             srand((unsigned int)time(nullptr));
         }
@@ -31,45 +31,70 @@ namespace hardwares
         void write(const rclcpp::Time& t, const rclcpp::Duration& period) override
         {
             hardware_interface::RobotInterface::write(t, period);
-            RCLCPP_INFO(node_->get_logger(), "当前周期(秒): %.6f，周期(毫秒): %.3f", 
-            period.seconds(), period.seconds() * 1000.0);
-            double max_single_delta = 1.0; 
-            auto &cmd_tau = command_.get<double>("torque");
-            int dof = 7; 
-            double torque_cmd[7]; 
-
-            std::vector<double> temp_torque(cmd_tau.begin(), cmd_tau.end());                
-            for (int i = 0; i < dof; i++) 
-            {   
-                // 增加安全防护：限制绝对最大扭矩 (解决你代码里定义了没用上的问题)
-                temp_torque[i] = std::clamp(temp_torque[i], -max_torque_[i], max_torque_[i]);
-
-                double delta = temp_torque[i] - prev_torque_[i];
-                delta = std::clamp(delta, -max_single_delta, max_single_delta);
-                temp_torque[i] = prev_torque_[i] + delta;
-                prev_torque_[i] = temp_torque[i];
-                torque_cmd[i] = temp_torque[i];
-            }
             
-            // auto &mode = command_.get<int>("mode")[0]; 
-            // if (mode == 3)
-            // {
-
-            //     sendTorque_rt(torque_cmd, period.seconds(), robot_ip_.c_str());
-            // }
+            // RCLCPP_INFO(node_->get_logger(), "当前周期(秒): %.6f，周期(毫秒): %.3f", period.seconds(), period.seconds() * 1000.0);
+            
             double dt = 1.0 / update_rate_;
-            
-            auto &mode = command_.get<int>("mode")[0]; 
+            int mode = command_.get<int>("mode")[0]; 
+
             switch (mode)
             {
-            case 3:
+                case 0: // 0: 笛卡尔空间 姿态控制 (Pose)
                 {
-                    enableTorqueReceiver(true, robot_ip_.c_str());                            
+                    auto &cmd_pose = command_.get<double>("pose");
+                    double pose_cmd[6];
+                    std::copy(cmd_pose.begin(), cmd_pose.begin() + 6, pose_cmd);
+                    
+                    // API: pose, time(dt), look_ahead_time(0.05), gain(500), scale(1.0), active_tcp
+                    servoL(pose_cmd, dt, 0.05, 500.0, 1.0, nullptr, robot_ip_.c_str());
+                    break;
+                }
+                case 1: // 1: 关节空间 位置控制 (Position)
+                {
+                    auto &cmd_pos = command_.get<double>("position");
+                    double pos_cmd[7];
+                    std::copy(cmd_pos.begin(), cmd_pos.begin() + 7, pos_cmd);
+                    
+                    // API: joints, time(dt), look_ahead_time(0.05), gain(500)
+                    servoJ(pos_cmd, dt, 0.05, 500.0, robot_ip_.c_str());
+                    break;
+                }
+                case 2: // 2: 关节空间 速度控制 (Velocity)
+                {
+                    auto &cmd_vel = command_.get<double>("velocity");
+                    double vel_cmd[7];
+                    std::copy(cmd_vel.begin(), cmd_vel.begin() + 7, vel_cmd);
+                    
+                    // API: speed, acceleration(1.5), t(0表示不提前减速)
+                    speedJ(vel_cmd, 1.5, 0.0, robot_ip_.c_str());
+                    break;
+                }
+                case 3: // 3: 关节空间 力矩控制 (Torque)
+                {
+                    // API手册及经验确认：开启接收器可以安全地随周期重复调用
+                    enableTorqueReceiver(true, robot_ip_.c_str());
+
+                    double max_single_delta = 1.0; 
+                    auto &cmd_tau = command_.get<double>("torque");
+                    double torque_cmd[7]; 
+
+                    for (int i = 0; i < 7; i++) 
+                    {   
+                        // 限制绝对最大扭矩 (确保安全参数生效)
+                        double temp_tau = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
+
+                        // 限制单步最大变化量，防止力矩突变引发报错
+                        double delta = temp_tau - prev_torque_[i];
+                        delta = std::clamp(delta, -max_single_delta, max_single_delta);
+                        
+                        torque_cmd[i] = prev_torque_[i] + delta;
+                        prev_torque_[i] = torque_cmd[i];
+                    }
                     sendTorque_rt(torque_cmd, dt, robot_ip_.c_str());
                     break;   
                 }     
-            default:
-                break;
+                default:
+                    break;
             }     
         }
 
@@ -77,7 +102,6 @@ namespace hardwares
 
         void read(const rclcpp::Time& t, const rclcpp::Duration& period) override
         {
-            // 原读取逻辑不变，确保关节位置、速度、外力等数据正确反馈给PD+控制器
             hardware_interface::RobotInterface::read(t, period);
             auto& q = state_.get<double>("position");
             auto& dq = state_.get<double>("velocity");
@@ -87,11 +111,10 @@ namespace hardwares
 
             auto dt = period.seconds();
 
-            getJointPos(q.data());
-            getJointAngularVel(dq.data());
-            getTcpPos(pose.data());
-            getJointTorque(torque.data());
-            
+            getJointPos(q.data(), robot_ip_.c_str());
+            getJointAngularVel(dq.data(), robot_ip_.c_str());
+            getTcpPos(pose.data(), robot_ip_.c_str());
+            getJointTorque(torque.data(), robot_ip_.c_str());
             
             if (dt > 0) 
             {
@@ -131,9 +154,10 @@ namespace hardwares
             RobotInterface::on_shutdown(prev);
             if (!robot_ip_.empty()) 
             {               
-                // 关机时下发零扭矩，确保安全
+                // 关机时下发零扭矩并关闭力矩接收器，确保切断动力安全
                 double zero_torque[7] = {0.0};
                 sendTorque_rt(zero_torque, 0, robot_ip_.c_str());
+                enableTorqueReceiver(false, robot_ip_.c_str());
                               
                 changeControlMode(T_MODE_POSITION, robot_ip_.c_str());
                 stop(robot_ip_.c_str());
@@ -148,7 +172,6 @@ namespace hardwares
             {
                 cleanErrorInfo(robot_ip_.c_str()); 
 
-                // 碰撞阈值、阻抗参数、负载配置保持原逻辑
                 double joint_collision[7] = {200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0};
                 double cart_collision[6] = {200.0, 200.0, 200.0, 200.0, 200.0, 200.0};
                 setJointCollision(joint_collision, robot_ip_.c_str());
@@ -157,18 +180,11 @@ namespace hardwares
                 double payload[10] = {0.0};
                 setActiveTcpPayload(payload, robot_ip_.c_str());
                 
-                double joint_stiff[7] = {1000, 1000, 1000, 1000, 500, 500, 500};
-                double cart_stiff[6] = {1000, 1000, 1000, 500, 500, 500};
-                // setJointImpeda(joint_stiff, 0.3, robot_ip_.c_str());
-                // setCartImpeda(cart_stiff, 0.3, robot_ip_.c_str());
-                
                 std::fill(prev_torque_.begin(), prev_torque_.end(), 0.0);   
+                std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);
 
-                //enableTorqueReceiver(true, robot_ip_.c_str());
                 releaseBrake(robot_ip_.c_str());
                 rclcpp::sleep_for(std::chrono::seconds(2));
-
-                // enableTorqueReceiver(true, robot_ip_.c_str()); 
 
                 return CallbackReturn::SUCCESS;
             }
@@ -178,11 +194,12 @@ namespace hardwares
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State& prev) override
         {
             RobotInterface::on_deactivate(prev);
-            // 停用控制器时下发零扭矩
+            // 停用控制器时下发零扭矩并关闭力矩接收模式
             double zero_torque[7] = {0.0};
             sendTorque_rt(zero_torque, 0, robot_ip_.c_str());  
-            std::fill(prev_torque_.begin(), prev_torque_.end(), 0.0);       
             enableTorqueReceiver(false, robot_ip_.c_str());
+            
+            std::fill(prev_torque_.begin(), prev_torque_.end(), 0.0);       
             stop(robot_ip_.c_str());
             return CallbackReturn::SUCCESS;
         }
@@ -193,8 +210,8 @@ namespace hardwares
         std::vector<double> pre_dq_;
 
         std::vector<double> prev_torque_;  // 上一次发送的扭矩
-        const std::vector<double> min_torque_{4, 3, 4, 4.5, 1.5, 1.5, 1.5};  // 最小有效扭矩
-        const std::vector<double> max_torque_{6.0, 6.0, 6.0, 5.0, 5.0, 2.0, 2.0};  // 最大有效扭矩
+        const std::vector<double> min_torque_{4, 3, 4, 4.5, 1.5, 1.5, 1.5};        // 最小有效扭矩（目前作为参考，可根据情况加入逻辑）
+        const std::vector<double> max_torque_{6.0, 6.0, 6.0, 5.0, 5.0, 2.0, 2.0};  // 最大安全扭矩边界
     };
 } // namespace hardwares
 
