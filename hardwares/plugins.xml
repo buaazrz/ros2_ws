@@ -1,0 +1,26 @@
+<library path="hardwares">
+  <class type="hardwares::SimulationRobot" base_class_type="hardware_interface::RobotInterface">
+    <description>This is my robot plugin.</description>
+  </class>
+  <class type="hardwares::FTKunweiSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>This is kunwei sensor plugin.</description>
+  </class>
+  <class type="hardwares::FTATISensor" base_class_type="hardware_interface::SensorInterface">
+    <description>This is ATI sensor plugin.</description>
+  </class>
+  <class type="hardwares::URRobot" base_class_type="hardware_interface::RobotInterface">
+    <description>This is URRobot plugin.</description>
+  </class>
+  <class type="hardwares::FC3Robot" base_class_type="hardware_interface::RobotInterface">
+    <description>This is franka FC3 plugin.</description>
+  </class>
+  <class type="hardwares::FTDummySensor" base_class_type="hardware_interface::SensorInterface">
+    <description>This is dummy sensor plugin.</description>
+  </class>
+    <class type="hardwares::FTSRSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>This is SR sensor plugin.</description>
+  </class>
+  <class type="hardwares::DIANARobot" base_class_type="hardware_interface::RobotInterface">
+    <description>This is diana Diana7 plugin.</description>
+  </class>
+</library>

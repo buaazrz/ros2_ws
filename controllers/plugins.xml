@@ -1,0 +1,48 @@
+<library path="controllers">
+  <class type="controllers::TorqueController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is my RobotController plugin.</description>
+  </class>
+  <class type="controllers::ForwardController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a ForwardController plugin.</description>
+  </class>
+    <class type="controllers::ForwardController2" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a ForwardController plugin.</description>
+  </class>
+  <class type="controllers::RealtimeTestController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a RealtimeTestController plugin.</description>
+  </class>
+  <class type="controllers::DummyController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a dummy controller plugin.</description>
+  </class>
+  <class type="controllers::ForceDragController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a force drag controller plugin.</description>
+  </class>
+  <class type="controllers::ForceDragDevController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a force drag dev controller plugin.</description>
+  </class>
+  <class type="controllers::AdmittanceController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is an admittance controller plugin.</description>
+  </class>
+  <class type="controllers::RCMController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is an rcm controller plugin.</description>
+  </class>
+  <class type="controllers::JointMotionController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a joint motion controller plugin.</description>
+  </class>
+  <class type="controllers::CartesianMotionController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a Cartesian motion controller plugin.</description>
+  </class>
+  <class type="controllers::CartesianTrajectoryController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianTrajectoryController plugin.</description>
+  </class>
+  <class type="controllers::RobotStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a RobotStateBroadcaster plugin.</description>
+  </class>
+  <class type="controllers::PDMotionController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a PDMotionController plugin.</description>
+  </class>
+  <class type="controllers::CartesianImpedancePDController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianImpedancePDController plugin.</description>
+  </class>
+  
+</library>
