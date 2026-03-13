@@ -14,7 +14,7 @@ control_node:
       - controllers::RealtimeTestController
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
-      - controllers::PDMotionController
+      # - controllers::PDMotionController
       - controllers::CartesianImpedancePDController
     default_controller: "controllers::CartesianImpedancePDController"
 
@@ -50,9 +50,9 @@ CartesianImpedancePDController:
   ros__parameters:
     cmd_name: "torque"
      # Kx 和 Bx 必须是 6 个数：前 3 个是姿态 (旋转)，后 3 个是位置 (平移)
-    Kx: [100.0, 100.0, 100.0,  200.0, 200.0, 200.0] # 姿态刚度设为 100，位置刚度设为 200
-    Bx: [ 20.0,  20.0,  20.0,   40.0,  40.0,  40.0] # 阻尼设为刚度的平方根附近，抑制晃动
+    Kx: [100.0, 100.0, 100.0,  100.0, 100.0, 100.0] # 姿态刚度设为 100，位置刚度设为 200
+    Bx: [ 5.0,  5.0, 5.0,   5.0,  5.0,  5.0] # 阻尼设为刚度的平方根附近，抑制晃动
     
     # Kn 和 Bn 必须是 7 个数：对应 7 个关节的零空间（冗余自由度）控制
-    Kn: [ 50.0,  50.0,  50.0,   50.0,  50.0,  50.0,  50.0] # 零空间刚度要比末端刚度软
-    Bn: [ 10.0,  10.0,  10.0,   10.0,  10.0,  10.0,  10.0] # 基础阻尼，防止关节乱甩
+    Kn: [ 5.0,  5.0,  5.0,   5.0,  5.0,  5.0,  5.0] # 零空间刚度要比末端刚度软
+    Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0,  1.0,  1.0] # 基础阻尼，防止关节乱甩

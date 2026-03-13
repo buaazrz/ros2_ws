@@ -31,6 +31,8 @@ namespace hardwares
         void write(const rclcpp::Time& t, const rclcpp::Duration& period) override
         {
             hardware_interface::RobotInterface::write(t, period);
+            RCLCPP_INFO(node_->get_logger(), "当前周期(秒): %.6f，周期(毫秒): %.3f", 
+            period.seconds(), period.seconds() * 1000.0);
             double max_single_delta = 1.0; 
             auto &cmd_tau = command_.get<double>("torque");
             int dof = 7; 
@@ -49,11 +51,25 @@ namespace hardwares
                 torque_cmd[i] = temp_torque[i];
             }
             
+            // auto &mode = command_.get<int>("mode")[0]; 
+            // if (mode == 3)
+            // {
+
+            //     sendTorque_rt(torque_cmd, period.seconds(), robot_ip_.c_str());
+            // }
+            double dt = 1.0 / update_rate_;
+            
             auto &mode = command_.get<int>("mode")[0]; 
-            if (mode == 3)
+            switch (mode)
             {
-                // 仅发送扭矩，绝不 sleep，绝不 enableTorqueReceiver
-                sendTorque_rt(torque_cmd, period.seconds(), robot_ip_.c_str());
+            case 3:
+                {
+                    enableTorqueReceiver(true, robot_ip_.c_str());                            
+                    sendTorque_rt(torque_cmd, dt, robot_ip_.c_str());
+                    break;   
+                }     
+            default:
+                break;
             }     
         }
 
@@ -152,7 +168,7 @@ namespace hardwares
                 releaseBrake(robot_ip_.c_str());
                 rclcpp::sleep_for(std::chrono::seconds(2));
 
-                enableTorqueReceiver(true, robot_ip_.c_str()); 
+                // enableTorqueReceiver(true, robot_ip_.c_str()); 
 
                 return CallbackReturn::SUCCESS;
             }
