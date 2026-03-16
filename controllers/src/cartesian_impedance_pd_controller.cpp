@@ -199,11 +199,22 @@ namespace controllers
             tau_task_ = M_ * J_sharp(Jh_, M_) * ddxc_;
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
-            tau_cmd = tau_task_ + tau_null_ + c;
+            tau_cmd = tau_task_ + tau_null_ + C_*dq;
 
             q_ = q;
             dq_ = dq;
             tau_cmd_ = tau_cmd;
+
+            std::ostringstream oss_c;
+            oss_c << c.transpose();
+            RCLCPP_INFO(node_->get_logger(), "[实时] c = [ %s ]", oss_c.str().c_str());
+
+            // 打印计算得到的 C_*dq 向量
+            Eigen::VectorXd C_dq = C_ * dq;
+            std::ostringstream oss_Cdq;
+            oss_Cdq << C_dq.transpose();
+            RCLCPP_INFO(node_->get_logger(), "[实时] C_*dq = [ %s ]", oss_Cdq.str().c_str());
+            RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
 
             // log2Channel(robot_data_, 0, xe_.head(3).data(), 3);
             // log2Channel(robot_data_, 1, xe_.tail(3).data(), 3);
