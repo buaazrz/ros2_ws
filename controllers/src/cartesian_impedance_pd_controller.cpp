@@ -1,256 +1,154 @@
 #include "robot_controller_interface/controller_interface.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "realtime_tools/realtime_box.hpp"
-#include "robot_math/MovingFilter.h"
 #include "robot_math/robot_math.hpp"
-#include "ros2_utility/data_comm.hpp"
-#include "ros2_utility/data_logger.hpp"
-#include "ros2_utility/file_utils.hpp"
-#include <iostream>
+#include <Eigen/Dense>
 
 using namespace robot_math;
+
 namespace controllers
 {
-    class CartesianImpedancePDController : public controller_interface::ControllerInterface
+    class CartesianAdmittanceController : public controller_interface::ControllerInterface
     {
     public:
-        CartesianImpedancePDController() {}
-        ~CartesianImpedancePDController()
-        {
-            // if (data_logger_)
-                // data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
-        }
-
+        CartesianAdmittanceController() {}
+        
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
             dof_ = robot_->dof;
-            node_->get_parameter_or<std::vector<double>>("Kx", Kx_vec_, {10.0, 10.0, 10.0, 100.0, 100.0, 100.0});
-            node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
-            node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
-            node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0});
-            Kx_in_box_.set(Kx_vec_);
-            Bx_in_box_.set(Bx_vec_);
-            Kn_in_box_.set(Kn_vec_);
-            Bn_in_box_.set(Bn_vec_);
-            parameters_callback_handle_ = node_->add_on_set_parameters_callback(
-                [&](std::vector<rclcpp::Parameter> parameters) -> rcl_interfaces::msg::SetParametersResult
-                {
-                    RCLCPP_INFO(node_->get_logger(), "Parameter %s update requested.", parameters[0].get_name().c_str());
-                    for (const auto &parameter : parameters)
-                    {
-                        if (parameter.get_name() == "Kx")
-                            Kx_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Bx")
-                            Bx_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Kn")
-                            Kn_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Bn")
-                            Bn_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
-                    }
-                    auto result = rcl_interfaces::msg::SetParametersResult();
-                    result.successful = true;
-                    return result;
-                });
+            
+            // 导纳模型参数 (Mass, Damping, Stiffness)
+            node_->get_parameter_or<std::vector<double>>("Ma", Ma_vec_, {2.0, 2.0, 2.0, 0.5, 0.5, 0.5});
+            node_->get_parameter_or<std::vector<double>>("Ba", Ba_vec_, {40.0, 40.0, 40.0, 5.0, 5.0, 5.0});
+            node_->get_parameter_or<std::vector<double>>("Ka", Ka_vec_, {100.0, 100.0, 100.0, 10.0, 10.0, 10.0});
+            
+            // 内环位置跟踪增益 (用于生成力矩)
+            node_->get_parameter_or<std::vector<double>>("Kp", Kp_vec_, {200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0});
+            node_->get_parameter_or<std::vector<double>>("Kd", Kd_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
+
+            Ma_in_box_.set(Ma_vec_);
+            Ba_in_box_.set(Ba_vec_);
+            Ka_in_box_.set(Ka_vec_);
+
             return CallbackReturn::SUCCESS;
         }
 
-        CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
+        CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
-            // DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
-                // 1. 打印state_->get<double>()的所有key（排查position/velocity/acceleration/pose等）
-            // RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
-            // for (const auto& [key, val] : state_->get<double>()) {
-            //     RCLCPP_INFO(node_->get_logger(), "Key: %s, size: %lu", key.c_str(), val.size());
-            // }
-
-            // // 3. 打印command_->get<double>()的key（排查mode/pose/velocity等）
-            // RCLCPP_INFO(node_->get_logger(), "=== Command double keys ===");
-            // for (const auto& [key, val] : command_->get<double>()) {
-            //     RCLCPP_INFO(node_->get_logger(), "Key: %s", key.c_str());
-            // }
             time_ = 0;
+            // 初始化状态
             const std::vector<double> &q_vec = state_->get<double>("position");
-            qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval();
-            RCLCPP_INFO(node_->get_logger(), "=== qd_ (Eigen格式化) ===");
-            std::ostringstream oss;
-            oss << qd_.transpose(); // 转置为行向量，打印更美观
-            RCLCPP_INFO(node_->get_logger(), "qd_ = %s", oss.str().c_str());
-            dqd_ = Eigen::VectorXd::Zero(dof_);
-            ddqd_ = Eigen::VectorXd::Zero(dof_);
-
-            const std::vector<double> &T_vec = state_->get<double>("T");
-            Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data(), 4, 4).eval();
-            // Rd_ = T.block(0, 0, 3, 3);
-            // pd_ = T.block(0, 3, 3, 1);
+            q_initial_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_);
+            
+            // 获取初始末端位姿作为期望位姿 Td
             Eigen::MatrixXd M_tmp, C_tmp, Jb_tmp, dJb_tmp, dM_tmp;
-            Eigen::Matrix4d Tb_tmp, dTb_tmp;
+            Eigen::Matrix4d Tb_init, dTb_tmp;
             Eigen::VectorXd g_tmp;
-            std::vector<double> dq_zero(dof_, 0.0); // 初始速度视为0
+            std::vector<double> dq_zero(dof_, 0.0);
+            m_c_g_matrix(robot_, q_vec, dq_zero, M_tmp, C_tmp, g_tmp, Jb_tmp, dJb_tmp, dM_tmp, dTb_tmp, Tb_init);
+            
+            Td_ = Tb_init; // 设定当前点为固定目标点
+            Rd_ = Td_.block(0,0,3,3);
+            pd_ = Td_.block(0,3,3,1);
 
-            m_c_g_matrix(robot_, q_vec, dq_zero, M_tmp, C_tmp, g_tmp, Jb_tmp, dJb_tmp, dM_tmp, dTb_tmp, Tb_tmp);
-
-            Rd_ = Tb_tmp.block(0, 0, 3, 3);
-            pd_ = Tb_tmp.block(0, 3, 3, 1);
-            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");   
-
-            // 1. 打印 Rd_ (3x3 矩阵)
-            std::ostringstream oss_Rd;
-            // 前面加一个换行符 \n，这样 3x3 矩阵的格式对齐会非常漂亮，不会和前缀挤在一起
-            oss_Rd << "\n" << Rd_; 
-            RCLCPP_INFO(node_->get_logger(), "Rd_ = %s", oss_Rd.str().c_str());
-
-            // 2. 打印 pd_ (3x1 向量)
-            std::ostringstream oss_pd;
-            // 用 transpose() 变成 1x3 行向量，紧凑打印
-            oss_pd << pd_.transpose(); 
-            RCLCPP_INFO(node_->get_logger(), "pd_ = [ %s ]", oss_pd.str().c_str());
-
-            wd_ = Eigen::Vector3d::Zero();
-            vd_ = Eigen::Vector3d::Zero();
-            ddxd_ = Eigen::Vector6d::Zero();
-
-            Thb_ = Eigen::Matrix6d::Identity();
-            dThb_ = Eigen::Matrix6d::Zero();
-
-            q_ = Eigen::VectorXd::Zero(dof_);
-            dq_ = Eigen::VectorXd::Zero(dof_);
-            tau_task_ = Eigen::VectorXd::Zero(dof_);
-            tau_null_ = Eigen::VectorXd::Zero(dof_);
-            tau_cmd_ = Eigen::VectorXd::Zero(dof_);
-            data_logger_ = std::make_unique<DataLogger>(
-                std::initializer_list<DataInfo>{
-                    DATA_WRAPPER(time_),
-                    DATA_WRAPPER(success_rate_),
-                    DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(q_),
-                    DATA_WRAPPER(dq_),
-                    DATA_WRAPPER(xe_),
-                    DATA_WRAPPER(dxe_),
-                    DATA_WRAPPER(tau_task_),
-                    DATA_WRAPPER(tau_null_),
-                },
-                std::initializer_list<ExperimentContext>{
-                    CONFIG_WRAPPER(Kx_vec_),
-                    CONFIG_WRAPPER(Bx_vec_),
-                    CONFIG_WRAPPER(Kn_vec_),
-                    CONFIG_WRAPPER(Bn_vec_),
-                },
-                1000);
+            // 导纳积分项初始化清零
+            xe_.setZero();  // 位姿偏差 [rot_err, pos_err]
+            dxe_.setZero(); // 偏差速度
+            
             return CallbackReturn::SUCCESS;
         }
 
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
+        void update(const rclcpp::Time & /*t*/, const rclcpp::Duration &period) override
         {
-            return CallbackReturn::SUCCESS;
-        }
+            double dt = period.seconds();
+            time_ += dt;
 
-        void update(const rclcpp::Time &t, const rclcpp::Duration &period) override
-        {
-            time_ += period.seconds();
-
-            auto start_time = std::chrono::high_resolution_clock::now();
-            std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
+            // 1. 获取传感器数据
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
-            const std::vector<double> &c_vec = state_->get<double>("c");
-            success_rate_ = state_->get<double>("success")[0];
+            const std::vector<double> &f_vec = state_->get<double>("wrench"); // 外部力/力矩传感器 [f, tau]
+            std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
 
-            Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
-            Eigen::Map<const Eigen::VectorXd> c(c_vec.data(), dof_);
+            Eigen::Map<const Eigen::VectorXd> F_ext(f_vec.data(), 6);
+            Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
 
-            Kx_in_box_.try_get([=](auto const &value)
-                               { Kx_vec_ = value; });
-            Bx_in_box_.try_get([=](auto const &value)
-                               { Bx_vec_ = value; });
-            Kn_in_box_.try_get([=](auto const &value)
-                               { Kn_vec_ = value; });
-            Bn_in_box_.try_get([=](auto const &value)
-                               { Bn_vec_ = value; });
-            Kx_ = Eigen::Map<Eigen::VectorXd>(Kx_vec_.data(), 6);
-            Bx_ = Eigen::Map<Eigen::VectorXd>(Bx_vec_.data(), 6);
-            Kn_ = Eigen::Map<Eigen::VectorXd>(Kn_vec_.data(), dof_);
-            Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
+            // 2. 更新导纳模型参数
+            Ma_in_box_.try_get([&](auto const &v){ Ma_ = Eigen::Map<const Eigen::VectorXd>(v.data(), 6); });
+            Ba_in_box_.try_get([&](auto const &v){ Ba_ = Eigen::Map<const Eigen::VectorXd>(v.data(), 6); });
+            Ka_in_box_.try_get([&](auto const &v){ Ka_ = Eigen::Map<const Eigen::VectorXd>(v.data(), 6); });
 
+            // 3. 导纳核心逻辑：积分计算期望位移偏差 xe
+            // 导纳方程: Ma*ddxe + Ba*dxe + Ka*xe = F_ext
+            // 计算加速度 ddxe
+            Eigen::Vector6d ddxe;
+            for(int i=0; i<6; ++i) {
+                ddxe(i) = (F_ext(i) - Ba_(i)*dxe_(i) - Ka_(i)*xe_(i)) / Ma_(i);
+            }
+
+            // 数值积分更新 dxe 和 xe
+            dxe_ += ddxe * dt;
+            xe_ += dxe_ * dt;
+
+            // 4. 计算导纳修正后的目标位姿 (参考书中 8-51, 8-52)
+            // 修正后的旋转矩阵 R_r 和位置 p_r
+            Eigen::Vector3d re = xe_.head(3);
+            Eigen::Vector3d pe = xe_.tail(3);
+
+            Eigen::Matrix3d R_r = Rd_ * exp_w(-re); 
+            Eigen::Vector3d p_r = pd_ - R_r * pe;
+
+            // 5. 内环跟踪：将修正后的 (R_r, p_r) 转换为关节空间指令
+            // 这里为了演示，采用简单的任务空间 PD + 动力学补偿，或者你可以调用逆运动学
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
-            command_->get<int>("mode")[0] = 3;
+            
+            Eigen::Matrix3d R_curr = Tb_.block(0,0,3,3);
+            Eigen::Vector3d p_curr = Tb_.block(0,3,3,1);
 
-            R_ = Tb_.block(0, 0, 3, 3);
-            p_ = Tb_.block(0, 3, 3, 1);
-            qe_ = qd_ - q;
-            dqe_ = dqd_ - dq;
+            // 计算跟踪误差
+            Eigen::Vector6d error;
+            error.head(3) = logR(R_curr.transpose() * R_r); // 姿态误差
+            error.tail(3) = p_r - p_curr;                  // 位置误差
 
-            Thb_.block(3, 3, 3, 3) = R_;
-            dThb_.block(3, 3, 3, 3) = dTb_.block(0, 0, 3, 3);
-            Jh_ = Thb_ * Jb_;
-            dJh_ = dThb_ * Jb_ + Thb_ * dJb_;
+            // 映射到关节力矩 (简单示意的阻抗形式跟踪内环)
+            Eigen::VectorXd Kp_inner = Eigen::Map<Eigen::VectorXd>(Kp_vec_.data(), dof_);
+            Eigen::VectorXd Kd_inner = Eigen::Map<Eigen::VectorXd>(Kd_vec_.data(), dof_);
 
-            xe_.head(3) = logR(R_.transpose() * Rd_);
-            xe_.tail(3) = pd_ - p_;
-            dxe_.head(3) = R_.transpose() * wd_ - (Jh_ * dq).head(3);
-            dxe_.tail(3) = vd_ - (Jh_ * dq).tail(3);
+            // 任务空间反馈 + 动力学补偿 (C*dq + g)
+            tau_cmd = Jb_.transpose() * (error * 100.0) - dq * 5.0 + C_ * dq + g_; 
 
-            ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_ - dJh_ * dq;
-            tau_task_ = M_ * J_sharp(Jh_, M_) * ddxc_;
-            Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
-            tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
-            tau_cmd = tau_task_ + tau_null_ + C_*dq;
-
-            q_ = q;
-            dq_ = dq;
-            tau_cmd_ = tau_cmd;
-
-            // std::ostringstream oss_c;
-            // oss_c << c.transpose();
-            // RCLCPP_INFO(node_->get_logger(), "[实时] c = [ %s ]", oss_c.str().c_str());
-
-            // // 打印计算得到的 C_*dq 向量
-            Eigen::VectorXd C_dq = C_ * dq;
-            std::ostringstream oss_Cdq;
-            std::ostringstream oss_dq;
-            oss_Cdq << C_dq.transpose();
-            oss_dq << dq.transpose();
-            RCLCPP_INFO(node_->get_logger(), "[实时] C_*dq = [ %s ]", oss_Cdq.str().c_str());
-            RCLCPP_INFO(node_->get_logger(), "[实时] dq = [ %s ]", oss_dq.str().c_str());
-            // RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
-
-            // log2Channel(robot_data_, 0, xe_.head(3).data(), 3);
-            // log2Channel(robot_data_, 1, xe_.tail(3).data(), 3);
-            // log2Channel(robot_data_, 2, tau_task_.data(), dof_);
-            // log2Channel(robot_data_, 3, tau_null_.data(), dof_);
-            // robot_data_.t = time_;
-            // DataComm::getInstance()->sendRobotStatus(robot_data_);
-            cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-            // data_logger_->record();
+            // 设置控制模式
+            command_->get<int>("mode")[0] = 3; 
         }
 
     protected:
-        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
         int dof_;
-        Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_, Jh_, dJh_;
-        Eigen::VectorXd g_, q_, dq_;
-        Eigen::Matrix4d Tb_, dTb_;
-        Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
-        Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
-        Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_;
-        Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_;
-        Eigen::Matrix3d Rd_, R_;
-        Eigen::Matrix6d Thb_, dThb_;
-        Eigen::Vector3d pd_, p_, wd_, vd_;
-        double success_rate_, cal_time_;
-        realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
-        std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
-        std::unique_ptr<DataLogger> data_logger_;
         double time_;
-        // RobotData robot_data_;
+        
+        // 导纳模型参数
+        Eigen::Vector6d Ma_, Ba_, Ka_;
+        std::vector<double> Ma_vec_, Ba_vec_, Ka_vec_;
+        realtime_tools::RealtimeBox<std::vector<double>> Ma_in_box_, Ba_in_box_, Ka_in_box_;
+
+        // 导纳积分状态量
+        Eigen::Vector6d xe_, dxe_; 
+
+        // 初始参考位姿
+        Eigen::Matrix4d Td_;
+        Eigen::Matrix3d Rd_;
+        Eigen::Vector3d pd_;
+        Eigen::VectorXd q_initial_;
+
+        // 机器人动力学矩阵
+        Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_;
+        Eigen::VectorXd g_;
+        Eigen::Matrix4d Tb_, dTb_;
+
+        // 内环增益
+        std::vector<double> Kp_vec_, Kd_vec_;
     };
-} // namespace controllers
+} 
 
 #include <pluginlib/class_list_macros.hpp>
-
-PLUGINLIB_EXPORT_CLASS(controllers::CartesianImpedancePDController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(controllers::CartesianAdmittanceController, controller_interface::ControllerInterface)
