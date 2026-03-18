@@ -1,0 +1,8 @@
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility/src/transform_interpolator.cpp:[m[K In member function ‘[01m[Kvoid TransformInterpolator::[01;32m[KappendNumTransform[m[K(int, const Eigen::Matrix4d&)[m[K’:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility/src/transform_interpolator.cpp:151:25:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<Eigen::Matrix<double, 4, 4> >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+  151 |     if (num <= 0 || [01;35m[Knum > T_traj_.size()[m[K)
+      |                     [01;35m[K~~~~^~~~~~~~~~~~~~~~[m[K
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility/src/sliding_window.cpp:[m[K In member function ‘[01m[Kvoid SlidingWindow::[01;32m[Kapply_hanning_window[m[K(Eigen::VectorXd&) const[m[K’:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility/src/sliding_window.cpp:65:26:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} and ‘[01m[KEigen::EigenBase<Eigen::Matrix<double, -1, 1> >::Index[m[K’ {aka ‘[01m[Klong int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+   65 |     for (size_t i = 0; [01;35m[Ki < data_segment.size()[m[K; ++i)
+      |                        [01;35m[K~~^~~~~~~~~~~~~~~~~~~~~[m[K

@@ -1,0 +1,1 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications/ament_cmake_core/applicationsConfig.cmake

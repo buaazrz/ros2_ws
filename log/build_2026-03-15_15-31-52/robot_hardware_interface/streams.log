@@ -1,0 +1,102 @@
+[0.033s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface
+[0.157s] -- The C compiler identification is GNU 13.3.0
+[0.290s] -- The CXX compiler identification is GNU 13.3.0
+[0.323s] -- Detecting C compiler ABI info
+[0.550s] -- Detecting C compiler ABI info - done
+[0.567s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.567s] -- Detecting C compile features
+[0.567s] -- Detecting C compile features - done
+[0.586s] -- Detecting CXX compiler ABI info
+[0.812s] -- Detecting CXX compiler ABI info - done
+[0.838s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.839s] -- Detecting CXX compile features
+[0.840s] -- Detecting CXX compile features - done
+[0.852s] -- Found urdf: 2.10.0 (/opt/ros/jazzy/share/urdf/cmake)
+[1.197s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.386s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.594s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.618s] -- Found robot_math: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake)
+[1.629s] -- Found rclcpp_lifecycle: 28.1.6 (/opt/ros/jazzy/share/rclcpp_lifecycle/cmake)
+[1.713s] -- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.745s] -- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.781s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.819s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.067s] -- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[2.079s] -- Found rmw_fastrtps_cpp: 8.4.1 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[2.145s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[2.282s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[2.288s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[2.347s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[2.354s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[2.377s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[2.400s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.582s] -- Found geometry_msgs: 5.3.5 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[2.665s] -- Found realtime_tools: 3.4.0 (/opt/ros/jazzy/share/realtime_tools/cmake)
+[3.015s] -- Found orocos_kdl_vendor: 0.5.1 (/opt/ros/jazzy/share/orocos_kdl_vendor/cmake)
+[3.048s] -- Found eigen3_cmake_module: 0.3.0 (/opt/ros/jazzy/share/eigen3_cmake_module/cmake)
+[3.051s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[3.051s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[3.059s] -- Found kdl_parser: 2.11.0 (/opt/ros/jazzy/share/kdl_parser/cmake)
+[3.277s] -- Configuring done (3.2s)
+[3.327s] -- Generating done (0.0s)
+[3.342s] -- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface
+[3.383s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface
+[3.385s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface -- -j16 -l16
+[3.540s] [ 25%] [32mBuilding CXX object CMakeFiles/robot_hardware_interface.dir/src/sensor_interface.cpp.o[0m
+[3.540s] [ 50%] [32mBuilding CXX object CMakeFiles/robot_hardware_interface.dir/src/robot_interface.cpp.o[0m
+[3.545s] [ 75%] [32mBuilding CXX object CMakeFiles/robot_hardware_interface.dir/src/hardware_interface.cpp.o[0m
+[15.763s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:[m[K In member function ‘[01m[Kint hardware_interface::RobotInterface::[01;32m[Kconfigure_urdf[m[K(const std::string&)[m[K’:
+[15.764s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:50:37:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kstd::vector<double>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} and ‘[01m[Kint[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+[15.764s]    50 |                 if([01;35m[Kinit_pose.size() != dof_[m[K)
+[15.764s]       |                    [01;35m[K~~~~~~~~~~~~~~~~~^~~~~~~[m[K
+[15.765s] In file included from [01m[K/opt/ros/jazzy/include/pluginlib/pluginlib/class_loader_imp.hpp:57[m[K,
+[15.765s]                  from [01m[K/opt/ros/jazzy/include/pluginlib/pluginlib/class_loader.hpp:334[m[K,
+[15.765s]                  from [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/include/robot_hardware_interface/robot_interface.hpp:4[m[K,
+[15.765s]                  from [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:1[m[K:
+[15.766s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:52:55:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<double>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wformat=-Wformat=]8;;[m[K]
+[15.766s]    52 |                     RCLCPP_ERROR(node_->get_logger(), [01;35m[K"init_pose size %d is not equal to dof %d"[m[K, [32m[Kinit_pose.size()[m[K, dof_);
+[15.766s]       |                                                       [01;35m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~[m[K
+[15.766s]       |                                                                                                                 [32m[K|[m[K
+[15.767s]       |                                                                                                                 [32m[Kstd::vector<double>::size_type {aka long unsigned int}[m[K
+[15.767s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:52:72:[m[K [01;36m[Knote: [m[Kformat string is defined here
+[15.767s]    52 |                     RCLCPP_ERROR(node_->get_logger(), "init_pose size [01;36m[K%d[m[K is not equal to dof %d", init_pose.size(), dof_);
+[15.767s]       |                                                                       [01;36m[K~^[m[K
+[15.767s]       |                                                                        [01;36m[K|[m[K
+[15.768s]       |                                                                        [01;36m[Kint[m[K
+[15.768s]       |                                                                       [32m[K%ld[m[K
+[33.208s] [100%] [32m[1mLinking CXX shared library librobot_hardware_interface.so[0m
+[33.465s] [100%] Built target robot_hardware_interface
+[33.490s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface -- -j16 -l16
+[33.494s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface
+[33.509s] -- Install configuration: "Release"
+[33.510s] -- Execute custom install script
+[33.511s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/include/robot_hardware_interface/robot_hardware_interface/command_interface.hpp
+[33.536s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/include/robot_hardware_interface/robot_hardware_interface/hardware_interface.hpp
+[33.557s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/include/robot_hardware_interface/robot_hardware_interface/robot_interface.hpp
+[33.580s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/include/robot_hardware_interface/robot_hardware_interface/sensor_interface.hpp
+[33.604s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/include/robot_hardware_interface/robot_hardware_interface/state_interface.hpp
+[33.627s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/library_path.sh
+[33.650s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/library_path.dsv
+[33.668s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/ament_index/resource_index/package_run_dependencies/robot_hardware_interface
+[33.686s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/ament_index/resource_index/parent_prefix_path/robot_hardware_interface
+[33.703s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/ament_prefix_path.sh
+[33.720s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/ament_prefix_path.dsv
+[33.738s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/path.sh
+[33.756s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/environment/path.dsv
+[33.778s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/local_setup.bash
+[33.798s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/local_setup.sh
+[33.816s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/local_setup.zsh
+[33.836s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/local_setup.dsv
+[33.856s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.dsv
+[33.874s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/ament_index/resource_index/packages/robot_hardware_interface
+[33.895s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/ament_cmake_export_include_directories-extras.cmake
+[33.919s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/ament_cmake_export_libraries-extras.cmake
+[33.936s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/ament_cmake_export_targets-extras.cmake
+[33.956s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/robot_hardware_interfaceConfig.cmake
+[33.980s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/robot_hardware_interfaceConfig-version.cmake
+[34.000s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.xml
+[34.018s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/librobot_hardware_interface.so
+[34.019s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/librobot_hardware_interface.so" to ""
+[34.019s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/export_robot_hardware_interfaceExport.cmake
+[34.019s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/export_robot_hardware_interfaceExport-release.cmake
+[34.025s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface

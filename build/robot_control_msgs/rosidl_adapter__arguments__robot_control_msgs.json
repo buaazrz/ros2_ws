@@ -1,0 +1,9 @@
+{
+  "package_name": "robot_control_msgs",
+  "non_idl_tuples": [
+    "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs:msg/RobotState.msg",
+    "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs:msg/VectorData.msg",
+    "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs:srv/ControlCommand.srv",
+    "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs:action/RobotMotion.action"
+  ]
+}

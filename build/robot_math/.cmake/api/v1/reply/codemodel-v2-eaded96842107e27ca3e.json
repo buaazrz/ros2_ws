@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-a31fbb6ef41563aba61b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "robot_math",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_math::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_math-Release-c6347441e5f18bdfae05.json",
+					"name" : "robot_math",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_math_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_math_uninstall-Release-a581ec90f0fe721e90db.json",
+					"name" : "robot_math_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_robot_math::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_robot_math-Release-72c9a1e00c12eef3cea3.json",
+					"name" : "test_robot_math",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Release-59251aa262789f789056.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math",
+		"source" : "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

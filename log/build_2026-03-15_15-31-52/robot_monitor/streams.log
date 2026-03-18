@@ -1,0 +1,74 @@
+[0.031s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor
+[0.165s] -- The C compiler identification is GNU 13.3.0
+[0.297s] -- The CXX compiler identification is GNU 13.3.0
+[0.339s] -- Detecting C compiler ABI info
+[0.585s] -- Detecting C compiler ABI info - done
+[0.602s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.602s] -- Detecting C compile features
+[0.603s] -- Detecting C compile features - done
+[0.627s] -- Detecting CXX compiler ABI info
+[0.863s] -- Detecting CXX compiler ABI info - done
+[0.880s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.881s] -- Detecting CXX compile features
+[0.881s] -- Detecting CXX compile features - done
+[0.898s] -- Found ament_cmake: 2.5.3 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.244s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.407s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.511s] -- Found rclcpp: 28.1.6 (/opt/ros/jazzy/share/rclcpp/cmake)
+[1.635s] -- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.671s] -- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.716s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.763s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.979s] -- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[1.991s] -- Found rmw_fastrtps_cpp: 8.4.1 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[2.200s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[2.245s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[2.294s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.553s] -- Found std_msgs: 5.3.5 (/opt/ros/jazzy/share/std_msgs/cmake)
+[2.604s] -- Found std_srvs: 5.3.5 (/opt/ros/jazzy/share/std_srvs/cmake)
+[2.657s] -- Found robot_control_msgs: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake)
+[2.816s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[3.019s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[3.021s] -- Found Threads: TRUE  
+[3.024s] -- Performing Test HAVE_STDATOMIC
+[3.318s] -- Performing Test HAVE_STDATOMIC - Success
+[3.321s] -- Found WrapAtomic: TRUE  
+[3.415s] -- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so   
+[3.417s] -- Found WrapOpenGL: TRUE  
+[3.568s] -- Found XKB: /usr/lib/x86_64-linux-gnu/libxkbcommon.so (found suitable version "1.6.0", minimum required is "0.5.0") 
+[3.626s] -- Found WrapVulkanHeaders: /usr/include  
+[3.922s] -- Configuring done (3.9s)
+[4.057s] -- Generating done (0.0s)
+[4.068s] -- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor
+[4.110s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor
+[4.112s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor -- -j16 -l16
+[4.241s] [  0%] Built target robot_monitor_autogen_timestamp_deps
+[4.304s] [ 14%] [34m[1mAutomatic MOC and UIC for target robot_monitor[0m
+[5.766s] [ 14%] Built target robot_monitor_autogen
+[5.848s] [ 42%] [32mBuilding CXX object CMakeFiles/robot_monitor.dir/src/widget.cpp.o[0m
+[5.848s] [ 42%] [32mBuilding CXX object CMakeFiles/robot_monitor.dir/robot_monitor_autogen/mocs_compilation.cpp.o[0m
+[5.852s] [ 57%] [32mBuilding CXX object CMakeFiles/robot_monitor.dir/src/mainwindow.cpp.o[0m
+[5.852s] [ 71%] [32mBuilding CXX object CMakeFiles/robot_monitor.dir/src/main.cpp.o[0m
+[30.485s] [ 85%] [32m[1mLinking CXX executable robot_monitor[0m
+[31.540s] [100%] Built target robot_monitor
+[31.567s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor -- -j16 -l16
+[31.569s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor
+[31.581s] -- Install configuration: "Release"
+[31.581s] -- Execute custom install script
+[31.582s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib/robot_monitor/robot_monitor
+[31.597s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/ament_index/resource_index/package_run_dependencies/robot_monitor
+[31.612s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/ament_index/resource_index/parent_prefix_path/robot_monitor
+[31.626s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/environment/ament_prefix_path.sh
+[31.645s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/environment/ament_prefix_path.dsv
+[31.661s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/environment/path.sh
+[31.677s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/environment/path.dsv
+[31.691s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/local_setup.bash
+[31.705s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/local_setup.sh
+[31.719s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/local_setup.zsh
+[31.740s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/local_setup.dsv
+[31.758s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.dsv
+[31.772s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/ament_index/resource_index/packages/robot_monitor
+[31.787s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/cmake/robot_monitorConfig.cmake
+[31.801s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/cmake/robot_monitorConfig-version.cmake
+[31.815s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.xml
+[31.833s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor

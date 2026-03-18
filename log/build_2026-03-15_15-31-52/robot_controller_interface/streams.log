@@ -1,0 +1,38 @@
+[0.024s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_controller_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_controller_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_controller_interface
+[0.151s] -- The C compiler identification is GNU 13.3.0
+[0.259s] -- The CXX compiler identification is GNU 13.3.0
+[0.289s] -- Detecting C compiler ABI info
+[0.498s] -- Detecting C compiler ABI info - done
+[0.517s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.518s] -- Detecting C compile features
+[0.518s] -- Detecting C compile features - done
+[0.540s] -- Detecting CXX compiler ABI info
+[0.752s] -- Detecting CXX compiler ABI info - done
+[0.771s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.771s] -- Detecting CXX compile features
+[0.772s] -- Detecting CXX compile features - done
+[0.775s] -- Found robot_hardware_interface: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake)
+[1.087s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.293s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.304s] -- Found rclcpp_lifecycle: 28.1.6 (/opt/ros/jazzy/share/rclcpp_lifecycle/cmake)
+[1.522s] -- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.560s] -- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.599s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.646s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.841s] -- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[1.850s] -- Found rmw_fastrtps_cpp: 8.4.1 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[2.046s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[2.098s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[2.153s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.342s] -- Found urdf: 2.10.0 (/opt/ros/jazzy/share/urdf/cmake)
+[2.426s] -- Found robot_math: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake)
+[2.435s] -- Found geometry_msgs: 5.3.5 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[2.504s] -- Found realtime_tools: 3.4.0 (/opt/ros/jazzy/share/realtime_tools/cmake)
+[2.778s] -- Found orocos_kdl_vendor: 0.5.1 (/opt/ros/jazzy/share/orocos_kdl_vendor/cmake)
+[2.808s] -- Found eigen3_cmake_module: 0.3.0 (/opt/ros/jazzy/share/eigen3_cmake_module/cmake)
+[2.810s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[2.810s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[2.816s] -- Found kdl_parser: 2.11.0 (/opt/ros/jazzy/share/kdl_parser/cmake)
+[3.015s] -- Configuring done (3.0s)
+[3.044s] -- Generating done (0.0s)
+[3.050s] -- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_controller_interface

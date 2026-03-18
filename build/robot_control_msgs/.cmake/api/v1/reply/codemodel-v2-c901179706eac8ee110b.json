@@ -1,0 +1,242 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-aca2a89754da4e0e4b20.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18
+					]
+				},
+				{
+					"build" : "robot_control_msgs__py",
+					"jsonFile" : "directory-robot_control_msgs__py-Release-3dff5bea0140c72643cd.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/robot_control_msgs__py",
+					"targetIndexes" : 
+					[
+						4
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "robot_control_msgs",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_build_robot_control_msgs_egg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_build_robot_control_msgs_egg-Release-59c4b6e0916bc58b9ea2.json",
+					"name" : "ament_cmake_python_build_robot_control_msgs_egg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_symlink_robot_control_msgs::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_symlink_robot_control_msgs-Release-8fae61dfd15064fdc220.json",
+					"name" : "ament_cmake_python_symlink_robot_control_msgs",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs-Release-fd0cbf18d6b64083db79.json",
+					"name" : "robot_control_msgs",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__cpp-Release-f39b6a9295612aaf6654.json",
+					"name" : "robot_control_msgs__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "robot_control_msgs__py::@f7af622c29a1938162a0",
+					"jsonFile" : "target-robot_control_msgs__py-Release-73c6a6577697007cd3da.json",
+					"name" : "robot_control_msgs__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_generator_c-Release-bd2c7fcddc04b31161ff.json",
+					"name" : "robot_control_msgs__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_generator_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_generator_py-Release-d21f4e616e7eb60f0c47.json",
+					"name" : "robot_control_msgs__rosidl_generator_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_generator_type_description::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_generator_type_description-Release-fc56c9e6b204e7eae55e.json",
+					"name" : "robot_control_msgs__rosidl_generator_type_description",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_c-Release-497f8c2dc80d9fafbc18.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_cpp-Release-c218055d5fa22e77ecea.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_fastrtps_c-Release-8b93a100c266999fdd00.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_fastrtps_cpp-Release-39a9b30f6085e007dbd8.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_introspection_c-Release-38f1479c1e34ac5a85ae.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs__rosidl_typesupport_introspection_cpp-Release-0b8e7a113efde9bfde97.json",
+					"name" : "robot_control_msgs__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs_s__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs_s__rosidl_typesupport_c-Release-bbda3b2c3c014a68a0f9.json",
+					"name" : "robot_control_msgs_s__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs_s__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs_s__rosidl_typesupport_fastrtps_c-Release-9ec7be4c4f6ec1423cc9.json",
+					"name" : "robot_control_msgs_s__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs_s__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs_s__rosidl_typesupport_introspection_c-Release-638ece86661baaea1488.json",
+					"name" : "robot_control_msgs_s__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "robot_control_msgs_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-robot_control_msgs_uninstall-Release-faa55367a403b89254af.json",
+					"name" : "robot_control_msgs_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Release-c6f2878a52b5d790c02c.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs",
+		"source" : "/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

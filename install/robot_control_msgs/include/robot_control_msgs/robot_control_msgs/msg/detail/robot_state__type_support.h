@@ -1,0 +1,1 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_generator_c/robot_control_msgs/msg/detail/robot_state__type_support.h

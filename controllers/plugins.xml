@@ -44,8 +44,8 @@
   <class type="controllers::CartesianImpedancePDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianImpedancePDController plugin.</description>
   </class>
-  <class type="controllers::CartesianDualLoopAdmittancePDController" base_class_type="controller_interface::ControllerInterface">
-    <description>This is a CartesianDualLoopAdmittancePDController plugin.</description>
+  <class type="controllers::CartesianImpedancePDPlusController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianImpedancePDPlusController plugin.</description>
   </class>
   
 </library>

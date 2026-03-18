@@ -1,0 +1,19 @@
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:[m[K In member function ‘[01m[Kint hardware_interface::RobotInterface::[01;32m[Kconfigure_urdf[m[K(const std::string&)[m[K’:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:50:37:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kstd::vector<double>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} and ‘[01m[Kint[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+   50 |                 if([01;35m[Kinit_pose.size() != dof_[m[K)
+      |                    [01;35m[K~~~~~~~~~~~~~~~~~^~~~~~~[m[K
+In file included from [01m[K/opt/ros/jazzy/include/pluginlib/pluginlib/class_loader_imp.hpp:57[m[K,
+                 from [01m[K/opt/ros/jazzy/include/pluginlib/pluginlib/class_loader.hpp:334[m[K,
+                 from [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/include/robot_hardware_interface/robot_interface.hpp:4[m[K,
+                 from [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:1[m[K:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:52:55:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<double>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wformat=-Wformat=]8;;[m[K]
+   52 |                     RCLCPP_ERROR(node_->get_logger(), [01;35m[K"init_pose size %d is not equal to dof %d"[m[K, [32m[Kinit_pose.size()[m[K, dof_);
+      |                                                       [01;35m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~[m[K
+      |                                                                                                                 [32m[K|[m[K
+      |                                                                                                                 [32m[Kstd::vector<double>::size_type {aka long unsigned int}[m[K
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface/src/robot_interface.cpp:52:72:[m[K [01;36m[Knote: [m[Kformat string is defined here
+   52 |                     RCLCPP_ERROR(node_->get_logger(), "init_pose size [01;36m[K%d[m[K is not equal to dof %d", init_pose.size(), dof_);
+      |                                                                       [01;36m[K~^[m[K
+      |                                                                        [01;36m[K|[m[K
+      |                                                                        [01;36m[Kint[m[K
+      |                                                                       [32m[K%ld[m[K

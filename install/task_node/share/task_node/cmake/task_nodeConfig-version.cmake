@@ -1,0 +1,1 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node/ament_cmake_core/task_nodeConfig-version.cmake

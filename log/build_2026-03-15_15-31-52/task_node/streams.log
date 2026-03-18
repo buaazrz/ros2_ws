@@ -1,0 +1,81 @@
+[0.025s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/task_node -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node
+[0.148s] -- The C compiler identification is GNU 13.3.0
+[0.262s] -- The CXX compiler identification is GNU 13.3.0
+[0.294s] -- Detecting C compiler ABI info
+[0.511s] -- Detecting C compiler ABI info - done
+[0.535s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.536s] -- Detecting C compile features
+[0.536s] -- Detecting C compile features - done
+[0.558s] -- Detecting CXX compiler ABI info
+[0.761s] -- Detecting CXX compiler ABI info - done
+[0.788s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.788s] -- Detecting CXX compile features
+[0.790s] -- Detecting CXX compile features - done
+[0.802s] -- Found ament_cmake: 2.5.3 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.162s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.357s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.451s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[1.626s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[1.627s] -- Found Threads: TRUE  
+[1.634s] -- Found rclcpp: 28.1.6 (/opt/ros/jazzy/share/rclcpp/cmake)
+[1.732s] -- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.765s] -- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.810s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.851s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.021s] -- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[2.029s] -- Found rmw_fastrtps_cpp: 8.4.1 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[2.238s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[2.302s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[2.367s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.611s] -- Found realtime_tools: 3.4.0 (/opt/ros/jazzy/share/realtime_tools/cmake)
+[2.769s] -- Found urdf: 2.10.0 (/opt/ros/jazzy/share/urdf/cmake)
+[2.865s] -- Found robot_math: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake)
+[2.879s] -- Found control_msgs: 5.3.0 (/opt/ros/jazzy/share/control_msgs/cmake)
+[3.248s] -- Found ament_lint_auto: 0.17.1 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+[3.627s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[3.628s] -- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node/include>
+[3.628s] -- Configured cppcheck exclude dirs and/or files: 
+[3.631s] -- Added test 'lint_cmake' to check CMake code style
+[3.636s] -- Added test 'uncrustify' to check C / C++ code style
+[3.636s] -- Configured uncrustify additional arguments: 
+[3.639s] -- Added test 'xmllint' to check XML markup files
+[3.645s] -- Configuring done (3.6s)
+[3.702s] -- Generating done (0.0s)
+[3.721s] -- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node
+[3.760s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/task_node -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node
+[3.761s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node -- -j16 -l16
+[3.901s] [ 33%] [32mBuilding CXX object CMakeFiles/task_node.dir/src/utils/DataComm.cpp.o[0m
+[3.902s] [ 33%] [32mBuilding CXX object CMakeFiles/task_node.dir/src/task_node.cpp.o[0m
+[3.907s] [ 66%] [32mBuilding CXX object CMakeFiles/franka_rcm.dir/src/utils/DataComm.cpp.o[0m
+[3.908s] [ 66%] [32mBuilding CXX object CMakeFiles/franka_rcm.dir/src/franka_rcm.cpp.o[0m
+[14.666s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node/src/franka_rcm.cpp:[m[K In lambda function:
+[14.666s] [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node/src/franka_rcm.cpp:62:38:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KRobotData::q[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+[14.666s]    62 |                 RobotData robotData{0[01;35m[K}[m[K;
+[14.667s]       |                                      [01;35m[K^[m[K
+[15.745s] [ 83%] [32m[1mLinking CXX executable task_node[0m
+[16.136s] [ 83%] Built target task_node
+[28.248s] [100%] [32m[1mLinking CXX executable franka_rcm[0m
+[28.781s] [100%] Built target franka_rcm
+[28.819s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node -- -j16 -l16
+[28.824s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node
+[28.853s] -- Install configuration: "Release"
+[28.854s] -- Execute custom install script
+[28.855s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/task_node/task_node
+[28.898s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/task_node/franka_rcm
+[28.927s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/config/fr3.json
+[28.956s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/ament_index/resource_index/package_run_dependencies/task_node
+[28.983s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/ament_index/resource_index/parent_prefix_path/task_node
+[29.011s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/environment/ament_prefix_path.sh
+[29.043s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/environment/ament_prefix_path.dsv
+[29.075s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/environment/path.sh
+[29.099s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/environment/path.dsv
+[29.120s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/local_setup.bash
+[29.143s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/local_setup.sh
+[29.166s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/local_setup.zsh
+[29.197s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/local_setup.dsv
+[29.216s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.dsv
+[29.243s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/ament_index/resource_index/packages/task_node
+[29.274s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/cmake/task_nodeConfig.cmake
+[29.297s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/cmake/task_nodeConfig-version.cmake
+[29.319s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.xml
+[29.351s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node

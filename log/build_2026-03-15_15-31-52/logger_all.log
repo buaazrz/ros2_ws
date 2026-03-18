@@ -1,0 +1,813 @@
+[0.404s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--cmake-args', '-DCMAKE_BUILD_TYPE=Release', '--symlink-install']
+[0.404s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=16, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=['-DCMAKE_BUILD_TYPE=Release'], cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x726c799e8560>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x726c799c79e0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x726c799c79e0>>, mixin_verb=('build',))
+[0.498s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.499s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.499s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.499s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.499s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.499s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.499s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/wjc/zrz_ros2_ws/src/ros2_ws'
+[0.499s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.499s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.499s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.500s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.556s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.556s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extensions ['ignore', 'ignore_ament_install']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extension 'ignore'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extension 'ignore_ament_install'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extensions ['colcon_pkg']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extension 'colcon_pkg'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extensions ['colcon_meta']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extension 'colcon_meta'
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extensions ['ros']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(applications) by extension 'ros'
+[0.562s] DEBUG:colcon.colcon_core.package_identification:Package 'applications' with type 'ros.ament_cmake' and name 'applications'
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extensions ['ignore', 'ignore_ament_install']
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extension 'ignore'
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extension 'ignore_ament_install'
+[0.562s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extensions ['colcon_pkg']
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extension 'colcon_pkg'
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extensions ['colcon_meta']
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extension 'colcon_meta'
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extensions ['ros']
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(control_node) by extension 'ros'
+[0.564s] DEBUG:colcon.colcon_core.package_identification:Package 'control_node' with type 'ros.ament_cmake' and name 'control_node'
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extensions ['ignore', 'ignore_ament_install']
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extension 'ignore'
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extension 'ignore_ament_install'
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extensions ['colcon_pkg']
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extension 'colcon_pkg'
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extensions ['colcon_meta']
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extension 'colcon_meta'
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extensions ['ros']
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(controllers) by extension 'ros'
+[0.566s] DEBUG:colcon.colcon_core.package_identification:Package 'controllers' with type 'ros.ament_cmake' and name 'controllers'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extensions ['ignore', 'ignore_ament_install']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extension 'ignore'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extension 'ignore_ament_install'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extensions ['colcon_pkg']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extension 'colcon_pkg'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extensions ['colcon_meta']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extension 'colcon_meta'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extensions ['ros']
+[0.567s] Level 1:colcon.colcon_core.package_identification:_identify(hardwares) by extension 'ros'
+[0.568s] DEBUG:colcon.colcon_core.package_identification:Package 'hardwares' with type 'ros.ament_cmake' and name 'hardwares'
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extensions ['ignore', 'ignore_ament_install']
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extension 'ignore'
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extension 'ignore_ament_install'
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extensions ['colcon_pkg']
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extension 'colcon_pkg'
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extensions ['colcon_meta']
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extension 'colcon_meta'
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extensions ['ros']
+[0.569s] Level 1:colcon.colcon_core.package_identification:_identify(pyhelper) by extension 'ros'
+[0.570s] DEBUG:colcon.colcon_core.package_identification:Package 'pyhelper' with type 'ros.ament_python' and name 'pyhelper'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extension 'ignore'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extension 'ignore_ament_install'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extensions ['colcon_pkg']
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extension 'colcon_pkg'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extensions ['colcon_meta']
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extension 'colcon_meta'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extensions ['ros']
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(robot_control_msgs) by extension 'ros'
+[0.572s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_control_msgs' with type 'ros.ament_cmake' and name 'robot_control_msgs'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extensions ['ignore', 'ignore_ament_install']
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extension 'ignore'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extension 'ignore_ament_install'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extensions ['colcon_pkg']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extension 'colcon_pkg'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extensions ['colcon_meta']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extension 'colcon_meta'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extensions ['ros']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(robot_controller_interface) by extension 'ros'
+[0.574s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_controller_interface' with type 'ros.ament_cmake' and name 'robot_controller_interface'
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extensions ['ignore', 'ignore_ament_install']
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extension 'ignore'
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extension 'ignore_ament_install'
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extensions ['colcon_pkg']
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extension 'colcon_pkg'
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extensions ['colcon_meta']
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extension 'colcon_meta'
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extensions ['ros']
+[0.574s] Level 1:colcon.colcon_core.package_identification:_identify(robot_gui) by extension 'ros'
+[0.576s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_gui' with type 'ros.ament_cmake' and name 'robot_gui'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extensions ['ignore', 'ignore_ament_install']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extension 'ignore'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extension 'ignore_ament_install'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extensions ['colcon_pkg']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extension 'colcon_pkg'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extensions ['colcon_meta']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extension 'colcon_meta'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extensions ['ros']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(robot_hardware_interface) by extension 'ros'
+[0.577s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_hardware_interface' with type 'ros.ament_cmake' and name 'robot_hardware_interface'
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extensions ['ignore', 'ignore_ament_install']
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extension 'ignore'
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extension 'ignore_ament_install'
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extensions ['colcon_pkg']
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extension 'colcon_pkg'
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extensions ['colcon_meta']
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extension 'colcon_meta'
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extensions ['ros']
+[0.578s] Level 1:colcon.colcon_core.package_identification:_identify(robot_math) by extension 'ros'
+[0.579s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_math' with type 'ros.ament_cmake' and name 'robot_math'
+[0.579s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extensions ['ignore', 'ignore_ament_install']
+[0.579s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extension 'ignore'
+[0.579s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extension 'ignore_ament_install'
+[0.579s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extensions ['colcon_pkg']
+[0.579s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extension 'colcon_pkg'
+[0.580s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extensions ['colcon_meta']
+[0.580s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extension 'colcon_meta'
+[0.580s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extensions ['ros']
+[0.580s] Level 1:colcon.colcon_core.package_identification:_identify(robot_monitor) by extension 'ros'
+[0.581s] DEBUG:colcon.colcon_core.package_identification:Package 'robot_monitor' with type 'ros.ament_cmake' and name 'robot_monitor'
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extensions ['ignore', 'ignore_ament_install']
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extension 'ignore'
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extension 'ignore_ament_install'
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extensions ['colcon_pkg']
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extension 'colcon_pkg'
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extensions ['colcon_meta']
+[0.581s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extension 'colcon_meta'
+[0.582s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extensions ['ros']
+[0.582s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_utility) by extension 'ros'
+[0.582s] DEBUG:colcon.colcon_core.package_identification:Package 'ros2_utility' with type 'ros.ament_cmake' and name 'ros2_utility'
+[0.582s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extensions ['ignore', 'ignore_ament_install']
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extension 'ignore'
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extension 'ignore_ament_install'
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extensions ['colcon_pkg']
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extension 'colcon_pkg'
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extensions ['colcon_meta']
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extension 'colcon_meta'
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extensions ['ros']
+[0.583s] Level 1:colcon.colcon_core.package_identification:_identify(task_node) by extension 'ros'
+[0.585s] DEBUG:colcon.colcon_core.package_identification:Package 'task_node' with type 'ros.ament_cmake' and name 'task_node'
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extensions ['ignore', 'ignore_ament_install']
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extension 'ignore'
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extension 'ignore_ament_install'
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extensions ['colcon_pkg']
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extension 'colcon_pkg'
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extensions ['colcon_meta']
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extension 'colcon_meta'
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extensions ['ros']
+[0.585s] Level 1:colcon.colcon_core.package_identification:_identify(ur_calibration) by extension 'ros'
+[0.587s] DEBUG:colcon.colcon_core.package_identification:Package 'ur_calibration' with type 'ros.ament_cmake' and name 'ur_calibration'
+[0.587s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.587s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.588s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.588s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.588s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.627s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.627s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.633s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 442 installed packages in /opt/ros/jazzy
+[0.635s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.744s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_target' from command line to 'None'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_clean_cache' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_clean_first' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'cmake_force_configure' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'ament_cmake_args' from command line to 'None'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'catkin_cmake_args' from command line to 'None'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'applications' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.745s] DEBUG:colcon.colcon_core.verb:Building package 'applications' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/applications', 'symlink_install': True, 'test_result_base': None}
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_target' from command line to 'None'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_clean_cache' from command line to 'False'
+[0.745s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_clean_first' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'cmake_force_configure' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'ament_cmake_args' from command line to 'None'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'catkin_cmake_args' from command line to 'None'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'pyhelper' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.746s] DEBUG:colcon.colcon_core.verb:Building package 'pyhelper' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/pyhelper', 'symlink_install': True, 'test_result_base': None}
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_target' from command line to 'None'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.746s] Level 5:colcon.colcon_core.verb:set package 'robot_control_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.746s] DEBUG:colcon.colcon_core.verb:Building package 'robot_control_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs', 'symlink_install': True, 'test_result_base': None}
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_target' from command line to 'None'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_clean_cache' from command line to 'False'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_clean_first' from command line to 'False'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'cmake_force_configure' from command line to 'False'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'ament_cmake_args' from command line to 'None'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'catkin_cmake_args' from command line to 'None'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'robot_math' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.747s] DEBUG:colcon.colcon_core.verb:Building package 'robot_math' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math', 'symlink_install': True, 'test_result_base': None}
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_target' from command line to 'None'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.747s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_clean_cache' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_clean_first' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'cmake_force_configure' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'ament_cmake_args' from command line to 'None'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'catkin_cmake_args' from command line to 'None'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'ur_calibration' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.748s] DEBUG:colcon.colcon_core.verb:Building package 'ur_calibration' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/ur_calibration', 'symlink_install': True, 'test_result_base': None}
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_target' from command line to 'None'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_clean_cache' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_clean_first' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'cmake_force_configure' from command line to 'False'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'ament_cmake_args' from command line to 'None'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'catkin_cmake_args' from command line to 'None'
+[0.748s] Level 5:colcon.colcon_core.verb:set package 'robot_gui' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.748s] DEBUG:colcon.colcon_core.verb:Building package 'robot_gui' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_gui', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui', 'symlink_install': True, 'test_result_base': None}
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_target' from command line to 'None'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_clean_cache' from command line to 'False'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_clean_first' from command line to 'False'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'cmake_force_configure' from command line to 'False'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'ament_cmake_args' from command line to 'None'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'catkin_cmake_args' from command line to 'None'
+[0.749s] Level 5:colcon.colcon_core.verb:set package 'robot_hardware_interface' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.749s] DEBUG:colcon.colcon_core.verb:Building package 'robot_hardware_interface' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface', 'symlink_install': True, 'test_result_base': None}
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_target' from command line to 'None'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_clean_cache' from command line to 'False'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_clean_first' from command line to 'False'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'cmake_force_configure' from command line to 'False'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'ament_cmake_args' from command line to 'None'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'catkin_cmake_args' from command line to 'None'
+[0.750s] Level 5:colcon.colcon_core.verb:set package 'robot_monitor' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.750s] DEBUG:colcon.colcon_core.verb:Building package 'robot_monitor' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor', 'symlink_install': True, 'test_result_base': None}
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_target' from command line to 'None'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_clean_cache' from command line to 'False'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_clean_first' from command line to 'False'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'cmake_force_configure' from command line to 'False'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'ament_cmake_args' from command line to 'None'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'catkin_cmake_args' from command line to 'None'
+[0.751s] Level 5:colcon.colcon_core.verb:set package 'ros2_utility' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.751s] DEBUG:colcon.colcon_core.verb:Building package 'ros2_utility' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility', 'symlink_install': True, 'test_result_base': None}
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_target' from command line to 'None'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_clean_cache' from command line to 'False'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_clean_first' from command line to 'False'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'cmake_force_configure' from command line to 'False'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'ament_cmake_args' from command line to 'None'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'catkin_cmake_args' from command line to 'None'
+[0.752s] Level 5:colcon.colcon_core.verb:set package 'task_node' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.752s] DEBUG:colcon.colcon_core.verb:Building package 'task_node' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node', 'symlink_install': True, 'test_result_base': None}
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_target' from command line to 'None'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_clean_cache' from command line to 'False'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_clean_first' from command line to 'False'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'cmake_force_configure' from command line to 'False'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'ament_cmake_args' from command line to 'None'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'catkin_cmake_args' from command line to 'None'
+[0.753s] Level 5:colcon.colcon_core.verb:set package 'hardwares' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.753s] DEBUG:colcon.colcon_core.verb:Building package 'hardwares' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/hardwares', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/hardwares', 'symlink_install': True, 'test_result_base': None}
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_target' from command line to 'None'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_clean_cache' from command line to 'False'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_clean_first' from command line to 'False'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'cmake_force_configure' from command line to 'False'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'ament_cmake_args' from command line to 'None'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'catkin_cmake_args' from command line to 'None'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'robot_controller_interface' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.754s] DEBUG:colcon.colcon_core.verb:Building package 'robot_controller_interface' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_controller_interface', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_controller_interface', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_controller_interface', 'symlink_install': True, 'test_result_base': None}
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_target' from command line to 'None'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.754s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_clean_cache' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_clean_first' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'cmake_force_configure' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'ament_cmake_args' from command line to 'None'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'catkin_cmake_args' from command line to 'None'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'control_node' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.755s] DEBUG:colcon.colcon_core.verb:Building package 'control_node' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/control_node', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/control_node', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/control_node', 'symlink_install': True, 'test_result_base': None}
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_args' from command line to '['-DCMAKE_BUILD_TYPE=Release']'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_target' from command line to 'None'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_clean_cache' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_clean_first' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'cmake_force_configure' from command line to 'False'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'ament_cmake_args' from command line to 'None'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'catkin_cmake_args' from command line to 'None'
+[0.755s] Level 5:colcon.colcon_core.verb:set package 'controllers' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.755s] DEBUG:colcon.colcon_core.verb:Building package 'controllers' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/controllers', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': ['-DCMAKE_BUILD_TYPE=Release'], 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/controllers', 'merge_install': False, 'path': '/home/wjc/zrz_ros2_ws/src/ros2_ws/controllers', 'symlink_install': True, 'test_result_base': None}
+[0.756s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.757s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.758s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math' with build type 'ament_cmake'
+[0.758s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math'
+[0.766s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.766s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.766s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.807s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs' with build type 'ament_cmake'
+[0.807s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs'
+[0.807s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.807s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.812s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/applications' with build type 'ament_cmake'
+[0.812s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/applications'
+[0.812s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.813s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.818s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/pyhelper' with build type 'ament_python'
+[0.819s] Level 1:colcon.colcon_core.shell:create_environment_hook('pyhelper', 'ament_prefix_path')
+[0.820s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/ament_prefix_path.ps1'
+[0.822s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/ament_prefix_path.dsv'
+[0.823s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/ament_prefix_path.sh'
+[0.824s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.824s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.829s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/ur_calibration' with build type 'ament_cmake'
+[0.829s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/ur_calibration'
+[0.829s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.829s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.843s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math
+[0.849s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs
+[0.854s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/applications -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications
+[1.440s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/pyhelper'
+[1.441s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.441s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.461s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/ur_calibration -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration
+[3.019s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/applications -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications
+[3.023s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications -- -j16 -l16
+[3.109s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications -- -j16 -l16
+[3.131s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications
+[3.189s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math
+[3.192s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math -- -j16 -l16
+[3.789s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/build --no-deps symlink_data
+[4.154s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(applications)
+[4.156s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/applications
+[4.167s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications' for CMake module files
+[4.170s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications' for CMake config files
+[4.171s] Level 1:colcon.colcon_core.shell:create_environment_hook('applications', 'cmake_prefix_path')
+[4.172s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.ps1'
+[4.173s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.dsv'
+[4.175s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.sh'
+[4.176s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/bin'
+[4.176s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/lib/pkgconfig/applications.pc'
+[4.177s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/lib/python3.12/site-packages'
+[4.177s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/bin'
+[4.178s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.ps1'
+[4.180s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.dsv'
+[4.181s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.sh'
+[4.183s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.bash'
+[4.186s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.zsh'
+[4.189s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/colcon-core/packages/applications)
+[4.191s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(applications)
+[4.192s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications' for CMake module files
+[4.194s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications' for CMake config files
+[4.195s] Level 1:colcon.colcon_core.shell:create_environment_hook('applications', 'cmake_prefix_path')
+[4.195s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.ps1'
+[4.196s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.dsv'
+[4.197s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/hook/cmake_prefix_path.sh'
+[4.199s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/bin'
+[4.199s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/lib/pkgconfig/applications.pc'
+[4.200s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/lib/python3.12/site-packages'
+[4.201s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/bin'
+[4.202s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.ps1'
+[4.203s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.dsv'
+[4.205s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.sh'
+[4.207s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.bash'
+[4.208s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/applications/package.zsh'
+[4.209s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/applications/share/colcon-core/packages/applications)
+[5.914s] Level 1:colcon.colcon_core.shell:create_environment_hook('pyhelper', 'pythonpath_develop')
+[5.915s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/share/pyhelper/hook/pythonpath_develop.ps1'
+[5.915s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/build --no-deps symlink_data
+[5.916s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/share/pyhelper/hook/pythonpath_develop.dsv'
+[5.917s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/pyhelper/share/pyhelper/hook/pythonpath_develop.sh'
+[5.918s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper' for CMake module files
+[5.918s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper' for CMake config files
+[5.919s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/lib'
+[5.919s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/bin'
+[5.919s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/lib/pkgconfig/pyhelper.pc'
+[5.920s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/lib/python3.12/site-packages'
+[5.920s] Level 1:colcon.colcon_core.shell:create_environment_hook('pyhelper', 'pythonpath')
+[5.920s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/pythonpath.ps1'
+[5.921s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/pythonpath.dsv'
+[5.921s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/hook/pythonpath.sh'
+[5.922s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/bin'
+[5.922s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(pyhelper)
+[5.922s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/package.ps1'
+[5.923s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/package.dsv'
+[5.923s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/package.sh'
+[5.924s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/package.bash'
+[5.924s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/pyhelper/package.zsh'
+[5.925s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/pyhelper/share/colcon-core/packages/pyhelper)
+[6.861s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/ur_calibration -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration
+[6.863s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration -- -j16 -l16
+[9.655s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs
+[9.659s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs -- -j16 -l16
+[27.356s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs -- -j16 -l16
+[27.359s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs
+[30.445s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_control_msgs)
+[30.446s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs' for CMake module files
+[30.446s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs
+[30.447s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs' for CMake config files
+[30.448s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'cmake_prefix_path')
+[30.449s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.ps1'
+[30.449s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.dsv'
+[30.450s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.sh'
+[30.452s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib'
+[30.452s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'ld_library_path_lib')
+[30.452s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.ps1'
+[30.453s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.dsv'
+[30.454s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.sh'
+[30.455s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/bin'
+[30.455s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/pkgconfig/robot_control_msgs.pc'
+[30.456s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages'
+[30.456s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'pythonpath')
+[30.457s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.ps1'
+[30.457s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.dsv'
+[30.458s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.sh'
+[30.459s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/bin'
+[30.459s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.ps1'
+[30.461s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.dsv'
+[30.461s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.sh'
+[30.463s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.bash'
+[30.463s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.zsh'
+[30.464s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/colcon-core/packages/robot_control_msgs)
+[30.465s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_control_msgs)
+[30.465s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs' for CMake module files
+[30.467s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs' for CMake config files
+[30.468s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'cmake_prefix_path')
+[30.469s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.ps1'
+[30.470s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.dsv'
+[30.470s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/cmake_prefix_path.sh'
+[30.472s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib'
+[30.472s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'ld_library_path_lib')
+[30.473s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.ps1'
+[30.473s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.dsv'
+[30.474s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/ld_library_path_lib.sh'
+[30.475s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/bin'
+[30.475s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/pkgconfig/robot_control_msgs.pc'
+[30.475s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages'
+[30.475s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_control_msgs', 'pythonpath')
+[30.476s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.ps1'
+[30.476s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.dsv'
+[30.477s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/hook/pythonpath.sh'
+[30.477s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/bin'
+[30.478s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.ps1'
+[30.478s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.dsv'
+[30.479s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.sh'
+[30.480s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.bash'
+[30.481s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.zsh'
+[30.481s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/colcon-core/packages/robot_control_msgs)
+[30.482s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor' with build type 'ament_cmake'
+[30.482s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor'
+[30.482s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[30.483s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[30.516s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor
+[34.595s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_monitor -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor
+[34.596s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor -- -j16 -l16
+[51.063s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration -- -j16 -l16
+[51.065s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration
+[51.536s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(ur_calibration)
+[51.536s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration' for CMake module files
+[51.538s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ur_calibration
+[51.539s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration' for CMake config files
+[51.540s] Level 1:colcon.colcon_core.shell:create_environment_hook('ur_calibration', 'cmake_prefix_path')
+[51.540s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.ps1'
+[51.541s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.dsv'
+[51.542s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.sh'
+[51.543s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib'
+[51.543s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/bin'
+[51.543s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib/pkgconfig/ur_calibration.pc'
+[51.544s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib/python3.12/site-packages'
+[51.544s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/bin'
+[51.545s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.ps1'
+[51.546s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.dsv'
+[51.547s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.sh'
+[51.547s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.bash'
+[51.548s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.zsh'
+[51.549s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/colcon-core/packages/ur_calibration)
+[51.551s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(ur_calibration)
+[51.552s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration' for CMake module files
+[51.553s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration' for CMake config files
+[51.554s] Level 1:colcon.colcon_core.shell:create_environment_hook('ur_calibration', 'cmake_prefix_path')
+[51.555s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.ps1'
+[51.557s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.dsv'
+[51.558s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/hook/cmake_prefix_path.sh'
+[51.560s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib'
+[51.560s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/bin'
+[51.560s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib/pkgconfig/ur_calibration.pc'
+[51.560s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/lib/python3.12/site-packages'
+[51.561s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/bin'
+[51.561s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.ps1'
+[51.562s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.dsv'
+[51.563s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.sh'
+[51.564s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.bash'
+[51.565s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/ur_calibration/package.zsh'
+[51.565s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ur_calibration/share/colcon-core/packages/ur_calibration)
+[62.051s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor -- -j16 -l16
+[62.053s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor
+[62.316s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_monitor)
+[62.316s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor' for CMake module files
+[62.317s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor
+[62.318s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor' for CMake config files
+[62.319s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_monitor', 'cmake_prefix_path')
+[62.320s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.ps1'
+[62.321s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.dsv'
+[62.322s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.sh'
+[62.323s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib'
+[62.323s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/bin'
+[62.323s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib/pkgconfig/robot_monitor.pc'
+[62.324s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib/python3.12/site-packages'
+[62.324s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/bin'
+[62.325s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.ps1'
+[62.327s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.dsv'
+[62.328s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.sh'
+[62.329s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.bash'
+[62.329s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.zsh'
+[62.330s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/colcon-core/packages/robot_monitor)
+[62.331s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_monitor)
+[62.331s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor' for CMake module files
+[62.332s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor' for CMake config files
+[62.333s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_monitor', 'cmake_prefix_path')
+[62.333s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.ps1'
+[62.334s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.dsv'
+[62.335s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/hook/cmake_prefix_path.sh'
+[62.337s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib'
+[62.337s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/bin'
+[62.337s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib/pkgconfig/robot_monitor.pc'
+[62.338s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/lib/python3.12/site-packages'
+[62.338s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/bin'
+[62.338s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.ps1'
+[62.339s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.dsv'
+[62.340s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.sh'
+[62.340s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.bash'
+[62.341s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/robot_monitor/package.zsh'
+[62.342s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_monitor/share/colcon-core/packages/robot_monitor)
+[109.229s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math -- -j16 -l16
+[109.230s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math
+[109.859s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_math)
+[109.860s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math' for CMake module files
+[109.860s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math
+[109.861s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math' for CMake config files
+[109.861s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_math', 'cmake_prefix_path')
+[109.861s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.ps1'
+[109.862s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.dsv'
+[109.862s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.sh'
+[109.863s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib'
+[109.863s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_math', 'ld_library_path_lib')
+[109.863s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.ps1'
+[109.864s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.dsv'
+[109.864s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.sh'
+[109.865s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/bin'
+[109.865s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib/pkgconfig/robot_math.pc'
+[109.865s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib/python3.12/site-packages'
+[109.865s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/bin'
+[109.866s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.ps1'
+[109.866s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.dsv'
+[109.867s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.sh'
+[109.867s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.bash'
+[109.868s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.zsh'
+[109.869s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/colcon-core/packages/robot_math)
+[109.870s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_math)
+[109.870s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math' for CMake module files
+[109.871s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math' for CMake config files
+[109.871s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_math', 'cmake_prefix_path')
+[109.872s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.ps1'
+[109.873s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.dsv'
+[109.873s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/cmake_prefix_path.sh'
+[109.874s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib'
+[109.874s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_math', 'ld_library_path_lib')
+[109.875s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.ps1'
+[109.875s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.dsv'
+[109.876s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/hook/ld_library_path_lib.sh'
+[109.876s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/bin'
+[109.876s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib/pkgconfig/robot_math.pc'
+[109.876s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib/python3.12/site-packages'
+[109.877s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/bin'
+[109.877s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.ps1'
+[109.877s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.dsv'
+[109.878s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.sh'
+[109.879s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.bash'
+[109.879s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/package.zsh'
+[109.879s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/colcon-core/packages/robot_math)
+[109.880s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface' with build type 'ament_cmake'
+[109.880s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface'
+[109.880s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[109.880s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[109.886s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility' with build type 'ament_cmake'
+[109.886s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility'
+[109.887s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[109.887s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[109.894s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui' with build type 'ament_cmake'
+[109.895s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui'
+[109.895s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[109.895s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[109.900s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node' with build type 'ament_cmake'
+[109.901s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node'
+[109.901s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[109.901s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[109.915s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface
+[109.917s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility
+[109.922s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_gui
+[109.926s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/task_node -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node
+[113.265s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_hardware_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface
+[113.267s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface -- -j16 -l16
+[113.661s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/task_node -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node
+[113.663s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node -- -j16 -l16
+[113.864s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_gui
+[113.867s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui -- -j16 -l16
+[114.369s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/ros2_utility -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility
+[114.374s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility -- -j16 -l16
+[137.196s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility -- -j16 -l16
+[137.199s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility
+[137.857s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(ros2_utility)
+[137.857s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility' for CMake module files
+[137.858s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/ros2_utility
+[137.862s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility' for CMake config files
+[137.862s] Level 1:colcon.colcon_core.shell:create_environment_hook('ros2_utility', 'cmake_prefix_path')
+[137.863s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.ps1'
+[137.865s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.dsv'
+[137.865s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.sh'
+[137.867s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib'
+[137.867s] Level 1:colcon.colcon_core.shell:create_environment_hook('ros2_utility', 'ld_library_path_lib')
+[137.868s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.ps1'
+[137.870s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.dsv'
+[137.871s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.sh'
+[137.872s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/bin'
+[137.872s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib/pkgconfig/ros2_utility.pc'
+[137.873s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib/python3.12/site-packages'
+[137.873s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/bin'
+[137.874s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.ps1'
+[137.875s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.dsv'
+[137.876s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.sh'
+[137.877s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.bash'
+[137.877s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.zsh'
+[137.878s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/colcon-core/packages/ros2_utility)
+[137.878s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(ros2_utility)
+[137.879s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility' for CMake module files
+[137.879s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility' for CMake config files
+[137.879s] Level 1:colcon.colcon_core.shell:create_environment_hook('ros2_utility', 'cmake_prefix_path')
+[137.880s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.ps1'
+[137.880s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.dsv'
+[137.881s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/cmake_prefix_path.sh'
+[137.881s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib'
+[137.882s] Level 1:colcon.colcon_core.shell:create_environment_hook('ros2_utility', 'ld_library_path_lib')
+[137.882s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.ps1'
+[137.882s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.dsv'
+[137.883s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/hook/ld_library_path_lib.sh'
+[137.883s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/bin'
+[137.883s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib/pkgconfig/ros2_utility.pc'
+[137.884s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/lib/python3.12/site-packages'
+[137.884s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/bin'
+[137.884s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.ps1'
+[137.886s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.dsv'
+[137.887s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.sh'
+[137.888s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.bash'
+[137.889s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/ros2_utility/package.zsh'
+[137.890s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/ros2_utility/share/colcon-core/packages/ros2_utility)
+[138.721s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node -- -j16 -l16
+[138.726s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node
+[139.251s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(task_node)
+[139.251s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node' for CMake module files
+[139.253s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node
+[139.254s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node' for CMake config files
+[139.254s] Level 1:colcon.colcon_core.shell:create_environment_hook('task_node', 'cmake_prefix_path')
+[139.255s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.ps1'
+[139.257s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.dsv'
+[139.258s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.sh'
+[139.259s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib'
+[139.259s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/bin'
+[139.259s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/pkgconfig/task_node.pc'
+[139.260s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/python3.12/site-packages'
+[139.260s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/bin'
+[139.260s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.ps1'
+[139.261s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.dsv'
+[139.261s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.sh'
+[139.262s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.bash'
+[139.262s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.zsh'
+[139.262s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/colcon-core/packages/task_node)
+[139.263s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(task_node)
+[139.264s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node' for CMake module files
+[139.264s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node' for CMake config files
+[139.265s] Level 1:colcon.colcon_core.shell:create_environment_hook('task_node', 'cmake_prefix_path')
+[139.265s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.ps1'
+[139.265s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.dsv'
+[139.266s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/hook/cmake_prefix_path.sh'
+[139.266s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib'
+[139.267s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/bin'
+[139.267s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/pkgconfig/task_node.pc'
+[139.267s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/lib/python3.12/site-packages'
+[139.267s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/bin'
+[139.267s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.ps1'
+[139.268s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.dsv'
+[139.270s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.sh'
+[139.271s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.bash'
+[139.272s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/task_node/package.zsh'
+[139.273s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/task_node/share/colcon-core/packages/task_node)
+[143.372s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface -- -j16 -l16
+[143.375s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface
+[143.905s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_hardware_interface)
+[143.906s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface' for CMake module files
+[143.906s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface' returned '0': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface
+[143.907s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface' for CMake config files
+[143.908s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_hardware_interface', 'cmake_prefix_path')
+[143.908s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.ps1'
+[143.909s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.dsv'
+[143.909s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.sh'
+[143.910s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib'
+[143.910s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_hardware_interface', 'ld_library_path_lib')
+[143.911s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.ps1'
+[143.911s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.dsv'
+[143.912s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.sh'
+[143.913s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/bin'
+[143.913s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/pkgconfig/robot_hardware_interface.pc'
+[143.913s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/python3.12/site-packages'
+[143.914s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/bin'
+[143.915s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.ps1'
+[143.916s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.dsv'
+[143.917s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.sh'
+[143.917s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.bash'
+[143.918s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.zsh'
+[143.918s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/colcon-core/packages/robot_hardware_interface)
+[143.920s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_hardware_interface)
+[143.920s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface' for CMake module files
+[143.921s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface' for CMake config files
+[143.921s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_hardware_interface', 'cmake_prefix_path')
+[143.921s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.ps1'
+[143.923s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.dsv'
+[143.924s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/cmake_prefix_path.sh'
+[143.925s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib'
+[143.925s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_hardware_interface', 'ld_library_path_lib')
+[143.926s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.ps1'
+[143.926s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.dsv'
+[143.927s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/hook/ld_library_path_lib.sh'
+[143.927s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/bin'
+[143.927s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/pkgconfig/robot_hardware_interface.pc'
+[143.928s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/python3.12/site-packages'
+[143.928s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/bin'
+[143.928s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.ps1'
+[143.929s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.dsv'
+[143.929s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.sh'
+[143.930s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.bash'
+[143.931s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/package.zsh'
+[143.931s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/colcon-core/packages/robot_hardware_interface)
+[143.931s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_controller_interface' with build type 'ament_cmake'
+[143.932s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_controller_interface'
+[143.932s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[143.932s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[143.938s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/hardwares' with build type 'ament_cmake'
+[143.939s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/wjc/zrz_ros2_ws/src/ros2_ws/hardwares'
+[143.940s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[143.941s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[143.957s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_controller_interface': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_controller_interface -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_controller_interface
+[143.963s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/hardwares': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/hardwares -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares
+[145.634s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/hardwares' returned '1': AMENT_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib:/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/hardwares -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares
+[145.662s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(hardwares)
+[145.663s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares' for CMake module files
+[145.663s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares' for CMake config files
+[145.664s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/bin'
+[145.664s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/lib/pkgconfig/hardwares.pc'
+[145.664s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/lib/python3.12/site-packages'
+[145.664s] Level 1:colcon.colcon_core.environment:checking '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/bin'
+[145.665s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/hardwares/package.ps1'
+[145.665s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/hardwares/package.dsv'
+[145.666s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/hardwares/package.sh'
+[145.666s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/hardwares/package.bash'
+[145.667s] INFO:colcon.colcon_core.shell:Creating package script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/hardwares/package.zsh'
+[145.667s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/wjc/zrz_ros2_ws/src/ros2_ws/install/hardwares/share/colcon-core/packages/hardwares)
+[153.876s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[153.876s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[153.876s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[153.876s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[153.891s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[153.891s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[153.891s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[154.057s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[154.058s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/local_setup.ps1'
+[154.059s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/_local_setup_util_ps1.py'
+[154.061s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/setup.ps1'
+[154.062s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/local_setup.sh'
+[154.063s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/_local_setup_util_sh.py'
+[154.064s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/setup.sh'
+[154.065s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/local_setup.bash'
+[154.066s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/setup.bash'
+[154.067s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/local_setup.zsh'
+[154.068s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/setup.zsh'

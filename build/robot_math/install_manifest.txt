@@ -1,0 +1,3 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/lib/librobot_math.so
+/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake/export_robot_mathExport.cmake
+/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake/export_robot_mathExport-release.cmake

@@ -215,6 +215,11 @@
          </item>
          <item>
           <property name="text">
+           <string>CartesianImpedancePDPlusController</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>AdmittanceController</string>
           </property>
          </item>

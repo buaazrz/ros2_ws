@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from robot_control_msgs/msg/VectorData.msg
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Header.idl"
+
+module robot_control_msgs {
+  module msg {
+    struct VectorData {
+      std_msgs::msg::Header header;
+
+      double timestamp;
+
+      sequence<double> data;
+
+      string name;
+    };
+  };
+};

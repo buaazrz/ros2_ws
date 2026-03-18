@@ -1,0 +1,57 @@
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found rclcpp: 28.1.6 (/opt/ros/jazzy/share/rclcpp/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 8.4.1 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+-- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found realtime_tools: 3.4.0 (/opt/ros/jazzy/share/realtime_tools/cmake)
+-- Found sensor_msgs: 5.3.5 (/opt/ros/jazzy/share/sensor_msgs/cmake)
+-- Found std_srvs: 5.3.5 (/opt/ros/jazzy/share/std_srvs/cmake)
+-- Found urdf: 2.10.0 (/opt/ros/jazzy/share/urdf/cmake)
+-- Found robot_math: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_math/share/robot_math/cmake)
+-- Found robot_control_msgs: 0.0.0 (/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake)
+-- Found Threads: TRUE  
+-- Performing Test HAVE_STDATOMIC
+-- Performing Test HAVE_STDATOMIC - Success
+-- Found WrapAtomic: TRUE  
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so   
+-- Found WrapOpenGL: TRUE  
+-- Found XKB: /usr/lib/x86_64-linux-gnu/libxkbcommon.so (found suitable version "1.6.0", minimum required is "0.5.0") 
+-- Found WrapVulkanHeaders: /usr/include  
+-- Configuring done (3.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_gui
+[  0%] Built target robot_gui_autogen_timestamp_deps
+[ 16%] [34m[1mAutomatic MOC and UIC for target robot_gui[0m
+[ 16%] Built target robot_gui_autogen
+[ 33%] [32mBuilding CXX object CMakeFiles/robot_gui.dir/robot_gui_autogen/mocs_compilation.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/robot_gui.dir/src/main.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/robot_gui.dir/src/RobotGUIMainWindow.cpp.o[0m
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui/src/RobotGUIMainWindow.cpp:[m[K In lambda function:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui/src/RobotGUIMainWindow.cpp:109:34:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<std::__cxx11::basic_string<char>, std::allocator<std::__cxx11::basic_string<char> > >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+  109 |                 for(int i = 0; [01;35m[Ki < joint_names_.size()[m[K; i++)
+      |                                [01;35m[K~~^~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui/src/RobotGUIMainWindow.cpp:[m[K In member function ‘[01m[Kvoid RobotGUIMainWindow::[01;32m[Ksend_forward_command[m[K()[m[K’:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_gui/src/RobotGUIMainWindow.cpp:171:27:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<std::__cxx11::basic_string<char>, std::allocator<std::__cxx11::basic_string<char> > >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+  171 |         for (int i = 0; [01;35m[Ki < joint_names_.size()[m[K; i++)
+      |                         [01;35m[K~~^~~~~~~~~~~~~~~~~~~~~[m[K
+[ 83%] [32m[1mLinking CXX executable robot_gui[0m
+[100%] Built target robot_gui

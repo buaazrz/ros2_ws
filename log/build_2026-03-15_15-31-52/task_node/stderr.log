@@ -1,0 +1,4 @@
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node/src/franka_rcm.cpp:[m[K In lambda function:
+[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/task_node/src/franka_rcm.cpp:62:38:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KRobotData::q[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+   62 |                 RobotData robotData{0[01;35m[K}[m[K;
+      |                                      [01;35m[K^[m[K

@@ -1,0 +1,293 @@
+[0.042s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs
+[0.650s] -- The C compiler identification is GNU 13.3.0
+[0.651s] -- The CXX compiler identification is GNU 13.3.0
+[0.651s] -- Detecting C compiler ABI info
+[0.781s] -- Detecting C compiler ABI info - done
+[0.803s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.803s] -- Detecting C compile features
+[0.804s] -- Detecting C compile features - done
+[0.828s] -- Detecting CXX compiler ABI info
+[1.159s] -- Detecting CXX compiler ABI info - done
+[1.190s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.191s] -- Detecting CXX compile features
+[1.192s] -- Detecting CXX compile features - done
+[1.207s] -- Found ament_cmake: 2.5.3 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.575s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.746s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.882s] -- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+[1.904s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.062s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.187s] -- Found rosidl_adapter: 4.6.5 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+[2.201s] -- Found action_msgs: 2.0.2 (/opt/ros/jazzy/share/action_msgs/cmake)
+[2.384s] -- Found std_msgs: 5.3.5 (/opt/ros/jazzy/share/std_msgs/cmake)
+[3.980s] -- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+[5.055s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[6.580s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[6.599s] -- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+[7.060s] -- Found PythonExtra: /usr/bin/python3  
+[8.473s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+[8.628s] -- Configuring done (8.6s)
+[8.772s] -- Generating done (0.1s)
+[8.805s] -- Build files have been written to: /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs
+[8.847s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/wjc/zrz_ros2_ws/src/ros2_ws/robot_control_msgs -DCMAKE_BUILD_TYPE=Release -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs
+[8.852s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs -- -j16 -l16
+[9.027s] [  1%] [34m[1mGenerating type hashes for ROS interfaces[0m
+[9.066s] [  1%] Built target ament_cmake_python_symlink_robot_control_msgs
+[9.805s] running egg_info
+[9.807s] creating robot_control_msgs.egg-info
+[9.822s] [  1%] Built target robot_control_msgs__rosidl_generator_type_description
+[9.855s] [  3%] [34m[1mGenerating C code for ROS interfaces[0m
+[9.896s] [  4%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[9.901s] writing robot_control_msgs.egg-info/PKG-INFO
+[9.903s] writing dependency_links to robot_control_msgs.egg-info/dependency_links.txt
+[9.903s] writing top-level names to robot_control_msgs.egg-info/top_level.txt
+[9.903s] writing manifest file 'robot_control_msgs.egg-info/SOURCES.txt'
+[10.169s] reading manifest file 'robot_control_msgs.egg-info/SOURCES.txt'
+[10.170s] writing manifest file 'robot_control_msgs.egg-info/SOURCES.txt'
+[10.271s] [  4%] Built target ament_cmake_python_build_robot_control_msgs_egg
+[11.357s] [  4%] Built target robot_control_msgs__cpp
+[11.669s] [  9%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/vector_data__description.c.o[0m
+[11.670s] [  9%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/robot_state__type_support.c.o[0m
+[11.670s] [  9%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/vector_data__functions.c.o[0m
+[11.674s] [ 10%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/robot_state__functions.c.o[0m
+[11.676s] [ 14%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/robot_state__description.c.o[0m
+[11.677s] [ 12%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/srv/detail/control_command__type_support.c.o[0m
+[11.683s] [ 15%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/action/detail/robot_motion__description.c.o[0m
+[11.685s] [ 17%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/action/detail/robot_motion__functions.c.o[0m
+[11.685s] [ 18%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/msg/detail/vector_data__type_support.c.o[0m
+[11.685s] [ 20%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/srv/detail/control_command__functions.c.o[0m
+[11.686s] [ 21%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/srv/detail/control_command__description.c.o[0m
+[11.687s] [ 23%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_c.dir/rosidl_generator_c/robot_control_msgs/action/detail/robot_motion__type_support.c.o[0m
+[13.286s] [ 25%] [32m[1mLinking C shared library librobot_control_msgs__rosidl_generator_c.so[0m
+[13.392s] [ 25%] Built target robot_control_msgs__rosidl_generator_c
+[13.428s] [ 26%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[13.428s] [ 28%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[13.430s] [ 29%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[13.433s] [ 31%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[13.439s] [ 32%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[13.440s] [ 34%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[14.939s] [ 37%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_control_msgs/srv/control_command__type_support.cpp.o[0m
+[14.940s] [ 37%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_control_msgs/msg/robot_state__type_support.cpp.o[0m
+[14.987s] [ 39%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_control_msgs/action/robot_motion__type_support.cpp.o[0m
+[14.993s] [ 40%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_control_msgs/msg/vector_data__type_support.cpp.o[0m
+[15.012s] [ 42%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_control_msgs/msg/vector_data__type_support.cpp.o[0m
+[15.013s] [ 45%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_control_msgs/srv/control_command__type_support.cpp.o[0m
+[15.024s] [ 45%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_control_msgs/msg/robot_state__type_support.cpp.o[0m
+[15.038s] [ 46%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_control_msgs/action/robot_motion__type_support.cpp.o[0m
+[15.454s] [ 48%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_control_msgs/msg/detail/robot_state__type_support.cpp.o[0m
+[15.457s] [ 50%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_control_msgs/action/detail/robot_motion__type_support.cpp.o[0m
+[15.458s] [ 51%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_control_msgs/msg/detail/robot_state__type_support.c.o[0m
+[15.468s] [ 53%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_control_msgs/srv/detail/control_command__type_support.c.o[0m
+[15.485s] [ 54%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_control_msgs/msg/detail/vector_data__type_support.cpp.o[0m
+[15.489s] [ 56%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_control_msgs/action/detail/robot_motion__type_support.c.o[0m
+[15.491s] [ 57%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_control_msgs/srv/detail/control_command__type_support.cpp.o[0m
+[15.502s] [ 59%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_control_msgs/msg/detail/vector_data__type_support.c.o[0m
+[15.588s] [ 60%] [32m[1mLinking CXX shared library librobot_control_msgs__rosidl_typesupport_c.so[0m
+[16.205s] [ 62%] [32m[1mLinking C shared library librobot_control_msgs__rosidl_typesupport_introspection_c.so[0m
+[16.231s] [ 62%] Built target robot_control_msgs__rosidl_typesupport_c
+[16.335s] [ 64%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_control_msgs/srv/detail/dds_fastrtps/control_command__type_support.cpp.o[0m
+[16.335s] [ 65%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_control_msgs/msg/detail/dds_fastrtps/robot_state__type_support.cpp.o[0m
+[16.338s] [ 67%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_control_msgs/action/detail/dds_fastrtps/robot_motion__type_support.cpp.o[0m
+[16.341s] [ 68%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_control_msgs/msg/detail/dds_fastrtps/vector_data__type_support.cpp.o[0m
+[16.449s] [ 70%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_control_msgs/srv/detail/control_command__type_support_c.cpp.o[0m
+[16.473s] [ 71%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_control_msgs/msg/detail/robot_state__type_support_c.cpp.o[0m
+[16.485s] [ 73%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_control_msgs/msg/detail/vector_data__type_support_c.cpp.o[0m
+[16.528s] [ 73%] Built target robot_control_msgs__rosidl_typesupport_introspection_c
+[16.701s] [ 75%] [32mBuilding CXX object CMakeFiles/robot_control_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_control_msgs/action/detail/robot_motion__type_support_c.cpp.o[0m
+[20.039s] [ 76%] [32m[1mLinking CXX shared library librobot_control_msgs__rosidl_typesupport_cpp.so[0m
+[20.281s] [ 76%] Built target robot_control_msgs__rosidl_typesupport_cpp
+[20.930s] [ 78%] [32m[1mLinking CXX shared library librobot_control_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[21.231s] [ 78%] Built target robot_control_msgs__rosidl_typesupport_fastrtps_c
+[21.265s] [ 79%] [32m[1mLinking CXX shared library librobot_control_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[21.553s] [ 79%] Built target robot_control_msgs__rosidl_typesupport_introspection_cpp
+[22.064s] [ 81%] [32m[1mLinking CXX shared library librobot_control_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[22.283s] [ 81%] Built target robot_control_msgs__rosidl_typesupport_fastrtps_cpp
+[22.337s] [ 81%] Built target robot_control_msgs
+[22.397s] [ 82%] [34m[1mGenerating Python code for ROS interfaces[0m
+[24.251s] [ 82%] Built target robot_control_msgs__py
+[24.291s] [ 87%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_py.dir/rosidl_generator_py/robot_control_msgs/msg/_vector_data_s.c.o[0m
+[24.291s] [ 87%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_py.dir/rosidl_generator_py/robot_control_msgs/srv/_control_command_s.c.o[0m
+[24.292s] [ 87%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_py.dir/rosidl_generator_py/robot_control_msgs/msg/_robot_state_s.c.o[0m
+[24.302s] [ 89%] [32mBuilding C object CMakeFiles/robot_control_msgs__rosidl_generator_py.dir/rosidl_generator_py/robot_control_msgs/action/_robot_motion_s.c.o[0m
+[25.408s] [ 90%] [32m[1mLinking C shared library librobot_control_msgs__rosidl_generator_py.so[0m
+[25.518s] [ 90%] Built target robot_control_msgs__rosidl_generator_py
+[25.571s] [ 93%] [32mBuilding C object CMakeFiles/robot_control_msgs_s__rosidl_typesupport_c.dir/rosidl_generator_py/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[25.572s] [ 93%] [32mBuilding C object CMakeFiles/robot_control_msgs_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[25.572s] [ 95%] [32mBuilding C object CMakeFiles/robot_control_msgs_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[26.179s] [ 96%] [32m[1mLinking C shared module rosidl_generator_py/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_fastrtps_c.so[0m
+[26.258s] [ 96%] Built target robot_control_msgs_s__rosidl_typesupport_fastrtps_c
+[26.440s] [ 98%] [32m[1mLinking C shared module rosidl_generator_py/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_c.so[0m
+[26.440s] [100%] [32m[1mLinking C shared module rosidl_generator_py/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_introspection_c.so[0m
+[26.516s] [100%] Built target robot_control_msgs_s__rosidl_typesupport_c
+[26.516s] [100%] Built target robot_control_msgs_s__rosidl_typesupport_introspection_c
+[26.549s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs -- -j16 -l16
+[26.552s] Invoking command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs
+[26.570s] -- Install configuration: "Release"
+[26.571s] -- Execute custom install script
+[26.572s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/ament_index/resource_index/rosidl_interfaces/robot_control_msgs
+[26.601s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/RobotState.json
+[26.622s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/VectorData.json
+[26.641s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/srv/ControlCommand.json
+[26.668s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/action/RobotMotion.json
+[26.689s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__functions.h
+[26.708s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__struct.h
+[26.735s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__type_support.h
+[26.757s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/robot_motion.h
+[26.784s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__functions.h
+[26.809s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__struct.h
+[26.833s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__type_support.h
+[26.860s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__functions.h
+[26.888s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__struct.h
+[26.909s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__type_support.h
+[26.930s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/robot_state.h
+[26.955s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/rosidl_generator_c__visibility_control.h
+[26.975s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/vector_data.h
+[26.999s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/control_command.h
+[27.020s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__functions.h
+[27.040s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__struct.h
+[27.058s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__type_support.h
+[27.077s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/library_path.sh
+[27.104s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/library_path.dsv
+[27.124s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__rosidl_typesupport_fastrtps_c.h
+[27.142s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__rosidl_typesupport_fastrtps_c.h
+[27.171s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__rosidl_typesupport_fastrtps_c.h
+[27.191s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[27.214s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__rosidl_typesupport_fastrtps_c.h
+[27.239s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__rosidl_typesupport_introspection_c.h
+[27.259s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__rosidl_typesupport_introspection_c.h
+[27.279s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__rosidl_typesupport_introspection_c.h
+[27.307s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[27.325s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__rosidl_typesupport_introspection_c.h
+[27.352s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__builder.hpp
+[27.369s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__struct.hpp
+[27.399s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__traits.hpp
+[27.421s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__type_support.hpp
+[27.450s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/robot_motion.hpp
+[27.474s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__builder.hpp
+[27.495s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__struct.hpp
+[27.522s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__traits.hpp
+[27.543s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__type_support.hpp
+[27.572s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__builder.hpp
+[27.598s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__struct.hpp
+[27.626s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__traits.hpp
+[27.651s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__type_support.hpp
+[27.676s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/robot_state.hpp
+[27.701s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+[27.719s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/vector_data.hpp
+[27.741s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/control_command.hpp
+[27.765s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__builder.hpp
+[27.784s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__struct.hpp
+[27.813s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__traits.hpp
+[27.838s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__type_support.hpp
+[27.859s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__rosidl_typesupport_fastrtps_cpp.hpp
+[27.886s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__rosidl_typesupport_fastrtps_cpp.hpp
+[27.908s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__rosidl_typesupport_fastrtps_cpp.hpp
+[27.927s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[27.952s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__rosidl_typesupport_fastrtps_cpp.hpp
+[27.975s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/action/detail/robot_motion__rosidl_typesupport_introspection_cpp.hpp
+[27.997s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/robot_state__rosidl_typesupport_introspection_cpp.hpp
+[28.015s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/msg/detail/vector_data__rosidl_typesupport_introspection_cpp.hpp
+[28.041s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/include/robot_control_msgs/robot_control_msgs/srv/detail/control_command__rosidl_typesupport_introspection_cpp.hpp
+[28.059s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/pythonpath.sh
+[28.081s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/pythonpath.dsv
+[28.107s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs-0.0.0-py3.12.egg-info/PKG-INFO
+[28.129s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs-0.0.0-py3.12.egg-info/SOURCES.txt
+[28.151s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs-0.0.0-py3.12.egg-info/dependency_links.txt
+[28.174s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs-0.0.0-py3.12.egg-info/top_level.txt
+[28.198s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/__init__.py
+[28.219s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_c.c
+[28.238s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+[28.269s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/_robot_control_msgs_s.ep.rosidl_typesupport_introspection_c.c
+[28.290s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action/__init__.py
+[28.311s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action/_robot_motion.py
+[28.337s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action/_robot_motion_s.c
+[28.355s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/__init__.py
+[28.373s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_robot_state.py
+[28.395s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_robot_state_s.c
+[28.419s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_vector_data.py
+[28.438s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_vector_data_s.c
+[28.457s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_c.so
+[28.486s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_fastrtps_c.so
+[28.509s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_introspection_c.so
+[28.535s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv/__init__.py
+[28.564s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv/_control_command.py
+[28.589s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv/_control_command_s.c
+[28.610s] -- Up-to-date symlink: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_fastrtps_c.so
+[28.611s] -- Up-to-date symlink: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_introspection_c.so
+[28.612s] -- Up-to-date symlink: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/robot_control_msgs_s__rosidl_typesupport_c.so
+[28.612s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/RobotState.idl
+[28.634s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/VectorData.idl
+[28.652s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/srv/ControlCommand.idl
+[28.683s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/action/RobotMotion.idl
+[28.707s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/RobotState.msg
+[28.731s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/msg/VectorData.msg
+[28.753s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/srv/ControlCommand.srv
+[28.775s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/action/RobotMotion.action
+[28.805s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/ament_index/resource_index/package_run_dependencies/robot_control_msgs
+[28.830s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/ament_index/resource_index/parent_prefix_path/robot_control_msgs
+[28.856s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/ament_prefix_path.sh
+[28.883s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/ament_prefix_path.dsv
+[28.915s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/path.sh
+[28.953s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/environment/path.dsv
+[29.012s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/local_setup.bash
+[29.051s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/local_setup.sh
+[29.078s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/local_setup.zsh
+[29.122s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/local_setup.dsv
+[29.157s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.dsv
+[29.184s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/ament_index/resource_index/packages/robot_control_msgs
+[29.218s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/rosidl_cmake-extras.cmake
+[29.241s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[29.267s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[29.286s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[29.315s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[29.339s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[29.361s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[29.387s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgsConfig.cmake
+[29.407s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgsConfig-version.cmake
+[29.431s] -- Symlinking: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/package.xml
+[29.457s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_generator_c.so
+[29.458s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_generator_c.so" to ""
+[29.458s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_fastrtps_c.so
+[29.459s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+[29.459s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_introspection_c.so
+[29.461s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_introspection_c.so" to ""
+[29.461s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_c.so
+[29.462s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_c.so" to ""
+[29.462s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_fastrtps_cpp.so
+[29.463s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+[29.464s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_introspection_cpp.so
+[29.465s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+[29.465s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_cpp.so
+[29.466s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_typesupport_cpp.so" to ""
+[29.591s] Listing '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs'...
+[29.591s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/__init__.py'...
+[29.591s] Listing '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action'...
+[29.591s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action/__init__.py'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/action/_robot_motion.py'...
+[29.592s] Listing '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/__init__.py'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_robot_state.py'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/msg/_vector_data.py'...
+[29.592s] Listing '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv/__init__.py'...
+[29.592s] Compiling '/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/python3.12/site-packages/robot_control_msgs/srv/_control_command.py'...
+[29.622s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_generator_py.so
+[29.623s] -- Set non-toolchain portion of runtime path of "/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/lib/librobot_control_msgs__rosidl_generator_py.so" to ""
+[29.623s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_generator_cExport.cmake
+[29.623s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_generator_cExport-release.cmake
+[29.624s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+[29.624s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_typesupport_fastrtps_cExport-release.cmake
+[29.624s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_introspection_cExport.cmake
+[29.625s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_introspection_cExport-release.cmake
+[29.626s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_cExport.cmake
+[29.626s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_cExport-release.cmake
+[29.628s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_generator_cppExport.cmake
+[29.629s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+[29.629s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_typesupport_fastrtps_cppExport-release.cmake
+[29.630s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[29.631s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_introspection_cppExport-release.cmake
+[29.631s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_cppExport.cmake
+[29.632s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/robot_control_msgs__rosidl_typesupport_cppExport-release.cmake
+[29.633s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_generator_pyExport.cmake
+[29.633s] -- Installing: /home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_control_msgs/share/robot_control_msgs/cmake/export_robot_control_msgs__rosidl_generator_pyExport-release.cmake
+[29.639s] Invoked command in '/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs

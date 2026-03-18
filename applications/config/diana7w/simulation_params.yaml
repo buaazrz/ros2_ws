@@ -2,8 +2,8 @@ control_node:
   ros__parameters:
     update_rate: 500
     lock_memory: true
-    simulation: false
-    sim_real_time: false
+    simulation: true
+    sim_real_time: true
     publish_joint_state: true
     robot: hardwares::SimulationRobot
     parameters: "parameters.yaml"
@@ -16,6 +16,7 @@ control_node:
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
       - controllers::PDMotionController
+      - controllers::CartesianImpedancePDPlusController
       - controllers::CartesianImpedancePDController
     default_controller: ""
 

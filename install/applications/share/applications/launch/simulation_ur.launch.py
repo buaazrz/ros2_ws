@@ -1,0 +1,1 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/applications/launch/simulation_ur.launch.py

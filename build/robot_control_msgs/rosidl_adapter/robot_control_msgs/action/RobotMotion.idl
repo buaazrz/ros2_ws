@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/action.idl.em
+// with input from robot_control_msgs/action/RobotMotion.action
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Float64MultiArray.idl"
+
+module robot_control_msgs {
+  module action {
+    struct RobotMotion_Goal {
+      std_msgs::msg::Float64MultiArray target_position;
+    };
+    struct RobotMotion_Result {
+      boolean success;
+    };
+    struct RobotMotion_Feedback {
+      std_msgs::msg::Float64MultiArray current_position;
+    };
+  };
+};

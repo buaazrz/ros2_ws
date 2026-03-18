@@ -1,0 +1,1 @@
+/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_monitor/ament_cmake_core/robot_monitorConfig-version.cmake

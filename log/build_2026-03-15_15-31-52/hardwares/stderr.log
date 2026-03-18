@@ -1,0 +1,17 @@
+[31mCMake Error at CMakeLists.txt:13 (find_package):
+  By not providing "Finddiana_api.cmake" in CMAKE_MODULE_PATH this project
+  has asked CMake to find a package configuration file provided by
+  "diana_api", but CMake did not find one.
+
+  Could not find a package configuration file provided by "diana_api" with
+  any of the following names:
+
+    diana_apiConfig.cmake
+    diana_api-config.cmake
+
+  Add the installation prefix of "diana_api" to CMAKE_PREFIX_PATH or set
+  "diana_api_DIR" to a directory containing one of the above files.  If
+  "diana_api" provides a separate development package or SDK, be sure it has
+  been installed.
+
+[0m
