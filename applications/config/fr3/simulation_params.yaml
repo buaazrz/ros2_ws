@@ -32,7 +32,7 @@ control_node:
     update_rate: 500
     lock_memory: true
     simulation: true
-    sim_real_time: false
+    sim_real_time: true
     publish_joint_state: true
     robot: hardwares::SimulationRobot
     parameters: "parameters.yaml"
@@ -44,6 +44,9 @@ control_node:
       - controllers::RealtimeTestController
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
+      - controllers::CartesianImpedancePDController
+
+
     default_controller: ""
 
 SimulationRobot:
@@ -59,8 +62,14 @@ SimulationRobot:
       - torque
     init_joint_pose: [.0, .0, .0, .0, .0, .0, .0] #[.0, -0.962, 1.730, -3.842, -1.843, 0.0]#  
     command_interface: [mode, pose]
-    command_length: [1, 7] # mode = 0: cartesian, 1: joint position 2: joint velocity 3: joint torque
+    command_length: [1, 6] # mode = 0: cartesian, 1: joint position 2: joint velocity 3: joint torque
     command_type: [int, double]
+    command_interface: [mode, pose]
+    command_length: [2, 6]
+    command_type: [int, double]
+    state_interface: [T, c, g, external_torque, success, m]
+    state_length: [16, 7, 7, 7, 1, 49]
+    state_type: [double, double, double, double, double, double]
     # sensors: [ft_sensor]
     # ft_sensor: hardwares::FTDummySensor
 
@@ -79,4 +88,6 @@ ForwardController:
 JointMotionController:
   ros__parameters:
     cmd_name: "position"
+
+
 

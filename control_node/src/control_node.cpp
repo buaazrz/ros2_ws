@@ -102,9 +102,17 @@ int main(int argc, char **argv)
                 {
                     cm->prepare_loop();
                     if (cm->is_simulation())
-                        cm->start_simulation(10000);
+                    {
+                        cm->start_simulation(10);
+                        // RCLCPP_INFO(cm->get_logger(), "is_simulation");
+                    }
+                        
+
                     else
+                    {
                         cm->control_loop();
+                        // RCLCPP_INFO(cm->get_logger(), "isnot_simulation");
+                    }
                     cm->end_loop();
                 }
             }

@@ -3,7 +3,7 @@
 #include "realtime_tools/realtime_box.hpp"
 #include "robot_math/MovingFilter.h"
 #include "robot_math/robot_math.hpp"
-// #include "ros2_utility/data_comm.hpp"
+#include "ros2_utility/data_comm.hpp"
 #include "ros2_utility/data_logger.hpp"
 #include "ros2_utility/file_utils.hpp"
 #include <iostream>
@@ -17,8 +17,8 @@ namespace controllers
         CartesianImpedancePDController() {}
         ~CartesianImpedancePDController()
         {
-            if (data_logger_)
-                data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
+            // if (data_logger_)
+                // data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -62,16 +62,16 @@ namespace controllers
         {
             // DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
                 // 1. 打印state_->get<double>()的所有key（排查position/velocity/acceleration/pose等）
-            RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
-            for (const auto& [key, val] : state_->get<double>()) {
-                RCLCPP_INFO(node_->get_logger(), "Key: %s, size: %lu", key.c_str(), val.size());
-            }
+            // RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
+            // for (const auto& [key, val] : state_->get<double>()) {
+            //     RCLCPP_INFO(node_->get_logger(), "Key: %s, size: %lu", key.c_str(), val.size());
+            // }
 
-            // 3. 打印command_->get<double>()的key（排查mode/pose/velocity等）
-            RCLCPP_INFO(node_->get_logger(), "=== Command double keys ===");
-            for (const auto& [key, val] : command_->get<double>()) {
-                RCLCPP_INFO(node_->get_logger(), "Key: %s", key.c_str());
-            }
+            // // 3. 打印command_->get<double>()的key（排查mode/pose/velocity等）
+            // RCLCPP_INFO(node_->get_logger(), "=== Command double keys ===");
+            // for (const auto& [key, val] : command_->get<double>()) {
+            //     RCLCPP_INFO(node_->get_logger(), "Key: %s", key.c_str());
+            // }
             time_ = 0;
             const std::vector<double> &q_vec = state_->get<double>("position");
             qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval();
@@ -95,7 +95,7 @@ namespace controllers
 
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
-            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");
+            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");   
 
             // 1. 打印 Rd_ (3x3 矩阵)
             std::ostringstream oss_Rd;
@@ -205,16 +205,19 @@ namespace controllers
             dq_ = dq;
             tau_cmd_ = tau_cmd;
 
-            std::ostringstream oss_c;
-            oss_c << c.transpose();
-            RCLCPP_INFO(node_->get_logger(), "[实时] c = [ %s ]", oss_c.str().c_str());
+            // std::ostringstream oss_c;
+            // oss_c << c.transpose();
+            // RCLCPP_INFO(node_->get_logger(), "[实时] c = [ %s ]", oss_c.str().c_str());
 
-            // 打印计算得到的 C_*dq 向量
+            // // 打印计算得到的 C_*dq 向量
             Eigen::VectorXd C_dq = C_ * dq;
             std::ostringstream oss_Cdq;
+            std::ostringstream oss_dq;
             oss_Cdq << C_dq.transpose();
+            oss_dq << dq.transpose();
             RCLCPP_INFO(node_->get_logger(), "[实时] C_*dq = [ %s ]", oss_Cdq.str().c_str());
-            RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
+            RCLCPP_INFO(node_->get_logger(), "[实时] dq = [ %s ]", oss_dq.str().c_str());
+            // RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
 
             // log2Channel(robot_data_, 0, xe_.head(3).data(), 3);
             // log2Channel(robot_data_, 1, xe_.tail(3).data(), 3);
@@ -223,7 +226,7 @@ namespace controllers
             // robot_data_.t = time_;
             // DataComm::getInstance()->sendRobotStatus(robot_data_);
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-            data_logger_->record();
+            // data_logger_->record();
         }
 
     protected:

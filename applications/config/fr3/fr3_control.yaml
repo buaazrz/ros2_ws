@@ -9,6 +9,7 @@ control_node:
     controllers: 
       - controllers::TorqueController
       - controllers::RCMController
+      
 
 FC3Robot:
   ros__parameters:
