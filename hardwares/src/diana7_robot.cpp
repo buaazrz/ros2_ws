@@ -109,12 +109,39 @@ namespace hardwares
             auto& pose = state_.get<double>("pose");
             auto& torque = state_.get<double>("torque");
 
+
             auto dt = period.seconds();
+            // 
 
             getJointPos(q.data(), robot_ip_.c_str());
             getJointAngularVel(dq.data(), robot_ip_.c_str());
             getTcpPos(pose.data(), robot_ip_.c_str());
             getJointTorque(torque.data(), robot_ip_.c_str());
+
+            
+
+            // std::cerr<<pose.data()<<std::endl;
+
+            // if (pose.size() >= 6) {
+            //     RCLCPP_INFO(node_->get_logger(), 
+            //                 "Current Pose: [x: %.8f, y: %.8f, z: %.8f, rx: %.8f, ry: %.8f, rz: %.8f]",
+            //                 pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+            // } else {
+            //     RCLCPP_WARN(node_->get_logger(), "Pose vector size is less than 6, cannot print full pose.");
+            // }
+            // -------------------------------- 修改后代码 --------------------------------
+            // RCLCPP_INFO(node_->get_logger(), "Current Pose size: %zu", pose.size());
+
+            // // 打印所有元素，不管有多少
+            // std::stringstream ss;
+            // ss << "Pose data: [";
+            // for (size_t i = 0; i < pose.size(); ++i) {
+            //     ss << pose[i];
+            //     if (i != pose.size() - 1) ss << ", ";
+            // }
+            // ss << "]";
+            // RCLCPP_INFO(node_->get_logger(), "%s", ss.str().c_str());
+            // // --------------------------------------------------------------------------
             
             if (dt > 0) 
             {
@@ -184,6 +211,8 @@ namespace hardwares
                 std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);
 
                 releaseBrake(robot_ip_.c_str());
+                enableTorqueReceiver(true, robot_ip_.c_str());
+
                 rclcpp::sleep_for(std::chrono::seconds(2));
 
                 return CallbackReturn::SUCCESS;
@@ -217,3 +246,16 @@ namespace hardwares
 
 #include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(hardwares::DIANARobot, hardware_interface::RobotInterface)
+
+// double posert[6] = {0.0};
+            // const char* strIpAddress = "192.168.10.75";
+            // int ret = getTcpPos(posert, strIpAddress);
+            // if(ret < 0)
+            // {
+            // printf("getTcpPos failed! Return value = %d\n", ret);
+            // }
+            // else
+            // {
+            // printf("getTcpPos: %f, %f, %f, %f, %f, %f\n", posert[0], 
+            // posert[1],posert[2],posert[3],posert[4],posert[5]);
+            // }
