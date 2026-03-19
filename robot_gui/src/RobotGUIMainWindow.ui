@@ -157,6 +157,19 @@
            <string>AdmittanceController</string>
           </attribute>
          </widget>
+          <widget class="QWidget" name="CartesianImpedancePDPlusController">
+          <attribute name="title">
+           <string>CartesianImpedancePDPlusController</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_4"/>
+         </widget>
+         <!-- 新增标签页2：阻抗PD控制器（代码中使用的widget(7)） -->
+         <widget class="QWidget" name="CartesianImpedancePDController">
+          <attribute name="title">
+           <string>CartesianImpedancePDController</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_5"/>
+         </widget>
          <widget class="QWidget" name="tab_4">
           <attribute name="title">
            <string>ForceDragController</string>

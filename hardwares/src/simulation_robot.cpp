@@ -49,62 +49,62 @@ namespace hardwares
                 for (int i = 0; i < dof_; i++)
                     state["position"][i] += cmd["velocity"][i] * period.seconds();
             }
-            else if (mode == 3) // torque 控制
-            {
-                // 1. 获取引用，避免多次查找
-                auto &cmd_torque = cmd["torque"];
-                auto &pos = state["position"];
-                auto &vel = state["velocity"];
+            // else if (mode == 3) // torque 控制
+            // {
+            //     // 1. 获取引用，避免多次查找
+            //     auto &cmd_torque = cmd["torque"];
+            //     auto &pos = state["position"];
+            //     auto &vel = state["velocity"];
 
-                // 2. 构造状态向量 x: [q, dq]
-                std::vector<double> x;
-                x.reserve(dof_ * 2);
-                x.insert(x.end(), pos.begin(), pos.end());
-                x.insert(x.end(), vel.begin(), vel.end());
+            //     // 2. 构造状态向量 x: [q, dq]
+            //     std::vector<double> x;
+            //     x.reserve(dof_ * 2);
+            //     x.insert(x.end(), pos.begin(), pos.end());
+            //     x.insert(x.end(), vel.begin(), vel.end());
 
-                // 3. 初始化 dx (size 将在 robot_dynamics 内部被 resize 为 2*n)
-                std::vector<double> dx; 
+            //     // 3. 初始化 dx (size 将在 robot_dynamics 内部被 resize 为 2*n)
+            //     std::vector<double> dx; 
 
-                // 获取连杆数量，通常是 dof_ + 1 (base + links)
-                // 如果不确定，可以填一个足够大的数（如 10），但最标准的是从 robot_ 对象获取
-                int num_segments = dof_ + 1; 
+            //     // 获取连杆数量，通常是 dof_ + 1 (base + links)
+            //     // 如果不确定，可以填一个足够大的数（如 10），但最标准的是从 robot_ 对象获取
+            //     int num_segments = dof_ + 1; 
 
-                // 4. 调用动力学解算
-                robot_dynamics(
-                    x, 
-                    dx, 
-                    t.seconds(), 
-                    // 修正点 1：返回 6 行，num_segments 列的零矩阵
-                    [num_segments](double) { 
-                        return Eigen::MatrixXd::Zero(6, num_segments); 
-                    }, 
-                    // 修正点 2：直接返回命令中的扭矩
-                    [&](double, const std::vector<double>&, const Eigen::MatrixXd&) { 
-                        return cmd_torque; 
-                    }
-                );
+            //     // 4. 调用动力学解算
+            //     robot_dynamics(
+            //         x, 
+            //         dx, 
+            //         t.seconds(), 
+            //         // 修正点 1：返回 6 行，num_segments 列的零矩阵
+            //         [num_segments](double) { 
+            //             return Eigen::MatrixXd::Zero(6, num_segments); 
+            //         }, 
+            //         // 修正点 2：直接返回命令中的扭矩
+            //         [&](double, const std::vector<double>&, const Eigen::MatrixXd&) { 
+            //             return cmd_torque; 
+            //         }
+            //     );
 
-                // 5. 积分更新状态
-                double dt = period.seconds();
-                if (dt > 0 && dx.size() >= (size_t)(2 * dof_)) 
-                {
-                    for (int i = 0; i < dof_; i++)
-                    {
-                        // 根据 robot_dynamics 的实现：
-                        // dx[i] 是速度 dq
-                        // dx[dof_ + i] 是计算出的加速度 ddq
-                        double acc = dx[dof_ + i];
-                        vel[i] += acc * dt;        // v = v + a*dt
-                        pos[i] += vel[i] * dt;     // p = p + v*dt
-                    }
-                }
+            //     // 5. 积分更新状态
+            //     double dt = period.seconds();
+            //     if (dt > 0 && dx.size() >= (size_t)(2 * dof_)) 
+            //     {
+            //         for (int i = 0; i < dof_; i++)
+            //         {
+            //             // 根据 robot_dynamics 的实现：
+            //             // dx[i] 是速度 dq
+            //             // dx[dof_ + i] 是计算出的加速度 ddq
+            //             double acc = dx[dof_ + i];
+            //             vel[i] += acc * dt;        // v = v + a*dt
+            //             pos[i] += vel[i] * dt;     // p = p + v*dt
+            //         }
+            //     }
 
-                // 6. 赋值当前扭矩状态（用于监控）
-                state["torque"] = cmd_torque;
+            //     // 6. 赋值当前扭矩状态（用于监控）
+            //     state["torque"] = cmd_torque;
 
-                // 修正点 3：严禁在此处直接打印日志。
-                // 如果非要打印，请使用之前定义的 
-            }
+            //     // 修正点 3：严禁在此处直接打印日志。
+            //     // 如果非要打印，请使用之前定义的 
+            // }
         }
         CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override
         {

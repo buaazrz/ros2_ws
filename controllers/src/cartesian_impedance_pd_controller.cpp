@@ -84,6 +84,7 @@ namespace controllers
 
             const std::vector<double> &T_vec = state_->get<double>("T");
             Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data(), 4, 4).eval();
+            
             // Rd_ = T.block(0, 0, 3, 3);
             // pd_ = T.block(0, 3, 3, 1);
             Eigen::Matrix4d Tb_tmp; 
@@ -212,10 +213,10 @@ namespace controllers
             // Eigen::VectorXd C_dq = C_ * dq;
             // std::ostringstream oss_Cdq;
             // std::ostringstream oss_dq;
-            // oss_Cdq << tau_cmd_.transpose();
-            // oss_dq << g_.transpose();
-            // RCLCPP_INFO(node_->get_logger(), "[实时] cmd = [ %s ]", oss_Cdq.str().c_str());
-            // RCLCPP_INFO(node_->get_logger(), "[实时] g = [ %s ]", oss_dq.str().c_str());
+            // oss_Cdq << tau_task_.transpose();
+            // oss_dq << tau_cmd_.transpose();
+            // RCLCPP_INFO(node_->get_logger(), "[实时]tau_task_ = [ %s ]", oss_Cdq.str().c_str());
+            // RCLCPP_INFO(node_->get_logger(), "[实时] tau_cmd_ = [ %s ]", oss_dq.str().c_str());
             // RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
 
             log2Channel(robot_data_, 0, xe_.head(3).data(), 3);

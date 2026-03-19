@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <deque>
+#include <QDebug>
 #include <thread>
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
@@ -17,6 +18,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "ros2_utility/data_comm.hpp"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -30,10 +32,12 @@ public:
     ~RobotGUIMainWindow();
     void send_forward_command();
 signals:
-    void joint_state_changed(const sensor_msgs::msg::JointState::SharedPtr msg);  
+    void joint_state_changed(const sensor_msgs::msg::JointState::SharedPtr msg);
+    void impedance_data_updated(const RobotData& data);  
 protected:
     void receive_data();
-    void update_joint_state(const sensor_msgs::msg::JointState::SharedPtr msg);  
+    void update_joint_state(const sensor_msgs::msg::JointState::SharedPtr msg); 
+     void update_impedance_ui(const RobotData& data); 
 private:
     Ui::MainWindow *ui;
     std::shared_ptr<std::thread> thread_;
@@ -50,13 +54,20 @@ private:
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr client_;
     rclcpp::Client<robot_control_msgs::srv::ControlCommand>::SharedPtr cmd_client_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr command_publisher_;
+
+    // 阻抗控制器UI控件（保留！）
+    std::vector<QLineEdit *> impedance_rot_err_;
+    std::vector<QLineEdit *> impedance_pos_err_;
+    std::vector<QLineEdit *> impedance_task_tau_;
+    std::vector<QLineEdit *> impedance_null_tau_;
     int controller_mode_;
     volatile bool keep_running_;
-    union 
-    {
-        int type;
-        char data_[8192];
-    } buffer_;
+    // union 
+    // {
+    //     int type;
+    //     char data_[8192];
+    // } buffer_;
+    RobotData buffer_;
     
 };
 #endif // MAINWINDOW_H

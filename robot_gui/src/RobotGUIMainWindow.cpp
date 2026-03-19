@@ -7,6 +7,7 @@
 #include <QDoubleSpinBox>
 #include "urdf/model.h"
 #include "rclcpp/time.hpp"
+#include "ros2_utility/data_comm.hpp"
 using namespace std::chrono_literals;
 
 RobotGUIMainWindow::RobotGUIMainWindow(QWidget *parent)
@@ -75,9 +76,68 @@ RobotGUIMainWindow::RobotGUIMainWindow(QWidget *parent)
     ui->formLayout->addRow("rz", item);
     pose_display_.push_back(item);
 
+    // ===================== 【最终修正】初始化笛卡尔阻抗控制器UI =====================
+    // 获取CartesianImpedancePDController标签页（索引7，和UI文件完全对应）
+    QWidget* impedance_tab = ui->tabWidget_2->widget(7);
+    if (!impedance_tab) {
+        qDebug() << "❌ 找不到阻抗控制器标签页！请检查UI文件标签顺序！";
+        return;
+    }
+
+    // 【关键】获取标签页自带的垂直布局，不直接清空原有布局
+    QVBoxLayout* vbox = qobject_cast<QVBoxLayout*>(impedance_tab->layout());
+    if (!vbox) {
+        vbox = new QVBoxLayout(impedance_tab);
+        impedance_tab->setLayout(vbox);
+    }
+
+    // 创建表单布局（用来放所有控件）
+    QFormLayout* impedance_layout = new QFormLayout();
+    impedance_layout->setSpacing(4);
+    impedance_layout->setContentsMargins(4, 4, 4, 4);
+
+    // 旋转误差 (rx, ry, rz)
+    for(int i=0;i<3;i++){
+        QLineEdit* edit = new QLineEdit;
+        edit->setReadOnly(true);
+        // 【关键】加样式，确保深色主题下可见
+        edit->setStyleSheet("QLineEdit { background-color: #2d2d2d; color: #ffffff; border: 1px solid #555; }");
+        impedance_layout->addRow(QString("旋转误差 r%1").arg(i), edit);
+        impedance_rot_err_.push_back(edit);
+    }
+    // 位置误差 (x, y, z)
+    for(int i=0;i<3;i++){
+        QLineEdit* edit = new QLineEdit;
+        edit->setReadOnly(true);
+        edit->setStyleSheet("QLineEdit { background-color: #2d2d2d; color: #ffffff; border: 1px solid #555; }");
+        impedance_layout->addRow(QString("位置误差 p%1").arg(i), edit);
+        impedance_pos_err_.push_back(edit);
+    }
+    // 任务空间力矩 (7关节)
+    for(int i=0;i<7;i++){
+        QLineEdit* edit = new QLineEdit;
+        edit->setReadOnly(true);
+        edit->setStyleSheet("QLineEdit { background-color: #2d2d2d; color: #ffffff; border: 1px solid #555; }");
+        impedance_layout->addRow(QString("任务力矩 J%1").arg(i+1), edit);
+        impedance_task_tau_.push_back(edit);
+    }
+    // 零空间力矩 (7关节)
+    for(int i=0;i<7;i++){
+        QLineEdit* edit = new QLineEdit;
+        edit->setReadOnly(true);
+        edit->setStyleSheet("QLineEdit { background-color: #2d2d2d; color: #ffffff; border: 1px solid #555; }");
+        impedance_layout->addRow(QString("零空间力矩 J%1").arg(i+1), edit);
+        impedance_null_tau_.push_back(edit);
+    }
+
+    // 把表单布局塞进标签页的垂直布局里
+    vbox->addLayout(impedance_layout);
+    qDebug() << "✅ 阻抗控制器UI初始化完成！";
+
     connect(ui->comboBox, &QComboBox::currentIndexChanged, [this](int index)
             { ui->tabWidget_2->setCurrentIndex(index); });
     connect(this, &RobotGUIMainWindow::joint_state_changed, this, &RobotGUIMainWindow::update_joint_state);
+    connect(this, &RobotGUIMainWindow::impedance_data_updated, this, &RobotGUIMainWindow::update_impedance_ui);
     connect(ui->pushButton, &QPushButton::clicked, [this]
             {
 
@@ -206,19 +266,26 @@ void RobotGUIMainWindow::receive_data()
     {
         auto t_start = std::chrono::high_resolution_clock::now();
 
-        int resv_num = recvfrom(socket_handle, &buffer_, sizeof(buffer_), 0, nullptr, nullptr);
-        if (resv_num > 0)
+        int recv_num = recvfrom(socket_handle, &buffer_, sizeof(RobotData), 0, nullptr, nullptr);
+
+        if (recv_num == sizeof(RobotData))
         {
-            switch (buffer_.type)
-            {
-            case 0:
-
-                break;
-
-            default:
-                break;
-            }
+            // 发送信号，传递完整数据
+            emit impedance_data_updated(buffer_);
         }
+        // int resv_num = recvfrom(socket_handle, &buffer_, sizeof(buffer_), 0, nullptr, nullptr);
+        // if (resv_num > 0)
+        // {
+        //     switch (buffer_.type)
+        //     {
+        //     case 0:
+
+        //         break;
+
+        //     default:
+        //         break;
+        //     }
+        // }
         auto t_stop = std::chrono::high_resolution_clock::now();
         auto t_duration = std::chrono::duration<double>(t_stop - t_start);
         if (t_duration.count() < dt)
@@ -244,4 +311,18 @@ void RobotGUIMainWindow::update_joint_state(const sensor_msgs::msg::JointState::
     pose_display_[3]->setText(QString("%1").arg(pose[3], 5, 'f', 4));
     pose_display_[4]->setText(QString("%1").arg(pose[4], 5, 'f', 4));
     pose_display_[5]->setText(QString("%1").arg(pose[5], 5, 'f', 4));
+}
+
+void RobotGUIMainWindow::update_impedance_ui(const RobotData& data)
+{
+    // 通道0：旋转误差（前3个数据）
+    for(int i=0;i<3;i++) impedance_rot_err_[i]->setText(QString::number(data.q[0][i], 'f', 4));
+    // 通道1：位置误差（前3个数据）
+    for(int i=0;i<3;i++) impedance_pos_err_[i]->setText(QString::number(data.q[1][i], 'f', 4));
+    // 通道2：任务力矩（7个关节）
+    for(int i=0;i<7;i++) impedance_task_tau_[i]->setText(QString::number(data.q[2][i], 'f', 3));
+    // 通道3：零空间力矩（7个关节）
+    for(int i=0;i<7;i++) impedance_null_tau_[i]->setText(QString::number(data.q[3][i], 'f', 3));
+
+    statusBar()->showMessage(QString("阻抗控制器 | 运行时间: %1s").arg(data.t, 0, 'f', 2));
 }

@@ -5,6 +5,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+
+
 # find dependencies
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   "rclcpp"
@@ -17,6 +19,12 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   "std_srvs"
   "robot_math"
   "robot_control_msgs"
+  "ros2_utility"
+  "rclcpp_lifecycle"
+  "tf2_ros"
+  "ament_index_cpp"
+  "geometry_msgs"
+  "visualization_msgs"
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
