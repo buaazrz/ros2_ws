@@ -1,6 +1,0 @@
-setup.py
-robot_control_msgs/__init__.py
-robot_control_msgs.egg-info/PKG-INFO
-robot_control_msgs.egg-info/SOURCES.txt
-robot_control_msgs.egg-info/dependency_links.txt
-robot_control_msgs.egg-info/top_level.txt

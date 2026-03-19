@@ -60,7 +60,7 @@ namespace controllers
 
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
         {
-            // DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
+            DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
                 // 1. 打印state_->get<double>()的所有key（排查position/velocity/acceleration/pose等）
             // RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
             // for (const auto& [key, val] : state_->get<double>()) {
@@ -86,28 +86,26 @@ namespace controllers
             Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data(), 4, 4).eval();
             // Rd_ = T.block(0, 0, 3, 3);
             // pd_ = T.block(0, 3, 3, 1);
-            Eigen::MatrixXd M_tmp, C_tmp, Jb_tmp, dJb_tmp, dM_tmp;
-            Eigen::Matrix4d Tb_tmp, dTb_tmp;
-            Eigen::VectorXd g_tmp;
-            std::vector<double> dq_zero(dof_, 0.0); // 初始速度视为0
+            Eigen::Matrix4d Tb_tmp; 
+            // 直接调用库中的正运动学函数
+            forward_kinematics(robot_, q_vec, Tb_tmp);
 
-            m_c_g_matrix(robot_, q_vec, dq_zero, M_tmp, C_tmp, g_tmp, Jb_tmp, dJb_tmp, dM_tmp, dTb_tmp, Tb_tmp);
-
+            // 获取当前位姿作为初始期望位姿
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
-            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");   
+            // // RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");   
 
-            // 1. 打印 Rd_ (3x3 矩阵)
-            std::ostringstream oss_Rd;
-            // 前面加一个换行符 \n，这样 3x3 矩阵的格式对齐会非常漂亮，不会和前缀挤在一起
-            oss_Rd << "\n" << Rd_; 
-            RCLCPP_INFO(node_->get_logger(), "Rd_ = %s", oss_Rd.str().c_str());
+            // // 1. 打印 Rd_ (3x3 矩阵)
+            // std::ostringstream oss_Rd;
+            // // 前面加一个换行符 \n，这样 3x3 矩阵的格式对齐会非常漂亮，不会和前缀挤在一起
+            // oss_Rd << "\n" << Rd_; 
+            // RCLCPP_INFO(node_->get_logger(), "Rd_ = %s", oss_Rd.str().c_str());
 
-            // 2. 打印 pd_ (3x1 向量)
-            std::ostringstream oss_pd;
-            // 用 transpose() 变成 1x3 行向量，紧凑打印
-            oss_pd << pd_.transpose(); 
-            RCLCPP_INFO(node_->get_logger(), "pd_ = [ %s ]", oss_pd.str().c_str());
+            // // 2. 打印 pd_ (3x1 向量)
+            // std::ostringstream oss_pd;
+            // // 用 transpose() 变成 1x3 行向量，紧凑打印
+            // oss_pd << pd_.transpose(); 
+            // RCLCPP_INFO(node_->get_logger(), "pd_ = [ %s ]", oss_pd.str().c_str());
 
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -151,6 +149,7 @@ namespace controllers
         void update(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
             time_ += period.seconds();
+            
 
             auto start_time = std::chrono::high_resolution_clock::now();
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
@@ -199,7 +198,7 @@ namespace controllers
             tau_task_ = M_ * J_sharp(Jh_, M_) * ddxc_;
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
-            tau_cmd = tau_task_ + tau_null_ /*+ C_*dq */;
+            tau_cmd = tau_task_ + tau_null_ + C_*dq + g_;
 
             q_ = q;
             dq_ = dq;
@@ -210,23 +209,23 @@ namespace controllers
             // RCLCPP_INFO(node_->get_logger(), "[实时] c = [ %s ]", oss_c.str().c_str());
 
             // // 打印计算得到的 C_*dq 向量
-            Eigen::VectorXd C_dq = C_ * dq;
-            std::ostringstream oss_Cdq;
-            std::ostringstream oss_dq;
-            oss_Cdq << tau_cmd_.transpose();
-            oss_dq << g_.transpose();
-            RCLCPP_INFO(node_->get_logger(), "[实时] cmd = [ %s ]", oss_Cdq.str().c_str());
+            // Eigen::VectorXd C_dq = C_ * dq;
+            // std::ostringstream oss_Cdq;
+            // std::ostringstream oss_dq;
+            // oss_Cdq << tau_cmd_.transpose();
+            // oss_dq << g_.transpose();
+            // RCLCPP_INFO(node_->get_logger(), "[实时] cmd = [ %s ]", oss_Cdq.str().c_str());
             // RCLCPP_INFO(node_->get_logger(), "[实时] g = [ %s ]", oss_dq.str().c_str());
             // RCLCPP_INFO(node_->get_logger(), "---------------------------------------------");
 
-            // log2Channel(robot_data_, 0, xe_.head(3).data(), 3);
-            // log2Channel(robot_data_, 1, xe_.tail(3).data(), 3);
-            // log2Channel(robot_data_, 2, tau_task_.data(), dof_);
-            // log2Channel(robot_data_, 3, tau_null_.data(), dof_);
-            // robot_data_.t = time_;
-            // DataComm::getInstance()->sendRobotStatus(robot_data_);
+            log2Channel(robot_data_, 0, xe_.head(3).data(), 3);
+            log2Channel(robot_data_, 1, xe_.tail(3).data(), 3);
+            log2Channel(robot_data_, 2, tau_task_.data(), dof_);
+            log2Channel(robot_data_, 3, tau_null_.data(), dof_);
+            robot_data_.t = time_;
+            DataComm::getInstance()->sendRobotStatus(robot_data_);
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-            // data_logger_->record();
+            data_logger_->record();
         }
 
     protected:
@@ -247,7 +246,7 @@ namespace controllers
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
         std::unique_ptr<DataLogger> data_logger_;
         double time_;
-        // RobotData robot_data_;
+        RobotData robot_data_;
     };
 } // namespace controllers
 

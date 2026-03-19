@@ -1,8 +1,0 @@
-[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math/src/robot_math.cpp:[m[K In function ‘[01m[Kvoid robot_math::[01;32m[Krcm_Jacobian[m[K(const Robot*, const std::vector<double>&, const std::vector<double>&, const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::Matrix4d&, const Eigen::Matrix4d&, Eigen::MatrixXd&, Eigen::MatrixXd&, Eigen::Vector3d&)[m[K’:
-[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math/src/robot_math.cpp:11:70:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kq[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
-   11 |     void rcm_Jacobian(const Robot *robot, [01;35m[Kconst std::vector<double> &q[m[K, const std::vector<double> &dq_array,
-      |                                           [01;35m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~^[m[K
-In file included from [01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math/test/main.cpp:8[m[K:
-[01m[K/home/wjc/zrz_ros2_ws/src/ros2_ws/robot_math/include/robot_math/CartesianTrajectory.hpp:8:11:[m[K [01;35m[Kwarning: [m[K‘[01m[Krobot_math::CartesianTrajectory[m[K’ has a field ‘[01m[K{anonymous}::tk::spline robot_math::CartesianTrajectory::spl_ [3][m[K’ whose type uses the anonymous namespace [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsubobject-linkage-Wsubobject-linkage]8;;[m[K]
-    8 |     class [01;35m[KCartesianTrajectory[m[K
-      |           [01;35m[K^~~~~~~~~~~~~~~~~~~[m[K

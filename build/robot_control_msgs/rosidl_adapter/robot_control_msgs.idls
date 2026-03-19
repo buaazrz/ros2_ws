@@ -1,4 +1,0 @@
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_adapter/robot_control_msgs:msg/RobotState.idl
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_adapter/robot_control_msgs:msg/VectorData.idl
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_adapter/robot_control_msgs:srv/ControlCommand.idl
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_adapter/robot_control_msgs:action/RobotMotion.idl

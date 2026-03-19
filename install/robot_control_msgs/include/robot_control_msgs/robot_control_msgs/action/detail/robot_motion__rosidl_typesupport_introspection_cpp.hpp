@@ -1,1 +1,0 @@
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_control_msgs/rosidl_typesupport_introspection_cpp/robot_control_msgs/action/detail/robot_motion__rosidl_typesupport_introspection_cpp.hpp

@@ -1,3 +1,0 @@
-/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/lib/librobot_hardware_interface.so
-/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/export_robot_hardware_interfaceExport.cmake
-/home/wjc/zrz_ros2_ws/src/ros2_ws/install/robot_hardware_interface/share/robot_hardware_interface/cmake/export_robot_hardware_interfaceExport-release.cmake

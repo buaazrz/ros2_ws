@@ -10,13 +10,11 @@ control_node:
     controllers: 
       - controllers::JointMotionController
       - controllers::CartesianMotionController
-      - controllers::CartesianImpedancePDController
       - controllers::CartesianTrajectoryController
       - controllers::ForwardController
       - controllers::RealtimeTestController
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
-      # - controllers::JointMotionPDController
     default_controller: ""
 
 SimulationRobot:
@@ -46,9 +44,5 @@ SimulationRobot:
 
 
 ForwardController:
-  ros__parameters:
-    cmd_name: "position"
-
-JointMotionController:
   ros__parameters:
     cmd_name: "position"

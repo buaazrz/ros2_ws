@@ -1,1 +1,0 @@
-/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_hardware_interface/ament_cmake_environment_hooks/local_setup.zsh

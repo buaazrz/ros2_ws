@@ -1,1 +1,0 @@
-/home/wjc/zrz_ros2_ws/src/ros2_ws/applications/launch/simulation_diana7w.launch.py

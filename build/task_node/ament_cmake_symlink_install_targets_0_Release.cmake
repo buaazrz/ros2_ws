@@ -1,1 +1,0 @@
-ament_cmake_symlink_install_targets("TARGET_FILES" "/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node/task_node" "/home/wjc/zrz_ros2_ws/src/ros2_ws/build/task_node/franka_rcm" "TARGETS" "task_node" "franka_rcm" "DESTINATION" "lib/task_node")

@@ -17,8 +17,8 @@ namespace controllers
         CartesianImpedancePDPlusController() {}
         ~CartesianImpedancePDPlusController()
         {
-            if (data_logger_)
-                data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pdplus_controller/", "cartesian_impedance_pdplus_controller");
+            // if (data_logger_)
+                // data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pdplus_controller/", "cartesian_impedance_pdplus_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -64,13 +64,39 @@ namespace controllers
             time_ = 0;
             const std::vector<double> &q_vec = state_->get<double>("position");
             qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval();
+            RCLCPP_INFO(node_->get_logger(), "=== qd_ (Eigen格式化) ===");
+            std::ostringstream oss;
+            oss << qd_.transpose(); // 转置为行向量，打印更美观
+            RCLCPP_INFO(node_->get_logger(), "qd_ = %s", oss.str().c_str());
             dqd_ = Eigen::VectorXd::Zero(dof_);
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
             const std::vector<double> &T_vec = state_->get<double>("T");
             Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data(), 4, 4).eval();
-            Rd_ = T.block(0, 0, 3, 3);
-            pd_ = T.block(0, 3, 3, 1);
+            Eigen::Matrix4d Tb_tmp; 
+            // 直接调用库中的正运动学函数
+            forward_kinematics(robot_, q_vec, Tb_tmp);
+
+            // 获取当前位姿作为初始期望位姿
+            Rd_ = Tb_tmp.block(0, 0, 3, 3);
+            pd_ = Tb_tmp.block(0, 3, 3, 1);
+
+            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");   
+
+            // // 1. 打印 Rd_ (3x3 矩阵)
+            std::ostringstream oss_Rd;
+            // 前面加一个换行符 \n，这样 3x3 矩阵的格式对齐会非常漂亮，不会和前缀挤在一起
+            oss_Rd << "\n" << Rd_; 
+            RCLCPP_INFO(node_->get_logger(), "Rd_ = %s", oss_Rd.str().c_str());
+
+            // 2. 打印 pd_ (3x1 向量)
+            std::ostringstream oss_pd;
+            // 用 transpose() 变成 1x3 行向量，紧凑打印
+            oss_pd << pd_.transpose(); 
+            RCLCPP_INFO(node_->get_logger(), "pd_ = [ %s ]", oss_pd.str().c_str());
+
+            // Rd_ = T.block(0, 0, 3, 3);
+            // pd_ = T.block(0, 3, 3, 1);
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
             ddxd_ = Eigen::Vector6d::Zero();
@@ -134,12 +160,14 @@ namespace controllers
                                { Kn_vec_ = value; });
             Bn_in_box_.try_get([=](auto const &value)
                                { Bn_vec_ = value; });
-            Kx_ = Eigen::Map<Eigen::VectorXd>(Kx_vec_.data(), dof_);
-            Bx_ = Eigen::Map<Eigen::VectorXd>(Bx_vec_.data(), dof_);
+            Kx_ = Eigen::Map<Eigen::VectorXd>(Kx_vec_.data(), 6);
+            Bx_ = Eigen::Map<Eigen::VectorXd>(Bx_vec_.data(), 6);
             Kn_ = Eigen::Map<Eigen::VectorXd>(Kn_vec_.data(), dof_);
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
+            command_->get<int>("mode")[0] = 3;
+
 
             R_ = Tb_.block(0, 0, 3, 3);
             p_ = Tb_.block(0, 3, 3, 1);

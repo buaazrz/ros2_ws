@@ -1,2 +1,0 @@
-[console_scripts]
-data_plotter = pyhelper.data_plotter:main

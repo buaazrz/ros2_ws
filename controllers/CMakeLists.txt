@@ -69,7 +69,6 @@ add_executable(debug_all test/debug_all.cpp)
 add_executable(test_joint_controller test/test_joint_controller.cpp)
 add_executable(test_cartesian_controller test/test_cartesian_controller.cpp)
 add_executable(test_trajectory_controller test/test_trajectory_controller.cpp)
-add_executable(test_pd_controller test/test_pd_controller.cpp)
 add_executable(movel utility/movel.cpp)
 add_executable(movej utility/movej.cpp)
 # target_include_directories(test_controller PUBLIC
@@ -98,11 +97,6 @@ ament_target_dependencies(
 )
 
 ament_target_dependencies(
-  test_pd_controller
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-
-ament_target_dependencies(
   test_cartesian_controller
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -117,7 +111,7 @@ ament_target_dependencies(
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
-install(TARGETS test_controller debug_all test_joint_controller test_trajectory_controller movej movel test_cartesian_controller test_pd_controller
+install(TARGETS test_controller debug_all test_joint_controller test_trajectory_controller movej movel test_cartesian_controller
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

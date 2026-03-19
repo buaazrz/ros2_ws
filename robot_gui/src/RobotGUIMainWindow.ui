@@ -210,7 +210,7 @@
          </item>
          <item>
           <property name="text">
-           <string>CartesianImpedancePDController</string>
+           <string>AdmittanceController</string>
           </property>
          </item>
          <item>
@@ -220,7 +220,7 @@
          </item>
          <item>
           <property name="text">
-           <string>AdmittanceController</string>
+           <string>CartesianImpedancePDController</string>
           </property>
          </item>
          <item>

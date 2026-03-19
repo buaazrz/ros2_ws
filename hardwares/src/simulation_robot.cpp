@@ -15,27 +15,13 @@ namespace hardwares
             hardware_interface::RobotInterface::read(t, period);
             // auto &force = com_state_["ft_sensor"]->get<double>("force");
             // std::cerr << "raw force: " << force[0] << " " << force[1] << " " << force[2] << " " << force[3] << " " << force[4] << " " << force[5] << std::endl;
-                
         }
         void write(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
-            // RCLCPP_INFO(rclcpp::get_logger("SimulationRobot"), "===== SimulationRobot::write 函数被调用 =====");
-            // std::cerr << "[SimulationRobot] Logger initialized successfully!" << std::endl;
-            
             hardware_interface::RobotInterface::write(t, period);
-            static int debug_count = 0;
-            if (++debug_count >= 500) 
-            {
-                auto mode_val = command_.get<int>("mode")[0];
-                // 只用 printf 或 std::cerr 简单打印，且每 1 秒才打印一次
-                std::cerr << "[SimulationRobot] write() is running! Current mode: " << mode_val << std::endl;
-                debug_count = 0;
-            }
-
             auto &cmd = command_.get<double>();
             auto &state = state_.get<double>();
             auto mode = command_.get<int>("mode")[0];
-            // RCLCPP_INFO(rclcpp::get_logger("SimulationRobot"), "当前mode原始值：%d", mode);
             if (mode == 0) // cartisan space
             {
                 std::vector<double> jt;
@@ -53,17 +39,13 @@ namespace hardwares
             {
                 if (period.seconds() > 0)
                     for (int i = 0; i < dof_; i++)
-                        // state["velocity"][i] = (cmd["position"][i] - state["position"][i]) / period.seconds();
+                        state["velocity"][i] = (cmd["position"][i] - state["position"][i]) / period.seconds();
                 state["position"] = cmd["position"];
-                // RCLCPP_INFO(node_->get_logger(), "mode==1，进入位置控制模式");
-
                 // state["velocity"] = cmd["velocity"];
             }
             else if (mode == 2) // velocity
             {
                 state["velocity"] = cmd["velocity"];
-                // RCLCPP_INFO(node_->get_logger(), "mode==2，进入速度控制模式");
-
                 for (int i = 0; i < dof_; i++)
                     state["position"][i] += cmd["velocity"][i] * period.seconds();
             }
@@ -121,16 +103,11 @@ namespace hardwares
                 state["torque"] = cmd_torque;
 
                 // 修正点 3：严禁在此处直接打印日志。
-                // 如果非要打印，请使用之前定义的 debug_count 逻辑
-                if (debug_count == 0) {
-                    // std::cerr << "[SimulationRobot] Torque mode active, acc[0]: " << dx[dof_] << std::endl;
-                }
+                // 如果非要打印，请使用之前定义的 
             }
         }
         CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override
         {
-            std::cerr << "[SimulationRobot] Logger initialized successfully!" << std::endl;
-
             if (RobotInterface::on_activate(previous_state) == CallbackReturn::SUCCESS)
             {
                 // to do
@@ -144,8 +121,6 @@ namespace hardwares
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override
         {
             RobotInterface::on_deactivate(previous_state);
-            std::cerr << "[SimulationRobot] Logger initialized successfully!" << std::endl;
-
             auto dq = state_.get<double>("velocity");
             std::fill(dq.begin(), dq.end(), 0);
             return CallbackReturn::SUCCESS;

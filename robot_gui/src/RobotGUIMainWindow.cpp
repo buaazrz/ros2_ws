@@ -106,7 +106,7 @@ RobotGUIMainWindow::RobotGUIMainWindow(QWidget *parent)
             request->cmd_params = ui->comboBox->currentText().toStdString();
             if(ind == 1) // forward controller
             {
-                for(int i = 0; i < joint_names_.size(); i++)
+                for(int i = 0; i < 6; i++)
                     joint_command_spinbox_[i]->setValue(joint_display_[i]->text().toDouble());
             }
             auto result = cmd_client_->async_send_request(request);
@@ -167,8 +167,8 @@ void RobotGUIMainWindow::send_forward_command()
     if (controller_mode_ == 1)
     {
         std_msgs::msg::Float64MultiArray msg;
-        msg.data.resize(joint_names_.size());
-        for (int i = 0; i < joint_names_.size(); i++)
+        msg.data.resize(6);
+        for (int i = 0; i < 6; i++)
             msg.data[i] = joint_command_spinbox_[i]->value();
         command_publisher_->publish(msg);
     }

@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/test_robot_math.dir/test/main.cpp.o -o test_robot_math  -Wl,-rpath,/home/wjc/zrz_ros2_ws/src/ros2_ws/build/robot_math:/opt/ros/jazzy/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu librobot_math.so /opt/ros/jazzy/lib/liburdf.so /opt/ros/jazzy/lib/x86_64-linux-gnu/liburdfdom_model.so.4.0 -ljsoncpp 
