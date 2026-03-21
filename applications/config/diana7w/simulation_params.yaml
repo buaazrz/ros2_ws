@@ -18,6 +18,7 @@ control_node:
       # - controllers::PDMotionController
       - controllers::CartesianImpedancePDPlusController
       - controllers::CartesianImpedancePDController
+      - controllers::CartesianDualLoopAdmittanceController
     default_controller: ""
 
 SimulationRobot:
@@ -37,9 +38,9 @@ SimulationRobot:
     command_length: [3, 6] # mode = 0: cartesian, 1: joint position 2: joint velocity 3: joint torque
     command_type: [int, double]
 
-    state_interface: [T, c, g, external_torque, success, m]
-    state_length: [16, 7, 7, 7, 1, 49]
-    state_type: [double, double, double, double, double, double]
+    state_interface: [T, c, g, external_torque, success, m, f_ext]
+    state_length: [16, 7, 7, 7, 1, 49, 6]
+    state_type: [double, double, double, double, double, double, double]
     # sensors: [ft_sensor]
     # ft_sensor: hardwares::FTDummySensor
 

@@ -213,6 +213,11 @@
          </item>
          <item>
           <property name="text">
+           <string>CartesianDualLoopAdmittanceController</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>CartesianMotionController</string>
           </property>
          </item>
