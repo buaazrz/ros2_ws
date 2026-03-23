@@ -17,8 +17,8 @@ namespace controllers
         CartesianImpedancePDController() {}
         ~CartesianImpedancePDController()
         {
-            if (data_logger_)
-                data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
+            // if (data_logger_)
+                // data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -26,8 +26,8 @@ namespace controllers
             dof_ = robot_->dof;
             node_->get_parameter_or<std::vector<double>>("Kx", Kx_vec_, {10.0, 10.0, 10.0, 100.0, 100.0, 100.0});
             node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
-            node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
-            node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0});
+            node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+            node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
             Kn_in_box_.set(Kn_vec_);
@@ -60,25 +60,9 @@ namespace controllers
 
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
         {
-            // DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
-                // 1. 打印state_->get<double>()的所有key（排查position/velocity/acceleration/pose等）
-            RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
-            for (const auto& [key, val] : state_->get<double>()) {
-                RCLCPP_INFO(node_->get_logger(), "Key: %s, size: %lu", key.c_str(), val.size());
-            }
-
-            // 3. 打印command_->get<double>()的key（排查mode/pose/velocity等）
-            RCLCPP_INFO(node_->get_logger(), "=== Command double keys ===");
-            for (const auto& [key, val] : command_->get<double>()) {
-                RCLCPP_INFO(node_->get_logger(), "Key: %s", key.c_str());
-            }
             time_ = 0;
             const std::vector<double> &q_vec = state_->get<double>("position");
             qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval();
-            RCLCPP_INFO(node_->get_logger(), "=== qd_ (Eigen格式化) ===");
-            std::ostringstream oss;
-            oss << qd_.transpose(); // 转置为行向量，打印更美观
-            RCLCPP_INFO(node_->get_logger(), "qd_ = %s", oss.str().c_str());
             dqd_ = Eigen::VectorXd::Zero(dof_);
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
@@ -86,28 +70,11 @@ namespace controllers
             Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data(), 4, 4).eval();
             // Rd_ = T.block(0, 0, 3, 3);
             // pd_ = T.block(0, 3, 3, 1);
-            Eigen::MatrixXd M_tmp, C_tmp, Jb_tmp, dJb_tmp, dM_tmp;
-            Eigen::Matrix4d Tb_tmp, dTb_tmp;
-            Eigen::VectorXd g_tmp;
-            std::vector<double> dq_zero(dof_, 0.0); // 初始速度视为0
-
-            m_c_g_matrix(robot_, q_vec, dq_zero, M_tmp, C_tmp, g_tmp, Jb_tmp, dJb_tmp, dM_tmp, dTb_tmp, Tb_tmp);
+            Eigen::Matrix4d Tb_tmp;
+            forward_kinematics(robot_, q_vec, Tb_tmp);
 
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
-            RCLCPP_INFO(node_->get_logger(), "=== Rd_ & pd_ (Eigen格式化) ===");
-
-            // 1. 打印 Rd_ (3x3 矩阵)
-            std::ostringstream oss_Rd;
-            // 前面加一个换行符 \n，这样 3x3 矩阵的格式对齐会非常漂亮，不会和前缀挤在一起
-            oss_Rd << "\n" << Rd_; 
-            RCLCPP_INFO(node_->get_logger(), "Rd_ = %s", oss_Rd.str().c_str());
-
-            // 2. 打印 pd_ (3x1 向量)
-            std::ostringstream oss_pd;
-            // 用 transpose() 变成 1x3 行向量，紧凑打印
-            oss_pd << pd_.transpose(); 
-            RCLCPP_INFO(node_->get_logger(), "pd_ = [ %s ]", oss_pd.str().c_str());
 
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -156,13 +123,10 @@ namespace controllers
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
-            const std::vector<double> &c_vec = state_->get<double>("c");
-            success_rate_ = state_->get<double>("success")[0];
 
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
-            Eigen::Map<const Eigen::VectorXd> c(c_vec.data(), dof_);
 
             Kx_in_box_.try_get([=](auto const &value)
                                { Kx_vec_ = value; });
@@ -178,28 +142,40 @@ namespace controllers
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
+            // forward_kinematics(robot_, q_vec, Tb_);
             command_->get<int>("mode")[0] = 3;
 
             R_ = Tb_.block(0, 0, 3, 3);
             p_ = Tb_.block(0, 3, 3, 1);
             qe_ = qd_ - q;
             dqe_ = dqd_ - dq;
-
-            Thb_.block(3, 3, 3, 3) = R_;
-            dThb_.block(3, 3, 3, 3) = dTb_.block(0, 0, 3, 3);
-            Jh_ = Thb_ * Jb_;
-            dJh_ = dThb_ * Jb_ + Thb_ * dJb_;
+            
+            Eigen::Vector3d w = (Jb_ * dq).head(3);
+            Eigen::Vector3d v = (Jb_ * dq).tail(3);
 
             xe_.head(3) = logR(R_.transpose() * Rd_);
-            xe_.tail(3) = pd_ - p_;
-            dxe_.head(3) = R_.transpose() * wd_ - (Jh_ * dq).head(3);
-            dxe_.tail(3) = vd_ - (Jh_ * dq).tail(3);
+            xe_.tail(3) = R_.transpose() * (pd_ - p_);
+            dxe_.head(3) = R_.transpose() * wd_ - w;
+            dxe_.tail(3) = R_.transpose() * vd_ - v;
+            // RCLCPP_INFO(get_node()->get_logger(), "xe_: %.6f %.6f %.6f %.6f %.6f %.6f m", 
+            // xe_[0], xe_[1], xe_[2], xe_[3], xe_[4], xe_[5]);
 
-            ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_ - dJh_ * dq;
-            tau_task_ = M_ * J_sharp(Jh_, M_) * ddxc_;
+
+            
+            Eigen::Vector3d acc_rot = Eigen::Vector3d::Zero();
+            Eigen::Vector3d acc_pos = Eigen::Vector3d::Zero();
+            ddxd_.head(3) = R_.transpose() * (acc_rot - (R_ * w).cross(wd_));
+            ddxd_.tail(3) = R_.transpose() * (acc_pos - (R_ * v).cross(vd_));
+
+            ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
+            tau_task_ = M_ * J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
-            tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
-            tau_cmd = tau_task_ + tau_null_ + c;
+            Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
+            tau_null_ = M_ * ((I - (J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
+            tau_cmd = tau_task_ + tau_null_;
+            RCLCPP_INFO(get_node()->get_logger(), "tau_cmd: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm",
+             tau_cmd[0], tau_cmd[1], tau_cmd[2], tau_cmd[3], tau_cmd[4], tau_cmd[5], tau_cmd[6]);
+
 
             q_ = q;
             dq_ = dq;
@@ -212,6 +188,7 @@ namespace controllers
             // robot_data_.t = time_;
             // DataComm::getInstance()->sendRobotStatus(robot_data_);
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+            // RCLCPP_INFO(get_node()->get_logger(), "cal_time: %.6f seconds", cal_time_);
             data_logger_->record();
         }
 

@@ -31,9 +31,7 @@ namespace hardwares
         void write(const rclcpp::Time& t, const rclcpp::Duration& period) override
         {
             hardware_interface::RobotInterface::write(t, period);
-            RCLCPP_INFO(node_->get_logger(), "当前周期(秒): %.6f，周期(毫秒): %.3f", 
-            period.seconds(), period.seconds() * 1000.0);
-            double max_single_delta = 1.0; 
+            double max_single_delta = 1000.0; 
             auto &cmd_tau = command_.get<double>("torque");
             int dof = 7; 
             double torque_cmd[7]; 
@@ -50,13 +48,6 @@ namespace hardwares
                 prev_torque_[i] = temp_torque[i];
                 torque_cmd[i] = temp_torque[i];
             }
-            
-            // auto &mode = command_.get<int>("mode")[0]; 
-            // if (mode == 3)
-            // {
-
-            //     sendTorque_rt(torque_cmd, period.seconds(), robot_ip_.c_str());
-            // }
             double dt = 1.0 / update_rate_;
             
             auto &mode = command_.get<int>("mode")[0]; 
@@ -64,13 +55,20 @@ namespace hardwares
             {
             case 3:
                 {
-                    enableTorqueReceiver(true, robot_ip_.c_str());                            
+                    // enableTorqueReceiver(true, robot_ip_.c_str());                            
                     sendTorque_rt(torque_cmd, dt, robot_ip_.c_str());
+                    // sleep(dt);
+                    // 更新历史扭矩和首次发送标志
+                    // std::copy(torque_cmd, torque_cmd + dof, prev_torque_.begin());
                     break;   
                 }     
             default:
                 break;
-            }     
+            }
+                // 仅发送扭矩，绝不 sleep，绝不 enableTorqueReceiver
+                // sendTorque_rt(torque_cmd, period.seconds(), robot_ip_.c_str());
+                // sleep(dt);
+  
         }
 
         bool is_stop() override { return false; }
@@ -157,8 +155,8 @@ namespace hardwares
                 double payload[10] = {0.0};
                 setActiveTcpPayload(payload, robot_ip_.c_str());
                 
-                double joint_stiff[7] = {1000, 1000, 1000, 1000, 500, 500, 500};
-                double cart_stiff[6] = {1000, 1000, 1000, 500, 500, 500};
+                // double joint_stiff[7] = {1000, 1000, 1000, 1000, 500, 500, 500};
+                // double cart_stiff[6] = {1000, 1000, 1000, 500, 500, 500};
                 // setJointImpeda(joint_stiff, 0.3, robot_ip_.c_str());
                 // setCartImpeda(cart_stiff, 0.3, robot_ip_.c_str());
                 
@@ -168,7 +166,7 @@ namespace hardwares
                 releaseBrake(robot_ip_.c_str());
                 rclcpp::sleep_for(std::chrono::seconds(2));
 
-                // enableTorqueReceiver(true, robot_ip_.c_str()); 
+                enableTorqueReceiver(true, robot_ip_.c_str()); 
 
                 return CallbackReturn::SUCCESS;
             }
@@ -193,8 +191,8 @@ namespace hardwares
         std::vector<double> pre_dq_;
 
         std::vector<double> prev_torque_;  // 上一次发送的扭矩
-        const std::vector<double> min_torque_{4, 3, 4, 4.5, 1.5, 1.5, 1.5};  // 最小有效扭矩
-        const std::vector<double> max_torque_{6.0, 6.0, 6.0, 5.0, 5.0, 2.0, 2.0};  // 最大有效扭矩
+        const std::vector<double> min_torque_{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};  // 最小有效扭矩
+        const std::vector<double> max_torque_{30.0, 30.0, 30.0, 20.0, 20.0, 20.0, 20.0};  // 最大有效扭矩
     };
 } // namespace hardwares
 
