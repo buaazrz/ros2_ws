@@ -69,8 +69,10 @@ add_executable(debug_all test/debug_all.cpp)
 add_executable(test_joint_controller test/test_joint_controller.cpp)
 add_executable(test_cartesian_controller test/test_cartesian_controller.cpp)
 add_executable(test_trajectory_controller test/test_trajectory_controller.cpp)
+add_executable(test_trajectory_controller_zrz test/test_trajectory_controller_zrz.cpp)
 add_executable(movel utility/movel.cpp)
 add_executable(movej utility/movej.cpp)
+add_executable(move_zrz utility/move_zrz.cpp)
 # target_include_directories(test_controller PUBLIC
 #   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 #   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
@@ -88,6 +90,11 @@ ament_target_dependencies(
 
 ament_target_dependencies(
   test_trajectory_controller
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+ament_target_dependencies(
+  test_trajectory_controller_zrz
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
@@ -111,7 +118,12 @@ ament_target_dependencies(
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
-install(TARGETS test_controller debug_all test_joint_controller test_trajectory_controller movej movel test_cartesian_controller
+ament_target_dependencies(
+  move_zrz
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+install(TARGETS test_controller debug_all test_joint_controller  test_trajectory_controller test_trajectory_controller_zrz  movej movel move_zrz test_cartesian_controller
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

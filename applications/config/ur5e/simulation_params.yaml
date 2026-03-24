@@ -2,8 +2,8 @@ control_node:
   ros__parameters:
     update_rate: 500
     lock_memory: true
-    simulation: true
-    sim_real_time: true
+    simulation: false
+    sim_real_time: false
     publish_joint_state: true
     robot: hardwares::SimulationRobot
     parameters: "parameters.yaml"

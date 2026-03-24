@@ -47,4 +47,7 @@
   <class type="controllers::CartesianDualLoopAdmittanceController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianDualLoopAdmittanceController plugin.</description>
   </class>
+    <class type="controllers::CartesianTrajImpPDController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianTrajImpPDController plugin.</description>
+  </class>
 </library>

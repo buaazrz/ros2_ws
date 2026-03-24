@@ -191,6 +191,9 @@ namespace controllers
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
             tau_cmd = tau_task_ + tau_null_ + C_*dq + g_;
+
+            // q_ = q;
+            // dq_ = dq;
             tau_cmd_ = tau_cmd;
 
             // log2Channel(robot_data_, 0, xe_.data(), 6);
