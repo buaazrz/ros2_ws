@@ -246,9 +246,14 @@
            <string>CartesianDualLoopAdmittanceController</string>
           </property>
          </item>
-          <item>
+         <item>
           <property name="text">
            <string>CartesianTrajImpPDController</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>RobotStateBroadcaster</string>
           </property>
          </item>
         </widget>

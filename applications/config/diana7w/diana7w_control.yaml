@@ -17,6 +17,7 @@ control_node:
       # - controllers::PDMotionController
       - controllers::CartesianImpedancePDController
       - controllers::CartesianImpedancePDPlusController
+      - controllers::CartesianTrajImpPDController
     default_controller: "controllers::CartesianImpedancePDController"
 
 DIANARobot:
@@ -35,9 +36,9 @@ DIANARobot:
     command_interface: [mode, pose]
     command_length: [2, 6]
     command_type: [int, double]
-    state_interface: [T, c, g, external_torque, success, m, pose]
-    state_length: [16, 7, 7, 7, 1, 49, 6]
-    state_type: [double, double, double, double, double, double, double]
+    state_interface: [T, c, g, external_torque, success, m, pose, position, velocity]
+    state_length: [16, 7, 7, 7, 1, 49, 6, 7, 7]
+    state_type: [double, double, double, double, double, double, double, double, double]
 
 ForwardController:
   ros__parameters:
@@ -68,3 +69,14 @@ CartesianImpedancePDPlusController:
     # Kn 和 Bn 必须是 7 个数：对应 7 个关节的零空间（冗余自由度）控制
     Kn: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0] # 零空间刚度要比末端刚度软
     Bn: [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0] # 基础阻尼，防止关节乱甩
+
+CartesianTrajImpPDController:
+  ros__parameters:
+    cmd_name: "torque"
+     # Kx 和 Bx 必须是 6 个数：前 3 个是姿态 (旋转)，后 3 个是位置 (平移)
+    Kx: [1000.0, 1000.0, 1000.0,  300.0, 300.0, 300.0] # 姿态刚度设为 100，位置刚度设为 200
+    Bx: [ 35.0,  35.0, 35.0,   20.0,  20.0,  20.0] # 阻尼设为刚度的平方根附近，抑制晃动
+    
+    # Kn 和 Bn 必须是 7 个数：对应 7 个关节的零空间（冗余自由度）控制
+    Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] # 零空间刚度要比末端刚度软
+    Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] # 基础阻尼，防止关节乱甩

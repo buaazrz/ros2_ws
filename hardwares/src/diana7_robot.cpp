@@ -71,26 +71,27 @@ namespace hardwares
                 }
                 case 3: // 3: 关节空间 力矩控制 (Torque)
                 {
-                    // API手册及经验确认：开启接收器可以安全地随周期重复调用
                     enableTorqueReceiver(true, robot_ip_.c_str());
-
-                    double max_single_delta = 1.0; 
                     auto &cmd_tau = command_.get<double>("torque");
                     double torque_cmd[7]; 
-
-                    for (int i = 0; i < 7; i++) 
-                    {   
-                        // 限制绝对最大扭矩 (确保安全参数生效)
-                        double temp_tau = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
-
-                        // 限制单步最大变化量，防止力矩突变引发报错
-                        double delta = temp_tau - prev_torque_[i];
-                        delta = std::clamp(delta, -max_single_delta, max_single_delta);
-                        
-                        torque_cmd[i] = prev_torque_[i] + delta;
-                        prev_torque_[i] = torque_cmd[i];
+                    for(int i = 0; i < 7; i++)
+                    {
+                        torque_cmd[i] = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
                     }
+                    // for (int i = 0; i < 7; i++) 
+                    // {   
+                    //     double temp_tau = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
+
+                    //     double delta = temp_tau - prev_torque_[i];
+                    //     delta = std::clamp(delta, -max_single_delta, max_single_delta);
+                        
+                    //     torque_cmd[i] = prev_torque_[i] + delta;
+                    //     prev_torque_[i] = torque_cmd[i];
+                    // }
                     sendTorque_rt(torque_cmd, dt, robot_ip_.c_str());
+                    RCLCPP_INFO(get_node()->get_logger(), "torque_cmd: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
+            torque_cmd[0], torque_cmd[1], torque_cmd[2], torque_cmd[3],torque_cmd[4], torque_cmd[5],torque_cmd[6]);
+
                     break;   
                 }     
                 default:
@@ -116,33 +117,10 @@ namespace hardwares
             getJointPos(q.data(), robot_ip_.c_str());
             getJointAngularVel(dq.data(), robot_ip_.c_str());
             getTcpPos(pose.data(), robot_ip_.c_str());
-            getJointTorque(torque.data(), robot_ip_.c_str());
-
+            // getJointTorque(torque.data(), robot_ip_.c_str());
             
-
-            // std::cerr<<pose.data()<<std::endl;
-
-            // if (pose.size() >= 6) {
-            //     RCLCPP_INFO(node_->get_logger(), 
-            //                 "Current Pose: [x: %.8f, y: %.8f, z: %.8f, rx: %.8f, ry: %.8f, rz: %.8f]",
-            //                 pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
-            // } else {
-            //     RCLCPP_WARN(node_->get_logger(), "Pose vector size is less than 6, cannot print full pose.");
-            // }
-            // -------------------------------- 修改后代码 --------------------------------
-            // RCLCPP_INFO(node_->get_logger(), "Current Pose size: %zu", pose.size());
-
-            // // 打印所有元素，不管有多少
-            // std::stringstream ss;
-            // ss << "Pose data: [";
-            // for (size_t i = 0; i < pose.size(); ++i) {
-            //     ss << pose[i];
-            //     if (i != pose.size() - 1) ss << ", ";
-            // }
-            // ss << "]";
-            // RCLCPP_INFO(node_->get_logger(), "%s", ss.str().c_str());
-            // // --------------------------------------------------------------------------
-            
+            // RCLCPP_INFO(get_node()->get_logger(), "torque: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
+            // torque[0], torque[1], torque[2], torque[3],torque[4], torque[5],torque[6]);
             if (dt > 0) 
             {
                 for (int i = 0; i < 7; i++) 
@@ -211,7 +189,7 @@ namespace hardwares
                 std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);
 
                 releaseBrake(robot_ip_.c_str());
-                enableTorqueReceiver(true, robot_ip_.c_str());
+                // enableTorqueReceiver(true, robot_ip_.c_str());
 
                 rclcpp::sleep_for(std::chrono::seconds(2));
 
@@ -239,23 +217,12 @@ namespace hardwares
         std::vector<double> pre_dq_;
 
         std::vector<double> prev_torque_;  // 上一次发送的扭矩
-        const std::vector<double> min_torque_{4, 3, 4, 4.5, 1.5, 1.5, 1.5};        // 最小有效扭矩（目前作为参考，可根据情况加入逻辑）
-        const std::vector<double> max_torque_{6.0, 6.0, 6.0, 5.0, 5.0, 2.0, 2.0};  // 最大安全扭矩边界
+        // const std::vector<double> min_torque_{4, 3, 4, 4.5, 1.5, 1.5, 1.5};        // 
+        const std::vector<double> max_torque_{20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 最大安全扭矩边界
+        const std::vector<double> friction_pos_ = {4.5, 2.8, 3.3, 4.0, 1.14, 1.37, 1.60}; // 正向死区
+        const std::vector<double> friction_neg_ = {3.5, 5.2, 3.3, 3.9, 1.41, 1.67, 1.55}; // 负向死区 (取绝对值)
     };
 } // namespace hardwares
 
 #include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(hardwares::DIANARobot, hardware_interface::RobotInterface)
-
-// double posert[6] = {0.0};
-            // const char* strIpAddress = "192.168.10.75";
-            // int ret = getTcpPos(posert, strIpAddress);
-            // if(ret < 0)
-            // {
-            // printf("getTcpPos failed! Return value = %d\n", ret);
-            // }
-            // else
-            // {
-            // printf("getTcpPos: %f, %f, %f, %f, %f, %f\n", posert[0], 
-            // posert[1],posert[2],posert[3],posert[4],posert[5]);
-            // }
