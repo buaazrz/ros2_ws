@@ -16,6 +16,8 @@
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "robot_control_msgs/msg/robot_state.hpp"
 #include "realtime_tools/realtime_publisher.hpp"
+#include <fstream>
+#include <iomanip>
 
 // using namespace robot_math;
 
@@ -129,6 +131,44 @@ namespace controllers
                 trajectory->set_traj(goal_handle->get_goal()->target_position.data);
                 traj_time_ = 0.0; 
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
+
+                double dt = 0.001;
+
+                std::ofstream outfile("/tmp/reference_trajectory.csv"); // Windows下可以改为 "C:\\temp\\reference_trajectory.csv" 之类的路径
+                if (outfile.is_open())
+                {
+                    // 写入 CSV 表头（时间, x, y, z, qw, qx, qy, qz）
+                    outfile << "time,x,y,z,qw,qx,qy,qz\n";
+                    
+                    for (double t = 0; t <= trajectory->total_time(); t += dt)
+                    {
+                        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+                        Eigen::Vector6d V, dV;
+                        
+                        // 评估 t 时刻的理想位姿
+                        trajectory->evaluate(t, T, V, dV);
+
+                        // 提取平移矩阵 (位置 X, Y, Z)
+                        double x = T(0, 3);
+                        double y = T(1, 3);
+                        double z = T(2, 3);
+
+                        // 提取旋转矩阵并转为四元数 (姿态 W, X, Y, Z)
+                        Eigen::Quaterniond q(T.block<3, 3>(0, 0));
+
+                        // 将数据以高精度写入 CSV 文件
+                        outfile << std::fixed << std::setprecision(6)
+                                << t << ","
+                                << x << "," << y << "," << z << ","
+                                << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
+                    }
+                    outfile.close();
+                    RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
+                }
+                else
+                {
+                    RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
+                }
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -288,12 +328,10 @@ namespace controllers
             robot_control_msgs::msg::RobotState msg;
             msg.header.stamp = t;
             
-            // 填充数据：前7个位置，接下来7个速度，后面预留空间
             std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
             std::copy(q.begin(), q.end(), msg.robot_state.begin());
             std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
 
-            // 尝试非阻塞发布
             if (real_time_publisher_->trylock())
             {
                 real_time_publisher_->msg_ = msg;
@@ -301,7 +339,6 @@ namespace controllers
             }
         }
     protected:
-        // ROS 2 通讯
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
         rclcpp::Publisher<robot_control_msgs::msg::RobotState>::SharedPtr robot_state_publisher_;
         std::shared_ptr<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>> real_time_publisher_;
