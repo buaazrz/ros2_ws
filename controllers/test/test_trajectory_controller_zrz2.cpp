@@ -12,8 +12,8 @@ using GoalHandle = rclcpp_action::ClientGoalHandle<ACTION>;
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller");
-  auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajectoryController/goal");
+  auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller_zrz2");
+  auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajImpPDPlusController/goal");
 
   if (!client->wait_for_action_server())
   {
@@ -21,52 +21,6 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 1;
   }
-
-  // auto send_goal_options = rclcpp_action::Client<ACTION>::SendGoalOptions();
-  // send_goal_options.goal_response_callback = [node](const GoalHandle::SharedPtr &goal_handle)
-  // {
-  //   if (!goal_handle)
-  //   {
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was rejected by server");
-  //   }
-  //   else
-  //   {
-  //     RCLCPP_INFO(node->get_logger(), "Goal accepted by server, waiting for result");
-  //   }
-  // };
-
-  // send_goal_options.feedback_callback = [node](
-  //                                           GoalHandle::SharedPtr,
-  //                                           const std::shared_ptr<const ACTION::Feedback> feedback)
-  // {
-  //   std::stringstream ss;
-  //   for (auto number : feedback->current_position.data)
-  //   {
-  //     ss << number << " ";
-  //   }
-  //   RCLCPP_INFO(node->get_logger(), ss.str().c_str());
-  // };
-
-  // send_goal_options.result_callback = [node](const GoalHandle::WrappedResult &result)
-  // {
-  //   switch (result.code)
-  //   {
-  //   case rclcpp_action::ResultCode::SUCCEEDED:
-  //     break;
-  //   case rclcpp_action::ResultCode::ABORTED:
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was aborted");
-  //     return;
-  //   case rclcpp_action::ResultCode::CANCELED:
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was canceled");
-  //     return;
-  //   default:
-  //     RCLCPP_ERROR(node->get_logger(), "Unknown result code");
-  //     return;
-  //   }
-  //   std::stringstream ss;
-  //   ss << "Result received: " << result.result->success << " ";
-  //   RCLCPP_INFO(node->get_logger(), ss.str().c_str());
-  // };
   auto goal_msg = ACTION::Goal();
   goal_msg.target_position.data = {
     5,  0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100, 
@@ -75,7 +29,8 @@ int main(int argc, char **argv)
     20, 0.4500,  0.1800, 0.3600, 0.0000, -0.0000, -0.3100,  
     25, 0.4500, -0.0000, 0.3600, 0.0000, -0.0000, -0.3100,  
     30, 0.4500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100, 
-    35, 0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100,};
+    35, 0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100,  
+ };
   auto handle_future = client->async_send_goal(goal_msg);
   auto result = rclcpp::spin_until_future_complete(node, handle_future);
   if (result != rclcpp::FutureReturnCode::SUCCESS)

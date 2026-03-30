@@ -23,15 +23,15 @@
 
 namespace controllers
 {
-    class CartesianTrajImpPDController : public controller_interface::ControllerInterface
+    class CartesianTrajImpPDPlusController : public controller_interface::ControllerInterface
     {
     public:
         using ACTION = robot_control_msgs::action::RobotMotion;
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
-        CartesianTrajImpPDController() {}
-        ~CartesianTrajImpPDController() {}
+        CartesianTrajImpPDPlusController() {}
+        ~CartesianTrajImpPDPlusController() {}
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -296,17 +296,15 @@ namespace controllers
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * v).cross(vd_));
 
-            ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
+            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_,M_)*(robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_)) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
             
-            tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
+            tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_,  (ddxc_- dJb_* dq));
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
-            // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
-            tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
+            tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
 
-
-            tau_cmd = tau_task_ + tau_null_ + C_* dq;
+            tau_cmd = tau_task_ + tau_null_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -373,4 +371,4 @@ namespace controllers
 } // namespace controllers
 
 #include <pluginlib/class_list_macros.hpp>
-PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDPlusController, controller_interface::ControllerInterface)

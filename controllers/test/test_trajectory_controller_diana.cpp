@@ -12,8 +12,8 @@ using GoalHandle = rclcpp_action::ClientGoalHandle<ACTION>;
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller");
-  auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajectoryController/goal");
+  auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller_diana");
+  auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajectoryDianaController/goal");
 
   if (!client->wait_for_action_server())
   {

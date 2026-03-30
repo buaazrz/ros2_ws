@@ -50,4 +50,10 @@
     <class type="controllers::CartesianTrajImpPDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianTrajImpPDController plugin.</description>
   </class>
+    <class type="controllers::CartesianTrajImpPDPlusController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianTrajImpPDPlusController plugin.</description>
+  </class>
+  <class type="controllers::CartesianTrajectoryDianaController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a CartesianTrajectoryDianaController plugin.</description>
+  </class>
 </library>

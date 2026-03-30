@@ -20,6 +20,16 @@ namespace controllers
             // if (data_logger_)
                 // data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_impedance_pd_controller");
         }
+        Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 1.0)
+        {
+            Eigen::VectorXd tau_d_saturated(dof_);
+            for (int i = 0; i < dof_; i++)
+            {
+                double difference = tau_d_calculated[i] - tau_J_d[i];
+                tau_d_saturated[i] = tau_J_d[i] + std::max(std::min(difference, tol), -tol);
+            }
+            return tau_d_saturated;
+        }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -61,6 +71,8 @@ namespace controllers
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
         {
             DataComm::getInstance()->setDestAddress("127.0.0.1", 7755);
+            tau_d.setZero();
+
                 // 1. 打印state_->get<double>()的所有key（排查position/velocity/acceleration/pose等）
             // RCLCPP_INFO(node_->get_logger(), "=== State double keys ===");
             // for (const auto& [key, val] : state_->get<double>()) {
@@ -199,7 +211,10 @@ namespace controllers
             tau_task_ = M_ * J_sharp(Jh_, M_) * ddxc_;
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * null_proj(Jh_, M_, ddqd_ + ldlt.solve(Bn_.asDiagonal() * dqe_ + Kn_.asDiagonal() * qe_));
-            tau_cmd = tau_task_ + tau_null_ + C_*dq + g_;
+            tau_cmd = tau_task_ + tau_null_;
+
+            tau_cmd = saturate_torque(tau_cmd, tau_d);
+            tau_d = tau_cmd;
 
             q_ = q;
             dq_ = dq;
@@ -248,6 +263,7 @@ namespace controllers
         std::unique_ptr<DataLogger> data_logger_;
         double time_;
         RobotData robot_data_;
+        Eigen::Vector7d tau_d;
     };
 } // namespace controllers
 

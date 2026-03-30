@@ -16,20 +16,16 @@
 using namespace std::chrono;
 using namespace std;
 
-// 全局线程运行标志（全功能保留）
 static volatile bool loop = true;
 
-// 机器人核心数据结构（与控制器完全匹配）
 struct RobotData
 {
     double t;
     float q[4][7];
 };
 
-// 接收回调函数类型（保留）
 typedef void (*ReceiveCallBack)(void *, const RobotData &);
 
-// 线程参数结构体（保留）
 struct ClientData
 { 
     ReceiveCallBack fnc;
@@ -38,7 +34,6 @@ struct ClientData
     void *pClientData;
 };
 
-// 数据日志写入文件（全功能保留）
 inline void log2file(std::ofstream &fout, std::vector<RobotData> &frames)
 {
     for (std::size_t k = 0; k < frames.size(); k++)
@@ -52,7 +47,6 @@ inline void log2file(std::ofstream &fout, std::vector<RobotData> &frames)
     }
 }
 
-// 接收线程主函数（全功能保留：UDP绑定、超时接收、回调、定时、日志）
 inline void *service_func(void *pdata)
 {
     int port = reinterpret_cast<ClientData *>(pdata)->port;
@@ -114,11 +108,9 @@ inline void *service_func(void *pdata)
     return nullptr;
 }
 
-// UDP通信单例类（**所有功能完整保留**）
 class DataComm
 {
 private:
-    // 私有构造/析构（单例模式）
     DataComm()
     {
         socket_handle = socket(AF_INET, SOCK_DGRAM, 0);
@@ -136,26 +128,22 @@ private:
         delete[] buffer;
     }
 
-    // 禁用拷贝和赋值（单例安全）
     DataComm(const DataComm &) = delete;
     DataComm &operator=(const DataComm &) = delete;
 
 public:
-    // 获取单例实例
     static DataComm *getInstance()
     {
         static DataComm comm;
         return &comm;
     }
 
-    // 设置目标IP和端口
     void setDestAddress(const char *ip, int port)
     {
         addr.sin_port = htons((short)port);
         addr.sin_addr.s_addr = inet_addr(ip);
     }
 
-    // 发送带换行的字符串
     int sendLine(const char *msg)
     {
         int n = strlen(msg);
@@ -165,20 +153,17 @@ public:
         return sendto(socket_handle, buffer, n + 1, 0, (struct sockaddr *)&addr, sizeof(addr));
     }
 
-    // 发送纯字符串
     int sendMsg(const char *msg)
     {
         int n = strlen(msg);
         return sendto(socket_handle, msg, n, 0, (struct sockaddr *)&addr, sizeof(addr));
     }
 
-    // 发送机器人状态数据（控制器核心使用）
     int sendRobotStatus(const RobotData &s)
     {
         return sendto(socket_handle, &s, sizeof(s), 0, (struct sockaddr *)&addr, sizeof(addr));
     }
 
-    // 启动接收服务（线程+回调+定时）
     void startReceiveService(ReceiveCallBack fnc, void *pClientData, int port, double dt = 0.0)
     {
         static ClientData data;
@@ -198,7 +183,6 @@ public:
         }
     }
 
-    // 停止接收服务
     void stopReceiveService()
     {
         if (service)
@@ -210,7 +194,6 @@ public:
     }
 
 private:
-    // 动态调整发送缓冲区
     void setBufferSize(int n)
     {
         if (n > sz)
@@ -229,7 +212,6 @@ private:
     pthread_t service;
 };
 
-// 模板工具函数（控制器必用：填充RobotData数据）
 template <class T>
 inline void log2Channel(RobotData &roboData, int c, const T *data, int n, int offset = 0)
 {

@@ -253,7 +253,17 @@
          </item>
          <item>
           <property name="text">
+           <string>CartesianTrajImpPDPlusController</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>RobotStateBroadcaster</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>CartesianTrajectoryDianaController</string>
           </property>
          </item>
         </widget>

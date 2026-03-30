@@ -74,9 +74,13 @@ namespace hardwares
                     enableTorqueReceiver(true, robot_ip_.c_str());
                     auto &cmd_tau = command_.get<double>("torque");
                     double torque_cmd[7]; 
+                    // for(int i = 0; i < 7; i++)
+                    // {
+                    //     torque_cmd[i] = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
+                    // }
                     for(int i = 0; i < 7; i++)
                     {
-                        torque_cmd[i] = std::clamp(cmd_tau[i], -max_torque_[i], max_torque_[i]);
+                        torque_cmd[i] = cmd_tau[i];
                     }
                     // for (int i = 0; i < 7; i++) 
                     // {   
@@ -89,12 +93,25 @@ namespace hardwares
                     //     prev_torque_[i] = torque_cmd[i];
                     // }
                     sendTorque_rt(torque_cmd, dt, robot_ip_.c_str());
-                    RCLCPP_INFO(get_node()->get_logger(), "torque_cmd: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
-            torque_cmd[0], torque_cmd[1], torque_cmd[2], torque_cmd[3],torque_cmd[4], torque_cmd[5],torque_cmd[6]);
+            //         RCLCPP_INFO(get_node()->get_logger(), "torque_cmd: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
+            // torque_cmd[0], torque_cmd[1], torque_cmd[2], torque_cmd[3],torque_cmd[4], torque_cmd[5],torque_cmd[6]);
 
                     break;   
-                }     
+                }    
+                case 4:
+                {
+                    changeControlMode(T_MODE_CART_IMPEDANCE, robot_ip_.c_str());
+                    auto &cmd_cart_pose = command_.get<double>("pose");
+                    double target_pose[6]; 
+                    // 拷贝控制器生成的轨迹：[X,Y,Z,Rx,Ry,Rz]
+                    std::copy(cmd_cart_pose.begin(), cmd_cart_pose.begin() + 6, target_pose);
+                    
+                    // 3. 调用官方API：阻抗模式下跟踪轨迹
+                    servoL_ex(target_pose, 0.001, 0.05, 500, 1.0, false, nullptr, robot_ip_.c_str());
+                    break;
+                } 
                 default:
+                    stop(robot_ip_.c_str());
                     break;
             }     
         }
