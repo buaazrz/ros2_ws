@@ -15,6 +15,8 @@ int main(int argc, char **argv)
   auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller_zrz");
   auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajImpPDController/goal");
 
+  
+
   if (!client->wait_for_action_server())
   {
     RCLCPP_ERROR(node->get_logger(), "Action server not available after waiting");

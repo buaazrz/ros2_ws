@@ -31,7 +31,11 @@ namespace controllers
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
         CartesianTrajImpPDController() {}
-        ~CartesianTrajImpPDController() {}
+        ~CartesianTrajImpPDController() 
+        {
+            if (data_logger_)
+               data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+        }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -91,16 +95,11 @@ namespace controllers
             dqd_ = Eigen::VectorXd::Zero(dof_);
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
-            // const std::vector<double> &pose = state_->get<double>("pose");
-            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            const std::vector<double> &pose = state_->get<double>("pose");
+            Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
             
-            // Rd_ = T.block(0, 0, 3, 3);
-            // pd_ = T.block(0, 3, 3, 1);
-
-            Eigen::Matrix4d Tb_tmp; 
-            forward_kinematics(robot_, q_vec, Tb_tmp);
-            Rd_ = Tb_tmp.block(0, 0, 3, 3);
-            pd_ = Tb_tmp.block(0, 3, 3, 1);
+            Rd_ = T.block(0, 0, 3, 3);
+            pd_ = T.block(0, 3, 3, 1);
             
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -128,16 +127,24 @@ namespace controllers
 
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle) {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                trajectory->set_traj(goal_handle->get_goal()->target_position.data);
+                const std::vector<double> &pose_current = state_->get<double>("pose");
+                std::vector<double> full_traj_data;
+                full_traj_data.push_back(0.0); 
+                for(int i = 0; i < 6; ++i) {
+                    full_traj_data.push_back(pose_current[i]); 
+                }
+                const auto& goal_data = goal_handle->get_goal()->target_position.data;
+                full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
+                trajectory->set_traj(full_traj_data);
+                
                 traj_time_ = 0.0; 
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
 
                 double dt = 0.001;
 
-                std::ofstream outfile("/tmp/reference_trajectory.csv"); // Windows下可以改为 "C:\\temp\\reference_trajectory.csv" 之类的路径
+                std::ofstream outfile("/tmp/reference_trajectory.csv"); 
                 if (outfile.is_open())
                 {
-                    // 写入 CSV 表头（时间, x, y, z, qw, qx, qy, qz）
                     outfile << "time,x,y,z,qw,qx,qy,qz\n";
                     
                     for (double t = 0; t <= trajectory->total_time(); t += dt)
@@ -145,18 +152,13 @@ namespace controllers
                         Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
                         Eigen::Vector6d V, dV;
                         
-                        // 评估 t 时刻的理想位姿
                         trajectory->evaluate(t, T, V, dV);
 
-                        // 提取平移矩阵 (位置 X, Y, Z)
                         double x = T(0, 3);
                         double y = T(1, 3);
                         double z = T(2, 3);
-
-                        // 提取旋转矩阵并转为四元数 (姿态 W, X, Y, Z)
                         Eigen::Quaterniond q(T.block<3, 3>(0, 0));
 
-                        // 将数据以高精度写入 CSV 文件
                         outfile << std::fixed << std::setprecision(6)
                                 << t << ","
                                 << x << "," << y << "," << z << ","
@@ -175,6 +177,21 @@ namespace controllers
             this->action_server_ = rclcpp_action::create_server<ACTION>(
                 node_, "~/goal", handle_goal, handle_cancel, handle_accepted, 
                 rcl_action_server_get_default_options(), call_back_group_);
+            
+            pose_ = Eigen::Vector6d::Zero();
+            data_logger_ = std::make_unique<DataLogger>(
+                std::initializer_list<DataInfo>{
+                    DATA_WRAPPER(time_),
+                    DATA_WRAPPER(cal_time_),
+                    DATA_WRAPPER(pose_),
+                },
+                std::initializer_list<ExperimentContext>{
+                    CONFIG_WRAPPER(Kx_vec_),
+                    CONFIG_WRAPPER(Bx_vec_),
+                    CONFIG_WRAPPER(Kn_vec_),
+                    CONFIG_WRAPPER(Bn_vec_),
+                },
+                1000);
 
             return CallbackReturn::SUCCESS;
         }
@@ -194,28 +211,22 @@ namespace controllers
             auto start_time = std::chrono::high_resolution_clock::now();
 
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
-            // auto &tau_d_vector = state_->get<double>("torque");
             command_->get<int>("mode")[0] = 3; 
 
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
-            // const std::vector<double> &pose = state_->get<double>("pose");
-            // Eigen::Matrix4d T = pose_to_tform(pose);
+            const std::vector<double> &pose_vec = state_->get<double>("pose");
 
-            
+            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+
+            Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
+            R_ = T.block(0, 0, 3, 3); 
+            p_ = T.block(0, 3, 3, 1); 
+         
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             std::fill(tau_cmd_vec.begin(), tau_cmd_vec.end(), 0);
-
-            
-            if (q.hasNaN() || dq.hasNaN()) {
-                RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
-                    "检测到关节状态为 NaN！");
-                Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
-                tau_cmd.setZero(); 
-                return;
-            }
 
             Kx_in_box_.try_get([=](auto const &value) { Kx_vec_ = value; });
             Bx_in_box_.try_get([=](auto const &value) { Bx_vec_ = value; });
@@ -227,8 +238,6 @@ namespace controllers
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
-            R_ = Tb_.block(0, 0, 3, 3); 
-            p_ = Tb_.block(0, 3, 3, 1); 
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -284,15 +293,6 @@ namespace controllers
             dxe_.head(3) = R_.transpose() * wd_ - w;
             dxe_.tail(3) = R_.transpose() * vd_ - v;
 
-            double max_trans_err = 0.03; 
-            if (xe_.tail(3).norm() > max_trans_err) {
-                xe_.tail(3) = xe_.tail(3).normalized() * max_trans_err;
-            }
-            double max_rot_err = 0.1;
-            if (xe_.head(3).norm() > max_rot_err) {
-                xe_.head(3) = xe_.head(3).normalized() * max_rot_err;
-            }
-
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * v).cross(vd_));
 
@@ -302,24 +302,19 @@ namespace controllers
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
-            // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
-            tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
+            tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
+            // tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
-
-            tau_cmd = tau_task_ + tau_null_ + C_* dq;
+            tau_cmd = tau_task_ + tau_null_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
-            RCLCPP_INFO(get_node()->get_logger(), "tau_task_: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
-            tau_task_[0], tau_task_[1], tau_task_[2], tau_task_[3],tau_task_[4], tau_task_[5],tau_task_[6]);
-
-            RCLCPP_INFO(get_node()->get_logger(), "tau_null_: %.6f %.6f %.6f %.6f %.6f %.6f %.6f Nm", 
-            tau_null_[0], tau_null_[1], tau_null_[2], tau_null_[3],tau_null_[4], tau_null_[5],tau_null_[6]);
-
             publish_robot_state(t, q_vec, dq_vec);
+            robot_data_.t = time_;
+            DataComm::getInstance()->sendRobotStatus(robot_data_);
 
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-            // RCLCPP_INFO(get_node()->get_logger(), "cal_time: %.6f seconds", cal_time_);
+            data_logger_->record();
 
         }
     
@@ -354,17 +349,20 @@ namespace controllers
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_, Jh_, dJh_;
+        Eigen::Vector6d pose_;
         Eigen::VectorXd g_;
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
         Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
         Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_;
         Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_, dVd;
-        Eigen::Matrix3d Rd_, R_;
+        Eigen::Matrix3d Rd_, R_, R_c_;
         Eigen::Matrix6d Thb_, dThb_;
-        Eigen::Vector3d pd_, p_, wd_, vd_;
+        Eigen::Vector3d pd_, p_, wd_, vd_, p_c_;
         Eigen::Vector7d tau_d;
         double cal_time_;
+        std::unique_ptr<DataLogger> data_logger_;
+        RobotData robot_data_;
 
         // 线程安全的参数盒子
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;

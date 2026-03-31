@@ -52,7 +52,7 @@ namespace controllers
                 q0_ = q;
                 pose0_ = pose;
             }
-            command_->get<int>("mode")[0] = 0;
+            command_->get<int>("mode")[0] = 4;
             if (goal_handle && goal_handle->is_active())
             {
                 if (goal_handle->is_canceling())
