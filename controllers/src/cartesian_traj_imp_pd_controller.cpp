@@ -96,10 +96,16 @@ namespace controllers
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
             const std::vector<double> &pose = state_->get<double>("pose");
-            Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            Eigen::Matrix4d Tb_tmp; 
+            robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
+
+            // 获取当前位姿作为初始期望位姿
+            Rd_ = Tb_tmp.block(0, 0, 3, 3);
+            pd_ = Tb_tmp.block(0, 3, 3, 1);
             
-            Rd_ = T.block(0, 0, 3, 3);
-            pd_ = T.block(0, 3, 3, 1);
+            // Rd_ = T.block(0, 0, 3, 3);
+            // pd_ = T.block(0, 3, 3, 1);
             
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -219,9 +225,9 @@ namespace controllers
 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
 
-            Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
-            R_ = T.block(0, 0, 3, 3); 
-            p_ = T.block(0, 3, 3, 1); 
+            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
+            // R_ = T.block(0, 0, 3, 3); 
+            // p_ = T.block(0, 3, 3, 1); 
          
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
@@ -238,6 +244,8 @@ namespace controllers
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
+            R_ = Tb_.block(0, 0, 3, 3); 
+            p_ = Tb_.block(0, 3, 3, 1); 
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -301,9 +309,9 @@ namespace controllers
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
-            Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
-            tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
-            // tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
+            // Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
+            // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
+            tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
             tau_cmd = tau_task_ + tau_null_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);

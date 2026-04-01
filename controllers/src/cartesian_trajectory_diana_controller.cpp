@@ -9,7 +9,11 @@
 #include "robot_control_msgs/action/robot_motion.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robot_control_msgs/msg/robot_state.hpp"
+#include "ros2_utility/data_logger.hpp"
 #include "realtime_tools/realtime_publisher.hpp"
+#include "ros2_utility/file_utils.hpp"
+#include <fstream>
+#include <iomanip>
 
 namespace controllers
 {
@@ -23,14 +27,24 @@ namespace controllers
         CartesianTrajectoryDianaController() 
         {
         }
+        ~CartesianTrajectoryDianaController() 
+        {
+            if (data_logger_)
+               data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_trajectory_controller_diana/", "cartesian_trajectory_controller_diana");
+        }
         void update(const rclcpp::Time & t, const rclcpp::Duration & period) override
         {
+            time_ += period.seconds();
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
             auto trajectory = handle_pair.second;
             auto &cmd = command_->get<double>("pose");
             auto &q = state_->get<double>("position");
             auto &dq = state_->get<double>("velocity");
+            const std::vector<double> &pose_vec = state_->get<double>("pose");
+
+            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+        
             
             robot_control_msgs::msg::RobotState msg;
             msg.header.stamp = t;
@@ -91,6 +105,8 @@ namespace controllers
             {
                 cmd = pose0_;
             }
+
+            data_logger_->record();
         }
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -99,6 +115,7 @@ namespace controllers
         }
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
+            time_ = 0;
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
             real_time_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>>(robot_state_publisher_);
             real_time_buffer_.reset();
@@ -115,12 +132,52 @@ namespace controllers
                 return rclcpp_action::CancelResponse::ACCEPT;
             };
 
-            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
-            {
+            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle) {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                trajectory->set_traj(goal_handle->get_goal()->target_position.data);
+                const std::vector<double> &pose_current = state_->get<double>("pose");
+                std::vector<double> full_traj_data;
+                full_traj_data.push_back(0.0); 
+                for(int i = 0; i < 6; ++i) {
+                    full_traj_data.push_back(pose_current[i]); 
+                }
+                const auto& goal_data = goal_handle->get_goal()->target_position.data;
+                full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
+                trajectory->set_traj(full_traj_data);
+                
                 last_time_ = node_->now();
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
+
+                double dt = 0.001;
+
+                std::ofstream outfile("/tmp/reference_trajectory.csv"); 
+                if (outfile.is_open())
+                {
+                    outfile << "time,x,y,z,qw,qx,qy,qz\n";
+                    
+                    for (double t = 0; t <= trajectory->total_time(); t += dt)
+                    {
+                        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+                        Eigen::Vector6d V, dV;
+                        
+                        trajectory->evaluate(t, T, V, dV);
+
+                        double x = T(0, 3);
+                        double y = T(1, 3);
+                        double z = T(2, 3);
+                        Eigen::Quaterniond q(T.block<3, 3>(0, 0));
+
+                        outfile << std::fixed << std::setprecision(6)
+                                << t << ","
+                                << x << "," << y << "," << z << ","
+                                << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
+                    }
+                    outfile.close();
+                    RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
+                }
+                else
+                {
+                    RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
+                }
             };
             // must be member variable
             // otherwise, the callback group will be destroyed before the action server
@@ -133,7 +190,15 @@ namespace controllers
                 handle_accepted,
                 rcl_action_server_get_default_options(),
                 call_back_group_);
-            
+            pose_ = Eigen::Vector6d::Zero();
+            data_logger_ = std::make_unique<DataLogger>(
+                std::initializer_list<DataInfo>{
+                    DATA_WRAPPER(time_),
+                    DATA_WRAPPER(pose_),
+                },
+                std::initializer_list<ExperimentContext>{
+                },
+                1000);
             return CallbackReturn::SUCCESS;
         }
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -154,6 +219,9 @@ namespace controllers
         rclcpp::CallbackGroup::SharedPtr call_back_group_;
         rclcpp::Publisher<robot_control_msgs::msg::RobotState>::SharedPtr robot_state_publisher_;
         std::shared_ptr<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>> real_time_publisher_;
+        std::unique_ptr<DataLogger> data_logger_;
+        Eigen::Vector6d pose_;
+        double time_;
     };
 
 } // namespace controllers
