@@ -41,10 +41,10 @@ namespace controllers
         {
             dof_ = robot_->dof;
             
-            node_->get_parameter_or<std::vector<double>>("Kx", Kx_vec_, {100.0, 100.0, 100.0, 50.0, 50.0, 50.0});
-            node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {10.0, 10.0, 10.0, 5.0, 5.0, 5.0});
-            node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
-            node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0});
+            node_->get_parameter_or<std::vector<double>>("Kx", Kx_vec_, {500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0});
+            node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {30.0, 30.0, 30.0, 150.0, 150.0, 150.0});
+            node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+            node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
             
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
@@ -96,11 +96,9 @@ namespace controllers
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
             const std::vector<double> &pose = state_->get<double>("pose");
-            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
             Eigen::Matrix4d Tb_tmp; 
             robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
-
-            // 获取当前位姿作为初始期望位姿
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
             
@@ -118,7 +116,6 @@ namespace controllers
             C_.resize(dof_, dof_);     C_.setZero();
             dM_.resize(dof_, dof_);    dM_.setZero();
         
-
             tau_task_ = Eigen::VectorXd::Zero(dof_);
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
@@ -190,6 +187,11 @@ namespace controllers
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
                     DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(tau_task_),
+                    // DATA_WRAPPER(tau_null_),
+                    // DATA_WRAPPER(xe_),
+                    // DATA_WRAPPER(dxe_),
+                    // DATA_WRAPPER(ddxd_),
                 },
                 std::initializer_list<ExperimentContext>{
                     CONFIG_WRAPPER(Kx_vec_),
@@ -217,14 +219,11 @@ namespace controllers
             auto start_time = std::chrono::high_resolution_clock::now();
 
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
-            command_->get<int>("mode")[0] = 3; 
-
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
-
-            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
-
+            command_->get<int>("mode")[0] = 3; 
+            // pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
             // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
             // R_ = T.block(0, 0, 3, 3); 
             // p_ = T.block(0, 3, 3, 1); 
@@ -272,8 +271,8 @@ namespace controllers
 
                     Rd_ = Td_curr.block(0, 0, 3, 3);
                     pd_ = Td_curr.block(0, 3, 3, 1);
-                    wd_ = Vd_curr.head(3);  // 角速度
-                    vd_ = Vd_curr.tail(3);  // 线速度
+                    wd_ = Vd_curr.head(3); 
+                    vd_ = Vd_curr.tail(3); 
                     dVd = dVd_curr;
 
 
@@ -302,10 +301,25 @@ namespace controllers
             dxe_.tail(3) = R_.transpose() * vd_ - v;
 
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
-            ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * v).cross(vd_));
+            ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
+            Eigen::Matrix6d Lambda = robot_math::A_x_inv(Jb_, M_).inverse();
 
-            ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
-            
+            double damping_ratio = 0.7; 
+
+            for(int i=0; i<6; i++) {
+                Bx_(i) = 2.0 * damping_ratio * std::sqrt(Kx_(i) * Lambda(i,i));
+            }
+            // RCLCPP_INFO_STREAM_THROTTLE(
+            //     node_->get_logger(), 
+            //     *node_->get_clock(), 
+            //     1000, 
+            //     "Bx_ currently is: " << Bx_.transpose()
+            // );
+
+            // ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
+
+            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
+
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
@@ -371,8 +385,6 @@ namespace controllers
         double cal_time_;
         std::unique_ptr<DataLogger> data_logger_;
         RobotData robot_data_;
-
-        // 线程安全的参数盒子
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
     };
