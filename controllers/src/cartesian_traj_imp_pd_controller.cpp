@@ -30,11 +30,12 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
-        CartesianTrajImpPDController() {}
+        CartesianTrajImpPDController() : d_filter_(7, 1) {}
         ~CartesianTrajImpPDController() 
         {
             if (data_logger_)
-               data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+            //    data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+               data_logger_->save("/home/wjc/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -86,6 +87,7 @@ namespace controllers
             traj_time_ = 0;
             real_time_buffer_.reset();
             tau_d.setZero();
+            d_filter_.reset();
 
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
             real_time_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>>(robot_state_publisher_);
@@ -182,12 +184,16 @@ namespace controllers
                 rcl_action_server_get_default_options(), call_back_group_);
             
             pose_ = Eigen::Vector6d::Zero();
+            torque_ = Eigen::Vector7d::Zero();
+            dq_ = Eigen::Vector7d::Zero();
             data_logger_ = std::make_unique<DataLogger>(
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(pose_),
-                    // DATA_WRAPPER(tau_task_),
+                    // DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(torque_),
+                    // DATA_WRAPPER(tau_d),
+                    // DATA_WRAPPER(dq_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -222,8 +228,11 @@ namespace controllers
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
+            const std::vector<double> &torque_vec = state_->get<double>("torque");
             command_->get<int>("mode")[0] = 3; 
-            // pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+            torque_ = Eigen::Map<const Eigen::Vector7d>(torque_vec.data());
+            dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
             // R_ = T.block(0, 0, 3, 3); 
             // p_ = T.block(0, 3, 3, 1); 
@@ -304,11 +313,11 @@ namespace controllers
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
             Eigen::Matrix6d Lambda = robot_math::A_x_inv(Jb_, M_).inverse();
 
-            double damping_ratio = 0.7; 
+            // double damping_ratio = 0.7; 
 
-            for(int i=0; i<6; i++) {
-                Bx_(i) = 2.0 * damping_ratio * std::sqrt(Kx_(i) * Lambda(i,i));
-            }
+            // for(int i=0; i<6; i++) {
+            //     Bx_(i) = 2.0 * damping_ratio * std::sqrt(Kx_(i) * Lambda(i,i));
+            // }
             // RCLCPP_INFO_STREAM_THROTTLE(
             //     node_->get_logger(), 
             //     *node_->get_clock(), 
@@ -318,9 +327,11 @@ namespace controllers
 
             // ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
 
-            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
+            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
 
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
+            // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
+
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             // Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
@@ -328,6 +339,7 @@ namespace controllers
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
             tau_cmd = tau_task_ + tau_null_;
+            // d_filter_.filtering(tau_cmd.data(),tau_cmd.data());
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -376,17 +388,18 @@ namespace controllers
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
         Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
-        Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_;
+        Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_, dq_;
         Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_, dVd;
         Eigen::Matrix3d Rd_, R_, R_c_;
         Eigen::Matrix6d Thb_, dThb_;
         Eigen::Vector3d pd_, p_, wd_, vd_, p_c_;
-        Eigen::Vector7d tau_d;
+        Eigen::Vector7d tau_d, torque_;
         double cal_time_;
         std::unique_ptr<DataLogger> data_logger_;
         RobotData robot_data_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
+        robot_math::MovingFilter<double> d_filter_;
     };
 } // namespace controllers
 
