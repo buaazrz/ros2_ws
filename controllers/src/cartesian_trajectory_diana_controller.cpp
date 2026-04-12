@@ -30,7 +30,7 @@ namespace controllers
         ~CartesianTrajectoryDianaController() 
         {
             if (data_logger_)
-               data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_trajectory_controller_diana/", "cartesian_trajectory_controller_diana");
+               data_logger_->save("/home/wjc/experiment_logs/cartesian_trajectory_controller_diana/", "cartesian_trajectory_controller_diana");
         }
         void update(const rclcpp::Time & t, const rclcpp::Duration & period) override
         {
@@ -66,7 +66,7 @@ namespace controllers
                 q0_ = q;
                 pose0_ = pose;
             }
-            command_->get<int>("mode")[0] = 4;
+            command_->get<int>("mode")[0] = 0;
             if (goal_handle && goal_handle->is_active())
             {
                 if (goal_handle->is_canceling())

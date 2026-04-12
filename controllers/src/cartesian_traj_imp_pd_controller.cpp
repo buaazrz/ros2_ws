@@ -99,13 +99,13 @@ namespace controllers
 
             const std::vector<double> &pose = state_->get<double>("pose");
             Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
-            // Eigen::Matrix4d Tb_tmp; 
-            // robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
-            // Rd_ = Tb_tmp.block(0, 0, 3, 3);
-            // pd_ = Tb_tmp.block(0, 3, 3, 1);
+            Eigen::Matrix4d Tb_tmp; 
+            robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
+            Rd_ = Tb_tmp.block(0, 0, 3, 3);
+            pd_ = Tb_tmp.block(0, 3, 3, 1);
             
-            Rd_ = T.block(0, 0, 3, 3);
-            pd_ = T.block(0, 3, 3, 1);
+            // Rd_ = T.block(0, 0, 3, 3);
+            // pd_ = T.block(0, 3, 3, 1);
             
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -184,14 +184,19 @@ namespace controllers
                 rcl_action_server_get_default_options(), call_back_group_);
             
             pose_ = Eigen::Vector6d::Zero();
+            pose_q_ = Eigen::Vector6d::Zero();
             torque_ = Eigen::Vector7d::Zero();
             dq_ = Eigen::Vector7d::Zero();
+            q_ = Eigen::Vector7d::Zero();
+            pose_Tb_.resize(6, 0.0);
             data_logger_ = std::make_unique<DataLogger>(
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
                     DATA_WRAPPER(pose_),
-                    // DATA_WRAPPER(torque_),
+                    DATA_WRAPPER(pose_Tb_),
+                    DATA_WRAPPER(pose_q_),
+                    DATA_WRAPPER(q_),
                     // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
                     // DATA_WRAPPER(tau_null_),
@@ -229,13 +234,16 @@ namespace controllers
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
             const std::vector<double> &torque_vec = state_->get<double>("torque");
+            const std::vector<double> &pose_q_vec = state_->get<double>("pose_q_");
             command_->get<int>("mode")[0] = 3; 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+            pose_q_ = Eigen::Map<const Eigen::Vector6d>(pose_q_vec.data());
             torque_ = Eigen::Map<const Eigen::Vector7d>(torque_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
+            q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
             Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
-            R_ = T.block(0, 0, 3, 3); 
-            p_ = T.block(0, 3, 3, 1); 
+            // R_ = T.block(0, 0, 3, 3); 
+            // p_ = T.block(0, 3, 3, 1); 
          
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
@@ -252,8 +260,9 @@ namespace controllers
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
-            // R_ = Tb_.block(0, 0, 3, 3); 
-            // p_ = Tb_.block(0, 3, 3, 1); 
+            pose_Tb_ = robot_math::tform_to_pose(Tb_);
+            R_ = Tb_.block(0, 0, 3, 3); 
+            p_ = Tb_.block(0, 3, 3, 1); 
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -318,6 +327,7 @@ namespace controllers
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
 
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
+            
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
 
 
@@ -326,7 +336,7 @@ namespace controllers
             // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
-            tau_cmd = tau_task_ + tau_null_;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -370,12 +380,12 @@ namespace controllers
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_, Jh_, dJh_;
-        Eigen::Vector6d pose_;
+        Eigen::Vector6d pose_, pose_q_;
         Eigen::VectorXd g_;
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
         Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
-        Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_, dq_;
+        Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_, dq_, q_;
         Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_, dVd;
         Eigen::Matrix3d Rd_, R_, R_c_;
         Eigen::Matrix6d Thb_, dThb_;
@@ -387,6 +397,7 @@ namespace controllers
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
         robot_math::MovingFilter<double> d_filter_;
+        std::vector<double> pose_Tb_;
     };
 } // namespace controllers
 

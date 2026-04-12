@@ -38,9 +38,9 @@ DIANARobot:
     command_interface: [mode, pose]
     command_length: [2, 6]
     command_type: [int, double]
-    state_interface: [T, c, g, external_torque, success, m, pose, position, velocity, torque]
-    state_length: [16, 7, 7, 7, 1, 49, 6, 7, 7, 7]
-    state_type: [double, double, double, double, double, double, double, double, double, double]
+    state_interface: [T, c, g, external_torque, success, m, pose, position, velocity, torque, pose_q_]
+    state_length: [16, 7, 7, 7, 1, 49, 6, 7, 7, 7, 6]
+    state_type: [double, double, double, double, double, double, double, double, double, double, double]
 
 ForwardController:
   ros__parameters:

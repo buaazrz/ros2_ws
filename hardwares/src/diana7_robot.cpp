@@ -91,7 +91,6 @@ namespace hardwares
                 }    
                 case 4:
                 {
-                    changeControlMode(T_MODE_CART_IMPEDANCE, robot_ip_.c_str());
                     auto &cmd_cart_pose = command_.get<double>("pose");
                     double target_pose[6]; 
                     std::copy(cmd_cart_pose.begin(), cmd_cart_pose.begin() + 6, target_pose);
@@ -118,6 +117,7 @@ namespace hardwares
             auto& dq = state_.get<double>("velocity");
             auto& ddq = state_.get<double>("acceleration");
             auto& pose = state_.get<double>("pose");
+            auto& pose_q_ = state_.get<double>("pose_q_");
             auto& torque = state_.get<double>("torque");
 
 
@@ -125,11 +125,8 @@ namespace hardwares
             getJointPos(q.data(), robot_ip_.c_str());
             getJointAngularVel(dq.data(), robot_ip_.c_str());
             getTcpPos(pose.data(), robot_ip_.c_str());
+            forward(q.data(), pose_q_.data(), nullptr, robot_ip_.c_str());
 
-            // RCLCPP_INFO(node_->get_logger(), "TCP Pose: [x: %.6f, y: %.6f, z: %.6f, roll: %.6f, pitch: %.6f, yaw: %.6f]",
-            // pose[0], pose[1], pose[2],  // 位置 (x, y, z)
-            // pose[3], pose[4], pose[5]   // 姿态 (roll, pitch, yaw))
-            // );
             if (dt > 0) 
             {
                 for (int i = 0; i < 7; i++) 
