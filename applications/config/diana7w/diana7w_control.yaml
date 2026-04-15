@@ -15,11 +15,8 @@ control_node:
       - controllers::RealtimeTestController
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
-      # - controllers::PDMotionController
       - controllers::CartesianImpedancePDController
-      - controllers::CartesianImpedancePDPlusController
       - controllers::CartesianTrajImpPDController
-      - controllers::CartesianTrajImpPDPlusController
     default_controller: "controllers::CartesianImpedancePDController"
 
 DIANARobot:
