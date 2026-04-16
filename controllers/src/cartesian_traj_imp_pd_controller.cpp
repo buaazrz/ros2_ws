@@ -186,6 +186,7 @@ namespace controllers
             pose_ = Eigen::Vector6d::Zero();
             pose_q_ = Eigen::Vector6d::Zero();
             torque_ = Eigen::Vector7d::Zero();
+            force_ = Eigen::Vector6d::Zero();
             dq_ = Eigen::Vector7d::Zero();
             q_ = Eigen::Vector7d::Zero();
             pose_Tb_.resize(6, 0.0);
@@ -193,12 +194,14 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(pose_),
-                    DATA_WRAPPER(pose_Tb_),
-                    DATA_WRAPPER(pose_q_),
-                    DATA_WRAPPER(q_),
+                    // DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(pose_Tb_),
+                    // DATA_WRAPPER(pose_q_),
+                    // DATA_WRAPPER(q_),
                     // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
+                    // DATA_WRAPPER(torque_),
+                    DATA_WRAPPER(force_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -235,10 +238,13 @@ namespace controllers
             const std::vector<double> &pose_vec = state_->get<double>("pose");
             const std::vector<double> &torque_vec = state_->get<double>("torque");
             const std::vector<double> &pose_q_vec = state_->get<double>("pose_q_");
+            // const std::vector<double> &force_vec = state_->get<double>("force");
+            auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             command_->get<int>("mode")[0] = 3; 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
             pose_q_ = Eigen::Map<const Eigen::Vector6d>(pose_q_vec.data());
             torque_ = Eigen::Map<const Eigen::Vector7d>(torque_vec.data());
+            force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
             Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
@@ -247,6 +253,7 @@ namespace controllers
          
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
+            Eigen::Map<const Eigen::VectorXd> force(force_vec.data(), dof_);
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             std::fill(tau_cmd_vec.begin(), tau_cmd_vec.end(), 0);
 
@@ -336,11 +343,11 @@ namespace controllers
             // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq;
+            tau_cmd = tau_task_ + tau_null_ ;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
-            publish_robot_state(t, q_vec, dq_vec);
+            publish_robot_state(t, q_vec, dq_vec, force_vec);
             robot_data_.t = time_;
             DataComm::getInstance()->sendRobotStatus(robot_data_);
 
@@ -352,7 +359,9 @@ namespace controllers
     private:
         void publish_robot_state(const rclcpp::Time &t, 
                                  const std::vector<double> &q, 
-                                 const std::vector<double> &dq)
+                                 const std::vector<double> &dq,
+                                 const std::vector<double> &force
+                                )
         {
             if (!real_time_publisher_) return;
 
@@ -362,6 +371,7 @@ namespace controllers
             std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
             std::copy(q.begin(), q.end(), msg.robot_state.begin());
             std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
+            std::copy(force.begin(), force.end(), msg.robot_state.begin() + 14);
 
             if (real_time_publisher_->trylock())
             {
@@ -380,7 +390,7 @@ namespace controllers
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_, Jh_, dJh_;
-        Eigen::Vector6d pose_, pose_q_;
+        Eigen::Vector6d pose_, pose_q_, force_;
         Eigen::VectorXd g_;
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;

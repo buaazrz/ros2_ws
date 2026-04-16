@@ -41,6 +41,15 @@ DIANARobot:
     state_interface: [T, c, g, external_torque, success, m, pose, position, velocity, torque, pose_q_]
     state_length: [16, 7, 7, 7, 1, 49, 6, 7, 7, 7, 6]
     state_type: [double, double, double, double, double, double, double, double, double, double, double]
+    # sensors:
+    sensors: [ft_sensor]
+    ft_sensor: hardwares::FTATISensor
+
+ft_sensor:
+  ros__parameters:
+    sensor_ip: 192.168.124.10
+    state_interface: [force]
+    state_length: [6]    
 
 ForwardController:
   ros__parameters:

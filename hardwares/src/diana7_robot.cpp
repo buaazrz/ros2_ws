@@ -119,12 +119,15 @@ namespace hardwares
             auto& pose = state_.get<double>("pose");
             auto& pose_q_ = state_.get<double>("pose_q_");
             auto& torque = state_.get<double>("torque");
+            // auto& force = state_.get<double>("force");
 
 
             auto dt = period.seconds();
             getJointPos(q.data(), robot_ip_.c_str());
             getJointAngularVel(dq.data(), robot_ip_.c_str());
             getTcpPos(pose.data(), robot_ip_.c_str());
+            getJointForce(torque.data(),robot_ip_.c_str());
+            // getTcpForce(force.data(),robot_ip_.c_str());
             forward(q.data(), pose_q_.data(), nullptr, robot_ip_.c_str());
 
             if (dt > 0) 
