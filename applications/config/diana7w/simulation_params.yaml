@@ -16,10 +16,6 @@ control_node:
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
       - controllers::CartesianTrajImpPDController
-      # - controllers::PDMotionController
-      # - controllers::CartesianImpedancePDPlusController
-      # - controllers::CartesianImpedancePDController
-      # - controllers::CartesianDualLoopAdmittanceController
     default_controller: ""
 
 SimulationRobot:

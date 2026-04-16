@@ -41,17 +41,8 @@
   <class type="controllers::CartesianImpedancePDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianImpedancePDController plugin.</description>
   </class>
-  <class type="controllers::CartesianImpedancePDPlusController" base_class_type="controller_interface::ControllerInterface">
-    <description>This is a CartesianImpedancePDPlusController plugin.</description>
-  </class>
-  <class type="controllers::CartesianDualLoopAdmittanceController" base_class_type="controller_interface::ControllerInterface">
-    <description>This is a CartesianDualLoopAdmittanceController plugin.</description>
-  </class>
     <class type="controllers::CartesianTrajImpPDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianTrajImpPDController plugin.</description>
-  </class>
-    <class type="controllers::CartesianTrajImpPDPlusController" base_class_type="controller_interface::ControllerInterface">
-    <description>This is a CartesianTrajImpPDPlusController plugin.</description>
   </class>
   <class type="controllers::CartesianTrajectoryDianaController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianTrajectoryDianaController plugin.</description>
