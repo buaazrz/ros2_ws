@@ -41,7 +41,9 @@ namespace controllers
             auto &cmd = command_->get<double>("pose");
             auto &q = state_->get<double>("position");
             auto &dq = state_->get<double>("velocity");
+            auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
+            force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
         
@@ -88,16 +90,37 @@ namespace controllers
                         result->success = true;
                         goal_handle->succeed(result);
                         pose0_ = pose;
-                        // RCLCPP_INFO(node_->get_logger(), "Goal succeeded");
                     }
                     else
                     {
                         
-                        Eigen::Matrix4d T;
+                        Eigen::Matrix4d Td;
                         Eigen::Vector6d V, dV;
-                        trajectory->evaluate(dt.seconds(), T, V, dV);
-                        cmd = robot_math::tform_to_pose(T);
+                        trajectory->evaluate(dt.seconds(), Td, V, dV);
+                        cmd = robot_math::tform_to_pose(Td);
                         //visual_tools_->publishMarker(T.block(0, 3, 3, 1), "base", 0.5);
+                        double v_norm = V.norm();
+                        
+                        if (v_norm < 1e-5) // 速度几乎为0，说明到达了停留点
+                        {
+                            // 2. 并且只在这个停留周期内记录一次
+                            if (!has_logged_current_pose_) 
+                            {
+                                data_logger_->record();
+                                has_logged_current_pose_ = true; // 锁定，防止这 2 秒内记录 2000 次
+                                
+                                // 可选：用节流打印提示一下记录成功
+                                RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
+                                    "Auto-logged data at target pose. Force Z: %.2f", force_[2]);
+                            }
+                        }
+                        else 
+                        {
+                            // 3. 一旦速度起来了（开始前往下一个点），重置标志位
+                            if (v_norm > 1e-3) {
+                                has_logged_current_pose_ = false;
+                            }
+                        }
                     }
                 }
             }
@@ -106,7 +129,7 @@ namespace controllers
                 cmd = pose0_;
             }
 
-            data_logger_->record();
+            // data_logger_->record();
         }
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -191,10 +214,12 @@ namespace controllers
                 rcl_action_server_get_default_options(),
                 call_back_group_);
             pose_ = Eigen::Vector6d::Zero();
+            force_ = Eigen::Vector6d::Zero();
             data_logger_ = std::make_unique<DataLogger>(
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(pose_),
+                    DATA_WRAPPER(force_),
                 },
                 std::initializer_list<ExperimentContext>{
                 },
@@ -220,7 +245,9 @@ namespace controllers
         rclcpp::Publisher<robot_control_msgs::msg::RobotState>::SharedPtr robot_state_publisher_;
         std::shared_ptr<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>> real_time_publisher_;
         std::unique_ptr<DataLogger> data_logger_;
-        Eigen::Vector6d pose_;
+        Eigen::Vector6d pose_, force_;
+        bool has_logged_current_pose_ = true;
+
         double time_;
     };
 

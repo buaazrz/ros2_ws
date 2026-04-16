@@ -2,8 +2,10 @@
 #include <pluginlib/class_loader.hpp>
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include <chrono>
+#include <vector>
 #include "robot_control_msgs/action/robot_motion.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+
 using namespace std::chrono_literals;
 
 using ACTION = robot_control_msgs::action::RobotMotion;
@@ -15,67 +17,52 @@ int main(int argc, char **argv)
   auto node = std::make_shared<rclcpp::Node>("test_trajectory_controller_diana");
   auto client = rclcpp_action::create_client<ACTION>(node, "CartesianTrajectoryDianaController/goal");
 
-  if (!client->wait_for_action_server())
+  if (!client->wait_for_action_server(5s))
   {
     RCLCPP_ERROR(node->get_logger(), "Action server not available after waiting");
     rclcpp::shutdown();
     return 1;
   }
 
-  // auto send_goal_options = rclcpp_action::Client<ACTION>::SendGoalOptions();
-  // send_goal_options.goal_response_callback = [node](const GoalHandle::SharedPtr &goal_handle)
-  // {
-  //   if (!goal_handle)
-  //   {
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was rejected by server");
-  //   }
-  //   else
-  //   {
-  //     RCLCPP_INFO(node->get_logger(), "Goal accepted by server, waiting for result");
-  //   }
-  // };
+  // 1. 在这里只管罗列你的纯位姿数据 (N个位姿，不需要手敲时间戳)
+  std::vector<std::vector<double>> target_poses = {
+    {0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.5500, -0.0000, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.5500,  0.1800, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.4500,  0.1800, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.4500, -0.0000, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.4500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100},
+    {0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100}
+  };
 
-  // send_goal_options.feedback_callback = [node](
-  //                                           GoalHandle::SharedPtr,
-  //                                           const std::shared_ptr<const ACTION::Feedback> feedback)
-  // {
-  //   std::stringstream ss;
-  //   for (auto number : feedback->current_position.data)
-  //   {
-  //     ss << number << " ";
-  //   }
-  //   RCLCPP_INFO(node->get_logger(), ss.str().c_str());
-  // };
+  // 2. 自动生成包含时间戳和“停留”逻辑的完整轨迹数组
+  std::vector<double> full_trajectory_data;
+  double current_time = 0.0;
+  
+  // 你可以在这里调节运动节奏
+  double move_duration = 5.0; // 每一段平移耗时 5 秒
+  double stay_duration = 2.0; // 到达每个点后停留 2 秒
 
-  // send_goal_options.result_callback = [node](const GoalHandle::WrappedResult &result)
-  // {
-  //   switch (result.code)
-  //   {
-  //   case rclcpp_action::ResultCode::SUCCEEDED:
-  //     break;
-  //   case rclcpp_action::ResultCode::ABORTED:
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was aborted");
-  //     return;
-  //   case rclcpp_action::ResultCode::CANCELED:
-  //     RCLCPP_ERROR(node->get_logger(), "Goal was canceled");
-  //     return;
-  //   default:
-  //     RCLCPP_ERROR(node->get_logger(), "Unknown result code");
-  //     return;
-  //   }
-  //   std::stringstream ss;
-  //   ss << "Result received: " << result.result->success << " ";
-  //   RCLCPP_INFO(node->get_logger(), ss.str().c_str());
-  // };
+  for (const auto& pose : target_poses)
+  {
+      // 动作 A：平滑移动到当前目标位姿
+      current_time += move_duration;
+      full_trajectory_data.push_back(current_time);
+      full_trajectory_data.insert(full_trajectory_data.end(), pose.begin(), pose.end());
+
+      // 动作 B：在原地停留 (时间推进了，但位姿不变)
+      current_time += stay_duration;
+      full_trajectory_data.push_back(current_time);
+      full_trajectory_data.insert(full_trajectory_data.end(), pose.begin(), pose.end());
+  }
+
+  // 3. 打包发送给控制器
   auto goal_msg = ACTION::Goal();
-  goal_msg.target_position.data = {
-    5,  0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100, 
-    10, 0.5500, -0.0000, 0.3600, 0.0000, -0.0000, -0.3100,  
-    15, 0.5500,  0.1800, 0.3600, 0.0000, -0.0000, -0.3100,  
-    20, 0.4500,  0.1800, 0.3600, 0.0000, -0.0000, -0.3100,  
-    25, 0.4500, -0.0000, 0.3600, 0.0000, -0.0000, -0.3100,  
-    30, 0.4500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100, 
-    35, 0.5500, -0.1800, 0.3600, 0.0000, -0.0000, -0.3100,};
+  goal_msg.target_position.data = full_trajectory_data;
+
+  RCLCPP_INFO(node->get_logger(), "Sending trajectory with %zu target poses. Total time: %.1f seconds.", 
+              target_poses.size(), current_time);
+
   auto handle_future = client->async_send_goal(goal_msg);
   auto result = rclcpp::spin_until_future_complete(node, handle_future);
   if (result != rclcpp::FutureReturnCode::SUCCESS)
@@ -84,6 +71,7 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
   }
+  
   auto handle = handle_future.get();
   if(handle == nullptr)
   {
@@ -91,6 +79,9 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
   }
+  
+  RCLCPP_INFO(node->get_logger(), "Goal accepted, waiting for execution to finish...");
+  
   auto result_future = client->async_get_result(handle);
   result = rclcpp::spin_until_future_complete(node, result_future);
   if (result != rclcpp::FutureReturnCode::SUCCESS)
@@ -99,9 +90,13 @@ int main(int argc, char **argv)
       rclcpp::shutdown();
       return 0;
   }
-  result_future.get().result->success;
+  
+  if (result_future.get().code == rclcpp_action::ResultCode::SUCCEEDED) {
+      RCLCPP_INFO(node->get_logger(), "Trajectory execution succeeded!");
+  } else {
+      RCLCPP_ERROR(node->get_logger(), "Trajectory execution failed or was canceled.");
+  }
+
   rclcpp::shutdown();
   return 0;
 }
-
-
