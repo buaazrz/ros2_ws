@@ -333,9 +333,9 @@ namespace controllers
 
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
 
-            // tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
+            tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
             
-            tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
+            // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
 
 
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
