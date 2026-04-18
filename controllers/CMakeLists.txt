@@ -71,6 +71,7 @@ add_executable(test_cartesian_controller test/test_cartesian_controller.cpp)
 add_executable(test_trajectory_controller test/test_trajectory_controller.cpp)
 add_executable(test_trajectory_controller_zrz test/test_trajectory_controller_zrz.cpp)
 add_executable(test_trajectory_controller_diana test/test_trajectory_controller_diana.cpp)
+add_executable(test_joint_motion_diana test/test_joint_motion_diana.cpp)
 add_executable(movel utility/movel.cpp)
 add_executable(movej utility/movej.cpp)
 add_executable(move_zrz utility/move_zrz.cpp)
@@ -91,6 +92,11 @@ ament_target_dependencies(
 
 ament_target_dependencies(
   test_trajectory_controller
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+ament_target_dependencies(
+  test_joint_motion_diana
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
@@ -130,7 +136,7 @@ ament_target_dependencies(
 )
 
 install(TARGETS test_controller debug_all test_joint_controller  test_trajectory_controller test_trajectory_controller_zrz  
-test_trajectory_controller_diana  movej movel move_zrz test_cartesian_controller
+test_trajectory_controller_diana  movej movel move_zrz test_cartesian_controller test_joint_motion_diana
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

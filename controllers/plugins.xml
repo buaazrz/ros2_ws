@@ -47,4 +47,7 @@
   <class type="controllers::CartesianTrajectoryDianaController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianTrajectoryDianaController plugin.</description>
   </class>
+  <class type="controllers::JointMotionControllerDiana" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a JointMotionControllerDiana plugin.</description>
+  </class>
 </library>

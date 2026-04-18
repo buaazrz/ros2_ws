@@ -17,6 +17,7 @@ control_node:
       - controllers::RobotStateBroadcaster
       - controllers::CartesianImpedancePDController
       - controllers::CartesianTrajImpPDController
+      - controllers::JointMotionControllerDiana
     default_controller: "controllers::CartesianImpedancePDController"
 
 DIANARobot:

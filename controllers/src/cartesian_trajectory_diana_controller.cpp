@@ -109,9 +109,13 @@ namespace controllers
                                 data_logger_->record();
                                 has_logged_current_pose_ = true; // 锁定，防止这 2 秒内记录 2000 次
                                 
-                                // 可选：用节流打印提示一下记录成功
-                                RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
-                                    "Auto-logged data at target pose. Force Z: %.2f", force_[2]);
+                                current_waypoint_index_++;
+                                
+                                // 打印当前是第几个点，以及当前的6维位姿 (X, Y, Z, Rx, Ry, Rz)
+                                RCLCPP_INFO(node_->get_logger(), 
+                                    "Auto-logged at waypoint [%d]. Current Pose: {%.4f, %.4f, %.4f, %.4f, %.4f, %.4f}", 
+                                    current_waypoint_index_,
+                                    pose_[0], pose_[1], pose_[2], pose_[3], pose_[4], pose_[5]);
                             }
                         }
                         else 
@@ -168,6 +172,7 @@ namespace controllers
                 trajectory->set_traj(full_traj_data);
                 
                 last_time_ = node_->now();
+                current_waypoint_index_ = 0; 
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
 
                 double dt = 0.001;
@@ -246,6 +251,7 @@ namespace controllers
         std::shared_ptr<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>> real_time_publisher_;
         std::unique_ptr<DataLogger> data_logger_;
         Eigen::Vector6d pose_, force_;
+        int current_waypoint_index_ = 0; 
         bool has_logged_current_pose_ = true;
 
         double time_;
