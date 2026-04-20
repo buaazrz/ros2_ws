@@ -520,6 +520,35 @@ namespace robot_math
                                force[2] - g(2) - offset[2]);
     }
 
+    Eigen::Vector6d gravity_and_inertia_compensation(const Robot &robot, const Eigen::Matrix4d &Tcp, const Eigen::Matrix4d &Tsensor, const std::vector<double> &q, const std::vector<double> &dq,
+                                                     const std::vector<double> &ddq, const double *rawForce, double mass, const double offset[6], const double cog[3], const Eigen::Matrix3d &mI, double scale)
+    {
+        Eigen::Vector3d com(cog[0], cog[1], cog[2]);
+        Eigen::Vector3d Pcom = Tsensor.block(0, 3, 3, 1) + Tsensor.block(0, 0, 3, 3) * com;
+        Eigen::Matrix4d Tcb = Eigen::Matrix4d::Identity();
+        Tcb.block(0, 3, 3, 1) = -Pcom;
+        Eigen::Matrix6d adTcb = adjoint_T(Tcb);
+        Eigen::Matrix6d g = Eigen::Matrix6d::Identity();
+        g(3, 3) = g(4, 4) = g(5, 5) = mass;
+        g.topLeftCorner(3, 3) = mI;
+        Eigen::MatrixXd J, dJ;
+        Eigen::Matrix4d T, dT;
+        Eigen::Vector6d Vc, dVc, Vb, dVb;
+        derivative_jacobian_matrix(&robot, q, dq, dJ, J, dT, T);
+        Vb = J * Eigen::Map<const Eigen::VectorXd>(&dq[0], dq.size());
+        dVb = dJ * Eigen::Map<const Eigen::VectorXd>(&dq[0], dq.size()) + J * Eigen::Map<const Eigen::VectorXd>(&ddq[0], ddq.size());
+        Vc = adTcb * Vb;
+        dVc = adTcb * dVb;
+        Eigen::Vector6d Ftotal = g * dVc - adjoint_V(Vc).transpose() * g * Vc;
+        Eigen::Vector6d Fg(0, 0, 0, 0, 0, 0);
+        Fg.bottomRows(3) = mass * 9.8 * T.block(0, 0, 3, 3).transpose() * Eigen::Vector3d(0, 0, -1);
+        Eigen::Vector6d rawWrench(rawForce[3] - offset[3], rawForce[4] - offset[4], rawForce[5] - offset[5],
+                                  rawForce[0] - offset[0], rawForce[1] - offset[1], rawForce[2] - offset[2]);
+        Eigen::Vector6d Fsensor = adjoint_T(inv_tform(Tsensor)).transpose() * rawWrench * scale;
+        Eigen::Vector6d Fext = adTcb.transpose() * (Fg - Ftotal) - Fsensor;
+        return adjoint_T(Tcp).transpose() * Fext;
+    }
+
     Eigen::Matrix3d so_w(const Eigen::Vector3d &w)
     {
         Eigen::Matrix3d S;
@@ -1214,35 +1243,6 @@ namespace robot_math
             dT = tform * (se_twist(Ai) * T * dq[i] + dT);
             T = tform * T;
         }
-    }
-
-    Eigen::Vector6d gravity_and_inertia_compensation(const Robot &robot, const Eigen::Matrix4d &Tcp, const Eigen::Matrix4d &Tsensor, const std::vector<double> &q, const std::vector<double> &dq,
-                                                     const std::vector<double> &ddq, const double *rawForce, double mass, const double offset[6], const double cog[3], const Eigen::Matrix3d &mI, double scale)
-    {
-        Eigen::Vector3d com(cog[0], cog[1], cog[2]);
-        Eigen::Vector3d Pcom = Tsensor.block(0, 3, 3, 1) + Tsensor.block(0, 0, 3, 3) * com;
-        Eigen::Matrix4d Tcb = Eigen::Matrix4d::Identity();
-        Tcb.block(0, 3, 3, 1) = -Pcom;
-        Eigen::Matrix6d adTcb = adjoint_T(Tcb);
-        Eigen::Matrix6d g = Eigen::Matrix6d::Identity();
-        g(3, 3) = g(4, 4) = g(5, 5) = mass;
-        g.topLeftCorner(3, 3) = mI;
-        Eigen::MatrixXd J, dJ;
-        Eigen::Matrix4d T, dT;
-        Eigen::Vector6d Vc, dVc, Vb, dVb;
-        derivative_jacobian_matrix(&robot, q, dq, dJ, J, dT, T);
-        Vb = J * Eigen::Map<const Eigen::VectorXd>(&dq[0], dq.size());
-        dVb = dJ * Eigen::Map<const Eigen::VectorXd>(&dq[0], dq.size()) + J * Eigen::Map<const Eigen::VectorXd>(&ddq[0], ddq.size());
-        Vc = adTcb * Vb;
-        dVc = adTcb * dVb;
-        Eigen::Vector6d Ftotal = g * dVc - adjoint_V(Vc).transpose() * g * Vc;
-        Eigen::Vector6d Fg(0, 0, 0, 0, 0, 0);
-        Fg.bottomRows(3) = mass * 9.8 * T.block(0, 0, 3, 3).transpose() * Eigen::Vector3d(0, 0, -1);
-        Eigen::Vector6d rawWrench(rawForce[3] - offset[3], rawForce[4] - offset[4], rawForce[5] - offset[5],
-                                  rawForce[0] - offset[0], rawForce[1] - offset[1], rawForce[2] - offset[2]);
-        Eigen::Vector6d Fsensor = adjoint_T(inv_tform(Tsensor)).transpose() * rawWrench * scale;
-        Eigen::Vector6d Fext = adTcb.transpose() * (Fg - Ftotal) - Fsensor;
-        return adjoint_T(Tcp).transpose() * Fext;
     }
 
     Eigen::Matrix3d A_r(const Eigen::Vector3d &r)

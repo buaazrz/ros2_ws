@@ -30,11 +30,10 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
-        CartesianTrajImpPDController() : f_filter_(6, 50) {}
+        CartesianTrajImpPDController() : f_filter_(6, 15) {}
         ~CartesianTrajImpPDController() 
         {
             if (data_logger_)
-            //    data_logger_->save(FileUtils::getHomeDirectory() + "/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
                data_logger_->save("/home/wjc/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
         }
 
@@ -103,27 +102,18 @@ namespace controllers
             robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
-
-            G_ << 0.0, 0.0, -0.60634; 
-            r_ <<  -0.3232   , 0.6814   ,-0.7030;
-            r_ *= 1.e-3;
-            offset_ <<  -6.0249  ,  5.3770  , -9.6741   , 0.4348  ,  0.2761 ,   0.2699;
-            offset_1_ << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-            
-            // Rd_ = T.block(0, 0, 3, 3);
-            // pd_ = T.block(0, 3, 3, 1);
             
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
             ddxd_ = Eigen::Vector6d::Zero();
-
-            M_.resize(dof_, dof_);     M_.setZero();
-            C_.resize(dof_, dof_);     C_.setZero();
-            dM_.resize(dof_, dof_);    dM_.setZero();
-        
             tau_task_ = Eigen::VectorXd::Zero(dof_);
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
+
+            sensor_weight_ = 0.60634; 
+            sensor_cog_vec_ = {-0.3232 * 1e-3, 0.6814 * 1e-3, -0.7030 * 1e-3};
+            sensor_offset_vec_ = {-6.0249, 5.3770, -9.6741, 0.4348, 0.2761, 0.2699};
+            T_sensor_ = Eigen::Matrix4d::Identity();
 
             auto handle_goal =[this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal) {
                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -187,23 +177,17 @@ namespace controllers
                 rcl_action_server_get_default_options(), call_back_group_);
             
             pose_ = Eigen::Vector6d::Zero();
-            pose_q_ = Eigen::Vector6d::Zero();
-            torque_ = Eigen::Vector7d::Zero();
             force_ = Eigen::Vector6d::Zero();
             dq_ = Eigen::Vector7d::Zero();
             q_ = Eigen::Vector7d::Zero();
-            pose_Tb_.resize(6, 0.0);
             data_logger_ = std::make_unique<DataLogger>(
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
                     // DATA_WRAPPER(pose_),
-                    // DATA_WRAPPER(pose_Tb_),
-                    // DATA_WRAPPER(pose_q_),
                     // DATA_WRAPPER(q_),
                     // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
-                    // DATA_WRAPPER(torque_),
                     DATA_WRAPPER(force_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
@@ -239,14 +223,9 @@ namespace controllers
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
-            const std::vector<double> &torque_vec = state_->get<double>("torque");
-            const std::vector<double> &pose_q_vec = state_->get<double>("pose_q_");
-            // const std::vector<double> &force_vec = state_->get<double>("force");
             auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             command_->get<int>("mode")[0] = 3; 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
-            pose_q_ = Eigen::Map<const Eigen::Vector6d>(pose_q_vec.data());
-            torque_ = Eigen::Map<const Eigen::Vector7d>(torque_vec.data());
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
@@ -270,16 +249,21 @@ namespace controllers
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
-            pose_Tb_ = robot_math::tform_to_pose(Tb_);
             R_ = Tb_.block(0, 0, 3, 3); 
             p_ = Tb_.block(0, 3, 3, 1);
-            Eigen::Vector3d F_S_G, M_S_G; 
-            F_S_G = R_.transpose() * G_;
-            M_S_G = r_.cross(F_S_G);
-            force_.head(3) = force_.head(3) - F_S_G - offset_.head(3) - offset_1_.head(3);
-            force_.tail(3) = force_.tail(3) - M_S_G - offset_.tail(3) - offset_1_.tail(3);
+            
+            Eigen::Vector6d raw_compensated = robot_math::get_ext_force(
+                force_vec, 
+                sensor_weight_, 
+                sensor_offset_vec_, 
+                sensor_cog_vec_, 
+                T_sensor_, 
+                Tb_
+            );
+            force_.head(3) = raw_compensated.tail(3); 
+            force_.tail(3) = raw_compensated.head(3); 
+
             f_filter_.filtering(force_.data(), force_.data());
-            // force = force_;
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -338,19 +322,10 @@ namespace controllers
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
             Eigen::Matrix6d Lambda = robot_math::A_x_inv(Jb_, M_).inverse();
-
-            // ddxc_ = ddxd_ + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_;
-
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
-
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
-            
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
-
-
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
-            // Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dof_, dof_);
-            // tau_null_ = M_ * ((I - (robot_math::J_sharp(Jb_, M_) * Jb_)) * ldlt.solve(Bn_.asDiagonal() * (-dq))); 
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
             tau_cmd = tau_task_ + tau_null_ ;
@@ -358,8 +333,6 @@ namespace controllers
             tau_d = tau_cmd;
 
             publish_robot_state(t, q_vec, dq_vec, force_);
-            robot_data_.t = time_;
-            DataComm::getInstance()->sendRobotStatus(robot_data_);
 
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
             data_logger_->record();
@@ -374,17 +347,12 @@ namespace controllers
         )
         {
         if (!real_time_publisher_) return;
-
         robot_control_msgs::msg::RobotState msg;
         msg.header.stamp = t;
-
         std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
         std::copy(q.begin(), q.end(), msg.robot_state.begin());
         std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
-
-        // <--- 修改 2：Eigen向量没有begin/end，用 .data() 指针进行拷贝，拷贝 6 个元素
         std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
-
         if (real_time_publisher_->trylock())
         {
         real_time_publisher_->msg_ = msg;
@@ -401,26 +369,26 @@ namespace controllers
 
         int dof_;
         double time_, traj_time_;
-        Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_, Jh_, dJh_;
-        Eigen::Vector6d pose_, pose_q_, force_;
+        Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_;
+        Eigen::Vector6d pose_, force_;
         Eigen::VectorXd g_;
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
         Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
         Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_, dq_, q_;
         Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_, dVd;
-        Eigen::Matrix3d Rd_, R_, R_c_;
-        Eigen::Vector6d offset_, offset_1_;
-        Eigen::Vector3d r_, G_;
-        Eigen::Vector3d pd_, p_, wd_, vd_, p_c_;
-        Eigen::Vector7d tau_d, torque_;
+        Eigen::Matrix3d Rd_, R_;
+        Eigen::Vector3d pd_, p_, wd_, vd_;
+        Eigen::Vector7d tau_d;
+        std::vector<double> sensor_cog_vec_;
+        std::vector<double> sensor_offset_vec_;
+        double sensor_weight_;
+        Eigen::Matrix4d T_sensor_;
         double cal_time_;
         std::unique_ptr<DataLogger> data_logger_;
-        RobotData robot_data_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
         robot_math::MovingFilter<double> f_filter_;
-        std::vector<double> pose_Tb_;
     };
 } // namespace controllers
 
