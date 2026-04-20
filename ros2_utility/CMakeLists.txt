@@ -25,7 +25,8 @@ pkg_check_modules(FFTW3 REQUIRED IMPORTED_TARGET fftw3)
 
 # 递归 glob 所有源文件
 file(GLOB_RECURSE ALL_SRCS src/*.cpp)
-add_library(ros2_utility SHARED ${ALL_SRCS})
+file(GLOB_RECURSE ALGLIB_SRCS src_alglib/*.cpp)
+add_library(ros2_utility SHARED ${ALL_SRCS} ${ALGLIB_SRCS})
 
 # 要求编译时使用 C99 标准 (用于 C 代码) 和 C++17 标准 (用于 C++ 代码)
 target_compile_features(ros2_utility PUBLIC c_std_99 cxx_std_17)
@@ -34,7 +35,9 @@ target_compile_features(ros2_utility PUBLIC c_std_99 cxx_std_17)
 target_include_directories(ros2_utility PUBLIC
     ${EIGEN3_INCLUDE_DIR} # 添加 Eigen3 的头文件路径
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src_alglib>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    $<INSTALL_INTERFACE:include/${PROJECT_NAME}/alglib>  
 )
 
 ament_target_dependencies(ros2_utility
@@ -57,6 +60,12 @@ ament_target_dependencies(ros2_utility
 install(
     DIRECTORY include/               # 源文件夹
     DESTINATION include/${PROJECT_NAME}  # 目标路径
+)
+
+install(
+    DIRECTORY src_alglib/
+    DESTINATION include/${PROJECT_NAME}/alglib
+    FILES_MATCHING PATTERN "*.h"
 )
 
 # 安装 ros2_utility 库及其相关文件
@@ -83,6 +92,7 @@ endif()
 # 导出项目的包含目录，供其他依赖此项目的包使用
 ament_export_include_directories(
     "include/${PROJECT_NAME}"  # 导出该项目的头文件目录
+    "include/${PROJECT_NAME}/alglib"
 )
 
 # 导出库，供其他依赖此库的包使用

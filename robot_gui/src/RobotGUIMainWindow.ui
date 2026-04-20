@@ -271,6 +271,11 @@
            <string>JointMotionControllerDiana</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>VariableImpedanceController</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
