@@ -110,10 +110,14 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.60634; 
-            sensor_cog_vec_ = {-0.3232 * 1e-3, 0.6814 * 1e-3, -0.7030 * 1e-3};
-            sensor_offset_vec_ = {-6.0249, 5.3770, -9.6741, 0.4348, 0.2761, 0.2699};
+            sensor_weight_ = 0.59702; 
+            sensor_cog_vec_ = {0.0008   , 0.0001 ,   0.0030};
+            sensor_offset_vec_ = {-4.8164  ,  5.5965  , -9.3466  ,  0.4178   , 0.2654  ,  0.2582};
             T_sensor_ = Eigen::Matrix4d::Identity();
+            T_sensor_ << 1,  0,  0, 0,
+             0, -1,  0, 0,
+             0,  0, -1, 0,
+             0,  0,  0, 1;
 
             auto handle_goal =[this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal) {
                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -184,11 +188,12 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    DATA_WRAPPER(tau_d),
+                    // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
                     DATA_WRAPPER(force_),
+                    DATA_WRAPPER(Kx_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -218,6 +223,10 @@ namespace controllers
             time_ += period.seconds();
 
             auto start_time = std::chrono::high_resolution_clock::now();
+            static int debug_count = 0;
+            if (debug_count++ % 1000 == 0) { // 1000Hz 循环，每秒打印一次
+                std::cerr << "[DEBUG] Hello! Update function is RUNNING. Count=" << debug_count << std::endl;
+            }
 
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
             const std::vector<double> &q_vec = state_->get<double>("position");
@@ -229,6 +238,9 @@ namespace controllers
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
+            Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
+            // R_ = T.block(0, 0, 3, 3); 
+            // p_ = T.block(0, 3, 3, 1); 
          
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
@@ -259,6 +271,11 @@ namespace controllers
             );
             force_.head(3) = raw_compensated.tail(3); 
             force_.tail(3) = raw_compensated.head(3); 
+            Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3,3>(0,0);
+            force_.head(3) = R_tcp_to_sensor * force_.head(3);
+            force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
+ 
+
             f_filter_.filtering(force_.data(), force_.data());
 
             auto handle_pair = *real_time_buffer_.readFromRT();
@@ -281,12 +298,16 @@ namespace controllers
                     traj_time_ += period.seconds();
                     Eigen::Matrix4d Td_curr;
                     Eigen::Vector6d Vd_curr, dVd_curr;
+
                     trajectory->evaluate(traj_time_, Td_curr, Vd_curr, dVd_curr);
+
                     Rd_ = Td_curr.block(0, 0, 3, 3);
                     pd_ = Td_curr.block(0, 3, 3, 1);
                     wd_ = Vd_curr.head(3); 
                     vd_ = Vd_curr.tail(3); 
                     dVd = dVd_curr;
+
+
                     Eigen::Vector3d pos_err = pd_ - p_;
                     Eigen::Vector3d rot_err = robot_math::logR(R_.transpose() * Rd_);
                     if (pos_err.norm() < 1e-3 && rot_err.norm() < 1e-2 && traj_time_ >= trajectory->total_time())
@@ -335,20 +356,20 @@ namespace controllers
         void publish_robot_state(const rclcpp::Time &t, 
             const std::vector<double> &q, 
             const std::vector<double> &dq,
-            const Eigen::Vector6d &force
+            const Eigen::Vector6d &force // <--- 修改 1：参数类型改为 Eigen::Vector6d
         )
         {
-            if (!real_time_publisher_) return;
-            robot_control_msgs::msg::RobotState msg;
-            msg.header.stamp = t;
-            std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
-            std::copy(q.begin(), q.end(), msg.robot_state.begin());
-            std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
-            std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
-            if (real_time_publisher_->trylock())
+        if (!real_time_publisher_) return;
+        robot_control_msgs::msg::RobotState msg;
+        msg.header.stamp = t;
+        std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
+        std::copy(q.begin(), q.end(), msg.robot_state.begin());
+        std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
+        std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
+        if (real_time_publisher_->trylock())
             {
-                real_time_publisher_->msg_ = msg;
-                real_time_publisher_->unlockAndPublish();
+            real_time_publisher_->msg_ = msg;
+            real_time_publisher_->unlockAndPublish();
             }
         }
     protected:
@@ -358,6 +379,7 @@ namespace controllers
         rclcpp::CallbackGroup::SharedPtr call_back_group_;
         rclcpp_action::Server<ACTION>::SharedPtr action_server_;
         realtime_tools::RealtimeBuffer<BufferType> real_time_buffer_;
+
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_;

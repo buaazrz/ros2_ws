@@ -42,14 +42,26 @@ namespace controllers
 
             auto &cmd = command_->get<double>("position");
             auto &q = state_->get<double>("position");
-            auto &pose = state_->get<double>("pose");
+            auto &pose_vec = state_->get<double>("pose");
+            Eigen::Vector6d tcp_pose_6d = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+            std::vector<double> tcp_pose_std(tcp_pose_6d.data(), tcp_pose_6d.data() + tcp_pose_6d.size());
+            Eigen::Matrix4d T_tcp = robot_math::pose_to_tform(tcp_pose_std);
+            Eigen::Matrix4d T_rel = Eigen::Matrix4d::Identity();
+            T_rel << 1,  0,  0, 0,
+             0, -1,  0, 0,
+             0,  0, -1, 0,
+             0,  0,  0, 1;
+            Eigen::Matrix4d T_sensor = T_tcp * T_rel;
             
             // 为了 DataLogger 记录，读取力传感器数据并通过正运动学计算当前笛卡尔位姿
             auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
 
             
-            pose_ = Eigen::Map<const Eigen::Vector6d>(pose.data());
+            // pose_ = Eigen::Map<const Eigen::Vector6d>(pose.data());
+            std::vector<double> pose_std;
+            pose_std = robot_math::tform_to_pose(T_sensor);
+            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_std.data());
 
             if(period.seconds() == 0)
             {

@@ -7,6 +7,7 @@
 #include "robot_math/CartesianTrajectory.hpp"
 #include "ros2_utility/data_logger.hpp"
 #include "ros2_utility/file_utils.hpp"
+#include "math.h"
 #include "robot_control_msgs/action/robot_motion.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include <iostream>
@@ -69,7 +70,7 @@ namespace controllers
         ~VariableImpedanceController() 
         {
             if (data_logger_)
-               data_logger_->save("/home/buaazrz/experiment_logs/variable_imp_controller/", "variable_imp_controller");
+               data_logger_->save("/home/wjc/experiment_logs/variable_imp_controller/", "variable_imp_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -158,10 +159,14 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.60634; 
-            sensor_cog_vec_ = {-0.3232 * 1e-3, 0.6814 * 1e-3, -0.7030 * 1e-3};
-            sensor_offset_vec_ = {-6.0249, 5.3770, -9.6741, 0.4348, 0.2761, 0.2699};
+            sensor_weight_ = 0.59702; 
+            sensor_cog_vec_ = {0.0008   , 0.0001 ,   0.0030};
+            sensor_offset_vec_ = {-4.8164  ,  5.5965  , -9.3466  ,  0.4178   , 0.2654  ,  0.2582};
             T_sensor_ = Eigen::Matrix4d::Identity();
+            T_sensor_ << 1,  0,  0, 0,
+             0, -1,  0, 0,
+             0,  0, -1, 0,
+             0,  0,  0, 1;
 
             auto handle_goal =[this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal) {
                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -232,11 +237,12 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    DATA_WRAPPER(tau_d),
+                    // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
-                    DATA_WRAPPER(force_),
+                    // DATA_WRAPPER(force_),
+                    DATA_WRAPPER(Kx_(5)),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -310,10 +316,11 @@ namespace controllers
             );
             force_.head(3) = raw_compensated.tail(3); 
             force_.tail(3) = raw_compensated.head(3); 
-
+            Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3,3>(0,0);
+            force_.head(3) = R_tcp_to_sensor * force_.head(3);
+            force_.tail(3) = R_tcp_to_sensor * force_.tail(3);    
+ 
             f_filter_.filtering(force_.data(), force_.data());
-
-            force_.setZero();
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -374,7 +381,7 @@ namespace controllers
 
             double F_ext_z = force_(2); 
             double F_err_z = F_des_z_ - F_ext_z;
-            std::cerr << "F_des_z: " << F_des_z_ << std::endl;
+            // std::cerr << "F_des_z: " << F_des_z_ << std::endl;
 
             force_int_z_ += F_err_z * period.seconds();
             double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
@@ -430,8 +437,20 @@ namespace controllers
                     alglib::minbleicresults(state, x_opt, rep);
 
                     // 提取结果并注入底层阻抗控制器
-                    Kx_vec_[5] = x_opt[0];
-                    Kx_(5) = x_opt[0];
+                    if (int(rep.terminationtype) > 0) 
+                    {
+                        Kx_vec_[5] = x_opt[0];
+                        Kx_(5) = x_opt[0];
+                        Bx_(5) = 1.42 * sqrt(Kx_(5));
+                    } 
+                    else 
+                    {
+                        // 如果无解(通常是因为力太大，约束打架)，强制设为最小刚度
+                        RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
+                            "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep.terminationtype));
+                        Kx_vec_[5] = Kz_min_;
+                        Kx_(5) = Kz_min_;
+                    }
                 }
                 catch(alglib::ap_error alglib_exception)
                 {
