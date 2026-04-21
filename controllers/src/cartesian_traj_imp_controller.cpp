@@ -184,9 +184,9 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    // DATA_WRAPPER(pose_),
+                    DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    // DATA_WRAPPER(tau_d),
+                    DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
                     DATA_WRAPPER(force_),
                     // DATA_WRAPPER(tau_null_),
@@ -229,9 +229,6 @@ namespace controllers
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
-            Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
-            // R_ = T.block(0, 0, 3, 3); 
-            // p_ = T.block(0, 3, 3, 1); 
          
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
@@ -262,7 +259,6 @@ namespace controllers
             );
             force_.head(3) = raw_compensated.tail(3); 
             force_.tail(3) = raw_compensated.head(3); 
-
             f_filter_.filtering(force_.data(), force_.data());
 
             auto handle_pair = *real_time_buffer_.readFromRT();
@@ -285,16 +281,12 @@ namespace controllers
                     traj_time_ += period.seconds();
                     Eigen::Matrix4d Td_curr;
                     Eigen::Vector6d Vd_curr, dVd_curr;
-
                     trajectory->evaluate(traj_time_, Td_curr, Vd_curr, dVd_curr);
-
                     Rd_ = Td_curr.block(0, 0, 3, 3);
                     pd_ = Td_curr.block(0, 3, 3, 1);
                     wd_ = Vd_curr.head(3); 
                     vd_ = Vd_curr.tail(3); 
                     dVd = dVd_curr;
-
-
                     Eigen::Vector3d pos_err = pd_ - p_;
                     Eigen::Vector3d rot_err = robot_math::logR(R_.transpose() * Rd_);
                     if (pos_err.norm() < 1e-3 && rot_err.norm() < 1e-2 && traj_time_ >= trajectory->total_time())
@@ -343,21 +335,21 @@ namespace controllers
         void publish_robot_state(const rclcpp::Time &t, 
             const std::vector<double> &q, 
             const std::vector<double> &dq,
-            const Eigen::Vector6d &force // <--- 修改 1：参数类型改为 Eigen::Vector6d
+            const Eigen::Vector6d &force
         )
         {
-        if (!real_time_publisher_) return;
-        robot_control_msgs::msg::RobotState msg;
-        msg.header.stamp = t;
-        std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
-        std::copy(q.begin(), q.end(), msg.robot_state.begin());
-        std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
-        std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
-        if (real_time_publisher_->trylock())
-        {
-        real_time_publisher_->msg_ = msg;
-        real_time_publisher_->unlockAndPublish();
-        }
+            if (!real_time_publisher_) return;
+            robot_control_msgs::msg::RobotState msg;
+            msg.header.stamp = t;
+            std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
+            std::copy(q.begin(), q.end(), msg.robot_state.begin());
+            std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
+            std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
+            if (real_time_publisher_->trylock())
+            {
+                real_time_publisher_->msg_ = msg;
+                real_time_publisher_->unlockAndPublish();
+            }
         }
     protected:
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
@@ -366,7 +358,6 @@ namespace controllers
         rclcpp::CallbackGroup::SharedPtr call_back_group_;
         rclcpp_action::Server<ACTION>::SharedPtr action_server_;
         realtime_tools::RealtimeBuffer<BufferType> real_time_buffer_;
-
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_;

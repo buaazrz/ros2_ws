@@ -232,9 +232,9 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    // DATA_WRAPPER(pose_),
+                    DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    // DATA_WRAPPER(tau_d),
+                    DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
                     DATA_WRAPPER(force_),
                     // DATA_WRAPPER(tau_null_),
@@ -374,17 +374,16 @@ namespace controllers
 
             double F_ext_z = force_(2); 
             double F_err_z = F_des_z_ - F_ext_z;
+            std::cerr << "F_des_z: " << F_des_z_ << std::endl;
+
             force_int_z_ += F_err_z * period.seconds();
             double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
-
             double xe_z = xe_(5);       
             double dxe_z = dxe_(5);
             double B_z = Bx_(5);
 
-            // 当位置偏差极小时，刚度计算无意义且容易导致数值不稳定
-            if (std::abs(xe_z) > 1e-4) 
+            if (std::abs(xe_z) > 1e-3) 
             {
-                // 配置传给 ALGLIB 的动态参数
                 OptParams params;
                 params.Q_weight = Q_weight_;
                 params.R_weight = R_weight_;
@@ -395,7 +394,6 @@ namespace controllers
 
                 try 
                 {
-                    // 1. 初始化优化变量
                     alglib::real_1d_array x_opt = "[0]";
                     x_opt[0] = Kx_(5); // 初始值设为上一周期的刚度，可加快收敛
 
@@ -438,7 +436,6 @@ namespace controllers
                 catch(alglib::ap_error alglib_exception)
                 {
                     RCLCPP_WARN(node_->get_logger(), "ALGLIB exception: %s", alglib_exception.msg.c_str());
-                    // 若优化失败，维持上一周期的刚度不变，保障系统安全
                 }
             }
 
