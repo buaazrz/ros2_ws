@@ -81,19 +81,15 @@ namespace controllers
             node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {30.0, 30.0, 30.0, 150.0, 150.0, 150.0});
             node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
-            node_->get_parameter_or<double>("Q_weight", Q_weight_, 1.0);      // 力跟踪权重
-            node_->get_parameter_or<double>("R_weight", R_weight_, 0.001);    // 刚度正则化权重 (防止K变化太大)
-            
-            // 2. 力控参数
-            node_->get_parameter_or<double>("F_des_z", F_des_z_, 0.0);        // 期望接触力 (单位：N，例如向下压设为正值)
-            node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);       // 最大安全接触力限制
-            node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);              // 力控 P
-            node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);              // 力控 I
-            
-            // 3. 刚度边界
-            node_->get_parameter_or<double>("Kz_min", Kz_min_, 500.0);         // 最小刚度 (软)
-            node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0); 
-            
+            node_->get_parameter_or<double>("Q_weight", Q_weight_, 1.0);
+            node_->get_parameter_or<double>("R_weight", R_weight_, 0.001);
+            node_->get_parameter_or<double>("F_des_z", F_des_z_, 0.0);
+            node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
+            node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
+            node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
+            node_->get_parameter_or<double>("Kz_min", Kz_min_, 100.0);
+            node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0);
+
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
             Kn_in_box_.set(Kn_vec_);
@@ -190,38 +186,6 @@ namespace controllers
                 
                 traj_time_ = 0.0; 
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
-
-                double dt = 0.001;
-
-                std::ofstream outfile("/tmp/reference_trajectory.csv"); 
-                if (outfile.is_open())
-                {
-                    outfile << "time,x,y,z,qw,qx,qy,qz\n";
-                    
-                    for (double t = 0; t <= trajectory->total_time(); t += dt)
-                    {
-                        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-                        Eigen::Vector6d V, dV;
-                        
-                        trajectory->evaluate(t, T, V, dV);
-
-                        double x = T(0, 3);
-                        double y = T(1, 3);
-                        double z = T(2, 3);
-                        Eigen::Quaterniond q(T.block<3, 3>(0, 0));
-
-                        outfile << std::fixed << std::setprecision(6)
-                                << t << ","
-                                << x << "," << y << "," << z << ","
-                                << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
-                    }
-                    outfile.close();
-                    RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
-                }
-                else
-                {
-                    RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
-                }
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);

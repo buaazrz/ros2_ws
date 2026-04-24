@@ -141,38 +141,6 @@ namespace controllers
                 
                 traj_time_ = 0.0; 
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
-
-                double dt = 0.001;
-
-                std::ofstream outfile("/tmp/reference_trajectory.csv"); 
-                if (outfile.is_open())
-                {
-                    outfile << "time,x,y,z,qw,qx,qy,qz\n";
-                    
-                    for (double t = 0; t <= trajectory->total_time(); t += dt)
-                    {
-                        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-                        Eigen::Vector6d V, dV;
-                        
-                        trajectory->evaluate(t, T, V, dV);
-
-                        double x = T(0, 3);
-                        double y = T(1, 3);
-                        double z = T(2, 3);
-                        Eigen::Quaterniond q(T.block<3, 3>(0, 0));
-
-                        outfile << std::fixed << std::setprecision(6)
-                                << t << ","
-                                << x << "," << y << "," << z << ","
-                                << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
-                    }
-                    outfile.close();
-                    RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
-                }
-                else
-                {
-                    RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
-                }
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -221,12 +189,7 @@ namespace controllers
         void update(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
             time_ += period.seconds();
-
             auto start_time = std::chrono::high_resolution_clock::now();
-            static int debug_count = 0;
-            if (debug_count++ % 1000 == 0) { // 1000Hz 循环，每秒打印一次
-                std::cerr << "[DEBUG] Hello! Update function is RUNNING. Count=" << debug_count << std::endl;
-            }
 
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
             const std::vector<double> &q_vec = state_->get<double>("position");
@@ -275,7 +238,6 @@ namespace controllers
             force_.head(3) = R_tcp_to_sensor * force_.head(3);
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
  
-
             f_filter_.filtering(force_.data(), force_.data());
 
             auto handle_pair = *real_time_buffer_.readFromRT();
@@ -356,7 +318,7 @@ namespace controllers
         void publish_robot_state(const rclcpp::Time &t, 
             const std::vector<double> &q, 
             const std::vector<double> &dq,
-            const Eigen::Vector6d &force // <--- 修改 1：参数类型改为 Eigen::Vector6d
+            const Eigen::Vector6d &force 
         )
         {
         if (!real_time_publisher_) return;
@@ -407,3 +369,36 @@ namespace controllers
 
 #include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_interface::ControllerInterface)
+
+
+                // double dt = 0.001;
+
+                // std::ofstream outfile("/tmp/reference_trajectory.csv"); 
+                // if (outfile.is_open())
+                // {
+                //     outfile << "time,x,y,z,qw,qx,qy,qz\n";
+                    
+                //     for (double t = 0; t <= trajectory->total_time(); t += dt)
+                //     {
+                //         Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+                //         Eigen::Vector6d V, dV;
+                        
+                //         trajectory->evaluate(t, T, V, dV);
+
+                //         double x = T(0, 3);
+                //         double y = T(1, 3);
+                //         double z = T(2, 3);
+                //         Eigen::Quaterniond q(T.block<3, 3>(0, 0));
+
+                //         outfile << std::fixed << std::setprecision(6)
+                //                 << t << ","
+                //                 << x << "," << y << "," << z << ","
+                //                 << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
+                //     }
+                //     outfile.close();
+                //     RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
+                // }
+                // else
+                // {
+                //     RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
+                // }
