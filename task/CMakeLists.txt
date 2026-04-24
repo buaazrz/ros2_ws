@@ -10,7 +10,17 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(robot_control_msgs REQUIRED)
 
-add_executable(task_manager src/task_manager.cpp)
+# 包含头文件目录
+include_directories(include)
+
+# ================= 关键修改位置 =================
+# 更新 utils/task_helpers.cpp 的相对路径
+add_executable(task_manager 
+  src/task_manager.cpp
+  src/utils/task_helpers.cpp
+)
+# ================================================
+
 ament_target_dependencies(task_manager
   rclcpp
   rclcpp_action
