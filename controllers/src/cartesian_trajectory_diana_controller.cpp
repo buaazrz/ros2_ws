@@ -28,7 +28,7 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
         
-        // === 新增：在构造函数中初始化滤波器 (6个通道，窗口大小为15) ===
+        // === 新增：在构造函数中初始化滤波器 (6个通道,窗口大小为15) ===
         CartesianTrajectoryDianaController() : f_filter_(6, 15)
         {
         }
@@ -80,7 +80,7 @@ namespace controllers
             // 滤波
             f_filter_.filtering(force_.data(), force_.data());
 
-            force_.setZero(); // === 临时措施：先把力清零，验证轨迹走位逻辑正常后再放开 ===
+            // force_.setZero(); // === 临时措施：先把力清零,验证轨迹走位逻辑正常后再放开 ===
             // =======================================================
 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
@@ -118,7 +118,7 @@ namespace controllers
                     // === 结合上一轮的逻辑：滤波补偿后的 力控接触检测 ===
                     // ========================================================
                     double force_z = force_[2]; // 此时的 force_[2] 已经是去除了工具重力、且经过滤波的干净力！
-                    const double FORCE_THRESHOLD = 10.0; // 接触阈值
+                    const double FORCE_THRESHOLD = 2.0; // 接触阈值
 
                     if (std::abs(force_z) >= FORCE_THRESHOLD)
                     {
@@ -197,9 +197,9 @@ namespace controllers
             // === 新增：初始化传感器补偿参数与重置滤波器 ===
             // =======================================================
             f_filter_.reset();
-            sensor_weight_ = 0.59702; 
-            sensor_cog_vec_ = {0.0008, 0.0001, 0.0030};
-            sensor_offset_vec_ = {-4.8164, 5.5965, -9.3466, 0.4178, 0.2654, 0.2582};
+            sensor_weight_ = 0.61569; 
+            sensor_cog_vec_ = {-0.0004 ,  -0.0000 ,   0.0026};
+            sensor_offset_vec_ = { -5.8497   , 5.6095,   -9.4235  ,  0.4396 ,   0.2853   , 0.2743};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1,  0,  0, 0,
                          0, -1,  0, 0,

@@ -155,9 +155,9 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.59702; 
-            sensor_cog_vec_ = {0.0008   , 0.0001 ,   0.0030};
-            sensor_offset_vec_ = {-4.8164  ,  5.5965  , -9.3466  ,  0.4178   , 0.2654  ,  0.2582};
+            sensor_weight_ = 0.61569; 
+            sensor_cog_vec_ = {-0.0004 ,  -0.0000 ,   0.0026};
+            sensor_offset_vec_ = { -5.8497   , 5.6095,   -9.4235  ,  0.4396 ,   0.2853   , 0.2743};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1,  0,  0, 0,
              0, -1,  0, 0,
@@ -366,7 +366,7 @@ namespace controllers
                 try 
                 {
                     alglib::real_1d_array x_opt = "[0]";
-                    x_opt[0] = Kx_(5); // 初始值设为上一周期的刚度，可加快收敛
+                    x_opt[0] = Kx_(5); // 初始值设为上一周期的刚度,可加快收敛
 
                     // 2. 边界约束 (Bound Constraints): Kmin <= K <= Kmax
                     alglib::real_1d_array bndl, bndu;
@@ -378,7 +378,7 @@ namespace controllers
                     // 转化：K*xe >= -F_max + dx_B   (类型 1)
                     //      K*xe <=  F_max + dx_B   (类型 -1)
                     alglib::real_2d_array c;
-                    c.setlength(2, 2); // 2个约束，2列 (系数和常数)
+                    c.setlength(2, 2); // 2个约束,2列 (系数和常数)
                     alglib::integer_1d_array ct = "[1, -1]";
                     
                     c[0][0] = xe_z; c[0][1] = -F_max_z_ + params.dx_B; // K*xe >= -F_max + dx_B
@@ -390,7 +390,7 @@ namespace controllers
                     alglib::minbleicsetbc(state, bndl, bndu);
                     alglib::minbleicsetlc(state, c, ct);
 
-                    // 设置缩放比例与停止条件 (迭代步数设为少一些，防止实时系统超时)
+                    // 设置缩放比例与停止条件 (迭代步数设为少一些,防止实时系统超时)
                     alglib::real_1d_array s = "[1]";
                     alglib::minbleicsetscale(state, s);
                     alglib::minbleicsetcond(state, 0.0, 0.0, 1e-4, 10); // maxits = 10 保证实时性
@@ -409,7 +409,7 @@ namespace controllers
                     } 
                     else 
                     {
-                        // 如果无解(通常是因为力太大，约束打架)，强制设为最小刚度
+                        // 如果无解(通常是因为力太大,约束打架),强制设为最小刚度
                         RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
                             "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep.terminationtype));
                         Kx_vec_[5] = Kz_min_;
