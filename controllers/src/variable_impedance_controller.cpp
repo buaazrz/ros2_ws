@@ -164,6 +164,25 @@ namespace controllers
              0,  0, -1, 0,
              0,  0,  0, 1;
 
+            x_opt_.setlength(1);
+            bndl_.setlength(1);
+            bndu_.setlength(1);
+            c_.setlength(2, 2);
+            ct_.setlength(2);
+            scale_.setlength(1);
+            
+            bndl_[0] = Kz_min_;
+            bndu_[0] = Kz_max_;
+            ct_[0] = 1; ct_[1] = -1;
+            scale_[0] = 1.0;
+            
+            // 执行一次初始建档 (黑盒生成)
+            x_opt_[0] = Kx_(5);
+            alglib::minbleiccreate(x_opt_, alglib_state_);
+            alglib::minbleicsetbc(alglib_state_, bndl_, bndu_);
+            alglib::minbleicsetscale(alglib_state_, scale_);
+            alglib::minbleicsetcond(alglib_state_, 0.0, 0.0, 1e-4, 10); // maxits=10
+
             auto handle_goal =[this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal) {
                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
             };
@@ -365,53 +384,35 @@ namespace controllers
 
                 try 
                 {
-                    alglib::real_1d_array x_opt = "[0]";
-                    x_opt[0] = Kx_(5); // 初始值设为上一周期的刚度,可加快收敛
+                    x_opt_[0] = Kx_(5); 
 
-                    // 2. 边界约束 (Bound Constraints): Kmin <= K <= Kmax
-                    alglib::real_1d_array bndl, bndu;
-                    bndl.setlength(1); bndl[0] = Kz_min_;
-                    bndu.setlength(1); bndu[0] = Kz_max_;
+                    // 2. 更新约束系数
+                    c_[0][0] = xe_z; c_[0][1] = -F_max_z_ + params_.dx_B; 
+                    c_[1][0] = xe_z; c_[1][1] =  F_max_z_ + params_.dx_B; 
 
-                    // 3. 线性不等式约束 (Linear Constraints): 限制接触力
-                    // 条件：-F_max <= K*xe - dx_B <= F_max
-                    // 转化：K*xe >= -F_max + dx_B   (类型 1)
-                    //      K*xe <=  F_max + dx_B   (类型 -1)
-                    alglib::real_2d_array c;
-                    c.setlength(2, 2); // 2个约束,2列 (系数和常数)
-                    alglib::integer_1d_array ct = "[1, -1]";
+
+                    // 3. 将新约束和新起点注入原有黑盒 (绝对不能再调 create!)
+                    alglib::minbleicsetlc(alglib_state_, c_, ct_);
+                    alglib::minbleicrestartfrom(alglib_state_, x_opt_); // <--- 高级接口：复用内存并更换起点
+
+                    // 4. 执行优化
+                    alglib::minbleicoptimize(alglib_state_, alglib_grad_callback, NULL, &params_);
                     
-                    c[0][0] = xe_z; c[0][1] = -F_max_z_ + params.dx_B; // K*xe >= -F_max + dx_B
-                    c[1][0] = xe_z; c[1][1] =  F_max_z_ + params.dx_B; // K*xe <= F_max + dx_B
-
-                    // 4. 创建求解器并加载约束
-                    alglib::minbleicstate state;
-                    alglib::minbleiccreate(x_opt, state);
-                    alglib::minbleicsetbc(state, bndl, bndu);
-                    alglib::minbleicsetlc(state, c, ct);
-
-                    // 设置缩放比例与停止条件 (迭代步数设为少一些,防止实时系统超时)
-                    alglib::real_1d_array s = "[1]";
-                    alglib::minbleicsetscale(state, s);
-                    alglib::minbleicsetcond(state, 0.0, 0.0, 1e-4, 10); // maxits = 10 保证实时性
-
-                    // 5. 开始优化
-                    alglib::minbleicreport rep;
-                    alglib::minbleicoptimize(state, alglib_grad_callback, NULL, &params);
-                    alglib::minbleicresults(state, x_opt, rep);
+                    // 5. 提取结果 (使用 buffered 版本，防止内部 malloc)
+                    alglib::minbleicresultsbuf(alglib_state_, x_opt_, rep_);
 
                     // 提取结果并注入底层阻抗控制器
-                    if (int(rep.terminationtype) > 0) 
+                    if (int(rep_.terminationtype) > 0) 
                     {
-                        Kx_vec_[5] = x_opt[0];
-                        Kx_(5) = x_opt[0];
+                        Kx_vec_[5] = x_opt_[0];
+                        Kx_(5) = x_opt_[0];
                         Bx_(5) = 1.42 * sqrt(Kx_(5));
                     } 
                     else 
                     {
                         // 如果无解(通常是因为力太大,约束打架),强制设为最小刚度
                         RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
-                            "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep.terminationtype));
+                            "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
                         Kx_vec_[5] = Kz_min_;
                         Kx_(5) = Kz_min_;
                     }
@@ -422,7 +423,6 @@ namespace controllers
                 }
             }
 
-            Eigen::Matrix6d Lambda = robot_math::A_x_inv(Jb_, M_).inverse();
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
@@ -484,6 +484,14 @@ namespace controllers
         std::vector<double> sensor_cog_vec_;
         std::vector<double> sensor_offset_vec_;
         double sensor_weight_;
+        alglib::real_1d_array x_opt_;
+        alglib::real_1d_array bndl_, bndu_;
+        alglib::real_2d_array c_;
+        alglib::integer_1d_array ct_;
+        alglib::real_1d_array scale_;
+        alglib::minbleicstate alglib_state_;
+        alglib::minbleicreport rep_;
+        OptParams params_;
         Eigen::Matrix4d T_sensor_;
         double F_des_z_, F_max_z_;
         double Kz_min_, Kz_max_;
