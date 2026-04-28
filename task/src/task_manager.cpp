@@ -12,19 +12,15 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     auto node = std::make_shared<rclcpp::Node>("task_manager_node");
 
-    // 创建通用控制器切换的 Service Client
     auto controller_client = node->create_client<robot_control_msgs::srv::ControlCommand>(
         "control_node/control_command");
         
-    if (!controller_client->wait_for_service(1s)) {
+    if (!controller_client->wait_for_service(2s)) {
         RCLCPP_ERROR(node->get_logger(), "Service not available after waiting");
         rclcpp::shutdown();
         return 1;
     }
 
-    // =========================================================
-    // 阶段 1: 使用 CartesianMotionController 到达初始准备位姿
-    // =========================================================
     RCLCPP_INFO(node->get_logger(), "=== PHASE 1: Cartesian Motion ===");
     
     if (!task_utils::activate_controller(node, controller_client, "CartesianMotionController")) {
@@ -40,20 +36,14 @@ int main(int argc, char **argv)
 
     if (!task_utils::activate_controller(node, controller_client, "CartesianTrajectoryDianaController")) return 1;
 
-    // 构造一段轨迹：从当前准备点，向下走 10cm 到 0.2600，设定时间为 10 秒
-    // 这样向下的速度就是 10cm / 10s = 1 cm/s，这是比较安全的探寻速度
     std::vector<double> init_traj_goal = {
         10, 0.5500, -0.1800, 0.2600, 0.0000, 0.0000, -0.3100
     };
 
-    // 执行！机械臂会以 1cm/s 向下走，一旦中途碰到东西力超过15N，就会立刻停下，下面的 if 就会通过
     if (task_utils::execute_motion(node, "CartesianTrajectoryDianaController/goal", init_traj_goal)) {
         RCLCPP_INFO(node->get_logger(), "碰到了！力检测已触发，机械臂已停止。");
     }
 
-    // =========================================================
-    // 阶段 2: 切换为 CartesianTrajectoryController 执行轨迹
-    // =========================================================
     RCLCPP_INFO(node->get_logger(), "=== PHASE 2: Cartesian Trajectory ===");
     
     if (!task_utils::activate_controller(node, controller_client, "CartesianTrajectoryController")) {
