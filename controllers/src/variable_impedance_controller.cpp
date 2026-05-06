@@ -83,7 +83,7 @@ namespace controllers
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
             node_->get_parameter_or<double>("Q_weight", Q_weight_, 1.0);
             node_->get_parameter_or<double>("R_weight", R_weight_, 0.001);
-            node_->get_parameter_or<double>("F_des_z", F_des_z_, 0.0);
+            node_->get_parameter_or<double>("F_des_z", F_des_z_, 2.0);
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
             node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
             node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
@@ -177,7 +177,7 @@ namespace controllers
             scale_[0] = 1.0;
             
             // 执行一次初始建档 (黑盒生成)
-            x_opt_[0] = Kx_(5);
+            x_opt_[0] = Kx_vec_[5];
             alglib::minbleiccreate(x_opt_, alglib_state_);
             alglib::minbleicsetbc(alglib_state_, bndl_, bndu_);
             alglib::minbleicsetscale(alglib_state_, scale_);
@@ -374,17 +374,16 @@ namespace controllers
 
             if (std::abs(xe_z) > 1e-3) 
             {
-                OptParams params;
-                params.Q_weight = Q_weight_;
-                params.R_weight = R_weight_;
-                params.xe = xe_z;
-                params.dx_B = B_z * dxe_z;
-                params.F_target = F_des_z_ + F_com_z;
-                params.K_min = Kz_min_;
+                params_.Q_weight = Q_weight_;
+                params_.R_weight = R_weight_;
+                params_.xe = xe_z;
+                params_.dx_B = B_z * dxe_z;
+                params_.F_target = F_des_z_ + F_com_z;
+                params_.K_min = Kz_min_;
 
                 try 
                 {
-                    x_opt_[0] = Kx_(5); 
+                    x_opt_[0] = Kx_(5);
 
                     // 2. 更新约束系数
                     c_[0][0] = xe_z; c_[0][1] = -F_max_z_ + params_.dx_B; 

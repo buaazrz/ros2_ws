@@ -16,6 +16,7 @@ control_node:
       - controllers::RealtimeTestController
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
+      - controllers::CartesianImpedancePDController
       - controllers::CartesianTrajImpPDController
       - controllers::JointMotionControllerDiana
       - controllers::VariableImpedanceController

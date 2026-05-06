@@ -81,6 +81,7 @@ namespace controllers
             f_filter_.filtering(force_.data(), force_.data());
 
             // force_.setZero(); // === 临时措施：先把力清零,验证轨迹走位逻辑正常后再放开 ===
+
             // =======================================================
 
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
@@ -114,11 +115,8 @@ namespace controllers
                 }
                 else
                 {
-                    // ========================================================
-                    // === 结合上一轮的逻辑：滤波补偿后的 力控接触检测 ===
-                    // ========================================================
-                    double force_z = force_[2]; // 此时的 force_[2] 已经是去除了工具重力、且经过滤波的干净力！
-                    const double FORCE_THRESHOLD = 2.0; // 接触阈值
+                    double force_z = force_[2]; 
+                    const double FORCE_THRESHOLD = 3.0; 
 
                     if (std::abs(force_z) >= FORCE_THRESHOLD)
                     {
@@ -130,12 +128,10 @@ namespace controllers
                         goal_handle->succeed(result);
 
                         RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
-                            "Contact Detected! Fz = %.2f N. Stopping.", force_z);
+                            "Contact Detected! Fz = %.2f N, Z = %.6f. Stopping.", force_z, pose_[2]);
                         return;
                     }
-                    // ========================================================
 
-                    // 正常的轨迹走位逻辑
                     auto goal = std::vector<double>(goal_handle->get_goal()->target_position.data.end() - 6, goal_handle->get_goal()->target_position.data.end());
                     auto goal_T = robot_math::pose_to_tform(goal);
                     auto errs = robot_math::distance(goal_T, T);
