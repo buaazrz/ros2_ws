@@ -644,6 +644,7 @@ namespace robot_math
         Eigen::MatrixXd tem = M.ldlt().solve(J.transpose());
         Eigen::MatrixXd tem2 = J * tem;
         Eigen::Vector3d cond = cond_matrix(tem2);
+        // std::cerr<<"cond: "<<cond(0)<<std::endl;
 
         if (cond(0) > c)
         {
