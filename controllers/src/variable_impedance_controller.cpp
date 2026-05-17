@@ -44,9 +44,8 @@ static void alglib_grad_callback(const alglib::real_1d_array &x, double &func, a
     double F_target = params->F_target;
     double K_min = params->K_min;
 
-    // 根据公式(4)计算当前预估的外力
     double F_ext_est = K * xe - dx_B;
-    // 力跟踪误差
+    
     double force_err = F_ext_est - F_target;
 
     // 代价函数 J = 0.5 * Q * (F_ext - F_target)^2 + 0.5 * R * (K - K_min)^2
@@ -82,9 +81,9 @@ namespace controllers
             node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {30.0, 30.0, 30.0, 150.0, 150.0, 150.0});
             node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
-            node_->get_parameter_or<double>("Q_weight", Q_weight_, 1.0);
-            node_->get_parameter_or<double>("R_weight", R_weight_, 0.001);
-            node_->get_parameter_or<double>("F_des_z", F_des_z_, 2.0);
+            node_->get_parameter_or<double>("Q_weight", Q_weight_, 100000.0);
+            node_->get_parameter_or<double>("R_weight", R_weight_, 0.1);
+            node_->get_parameter_or<double>("F_des_z", F_des_z_, -2.0);
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
             node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
             node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
@@ -165,9 +164,9 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ =  0.61102;
-            sensor_cog_vec_ = {    0.0001  , -0.0008  ,  0.0029};
-            sensor_offset_vec_ = {   -6.9216 +0.24   , 5.3981 -0.043 , -6.1761-1.626,   0.4643 -0.008 ,  0.3061-0.007 ,   0.2923-0.006
+            sensor_weight_ =  0.61583;
+            sensor_cog_vec_ = {    0.0001  , 0.000  ,  0.0029};
+            sensor_offset_vec_ = {0.0,0.0,0.0,0.0,0.0,0.0
             };
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
@@ -188,12 +187,12 @@ namespace controllers
             ct_[1] = -1;
             scale_[0] = 1.0;
 
-            // 执行一次初始建档 (黑盒生成)
+            // 执行一次初始建档 (黑盒生成) 
             x_opt_[0] = Kx_vec_[5];
             alglib::minbleiccreate(x_opt_, alglib_state_);
             alglib::minbleicsetbc(alglib_state_, bndl_, bndu_);
             alglib::minbleicsetscale(alglib_state_, scale_);
-            alglib::minbleicsetcond(alglib_state_, 0.0, 0.0, 1e-4, 10); // maxits=10
+            alglib::minbleicsetcond(alglib_state_, 0.0, 0.0, 1e-4, 0); // maxits=10
 
             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal)
             {
@@ -208,16 +207,8 @@ namespace controllers
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                const std::vector<double> &pose_current = state_->get<double>("pose");
-                std::vector<double> full_traj_data;
-                full_traj_data.push_back(0.0);
-                for (int i = 0; i < 6; ++i)
-                {
-                    full_traj_data.push_back(pose_current[i]);
-                }
                 const auto &goal_data = goal_handle->get_goal()->target_position.data;
-                full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
-                trajectory->set_traj(full_traj_data);
+                trajectory->set_traj(goal_data);
 
                 traj_time_ = 0.0;
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
@@ -236,13 +227,15 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    DATA_WRAPPER(F_imp_(5)),
+                    DATA_WRAPPER(params_.F_target),
+                    DATA_WRAPPER(F_imp_(5)), 
+                    DATA_WRAPPER(force_(2)),
                     // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
                     // DATA_WRAPPER(tau_d),
-                    // DATA_WRAPPER(dq_),
-                    // DATA_WRAPPER(force_),
+                    // DATA_WRAPPER(dq_), 
                     DATA_WRAPPER(Kx_(5)),
+                    DATA_WRAPPER(xe_(5)),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -386,32 +379,45 @@ namespace controllers
 
             xe_.head(3) = robot_math::logR(R_.transpose() * Rd_);
             xe_.tail(3) = R_.transpose() * (pd_ - p_);
+            // std::cerr << "xe_(5): " << xe_(5) << std::endl;
+            // std::cerr << "pd_(2): " << pd_(2) << std::endl;
+            // std::cerr << "p_(2): " << p_(2) << std::endl;
             dxe_.head(3) = R_.transpose() * wd_ - w;
             dxe_.tail(3) = R_.transpose() * vd_ - v;
+            // Eigen::Vector3d vd = R_.transpose() * vd_;
+            // std::cerr << vd(2) << std::endl;
 
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
 
-            double F_ext_z = force_(2);
-            double F_err_z = F_des_z_ -(- F_ext_z);
+            // double F_ext_z = force_(2);
+            // double F_err_z = F_des_z_ -(- F_ext_z);
             // std::cerr << "F_des_z: " << F_des_z_ << std::endl;
             // std::cerr << "F_ext_z: " << F_ext_z << std::endl;
             // std::cerr << "F_err_z: " << F_err_z << std::endl;
 
-            force_int_z_ += F_err_z * period.seconds();
-            double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
-            double xe_z = xe_(5);
+            // force_int_z_ += F_err_z * period.seconds();
+            // double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
+            double xe_z = xe_(5); 
             double dxe_z = dxe_(5);
+            // // std::cerr << "dxe_z: " << dxe_z << std::endl;
             double B_z = Bx_(5);
 
-            if (std::abs(xe_z) > 1e-3)
+            if (std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
             {
+                double F_ext_z = force_(2);
+                double F_err_z = F_des_z_ -(- F_ext_z);
+
+                force_int_z_ += F_err_z * period.seconds();
+                std::cerr << "F_err_z: " << F_err_z << std::endl;
+                double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
+
                 params_.Q_weight = Q_weight_;
                 params_.R_weight = R_weight_;
                 params_.xe = xe_z;
-                params_.dx_B = B_z * dxe_z;
+                params_.dx_B = -B_z * dxe_z;
                 params_.F_target = F_des_z_ + F_com_z;
-                params_.K_min = Kz_min_;
+                params_.K_min = Kz_min_; 
 
                 try
                 {
@@ -445,6 +451,7 @@ namespace controllers
                         // 如果无解(通常是因为力太大,约束打架),强制设为最小刚度
                         RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
                                              "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
+                        std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
                         Kx_vec_[5] = Kz_min_;
                         Kx_(5) = Kz_min_;
                     }
@@ -453,6 +460,12 @@ namespace controllers
                 {
                     RCLCPP_WARN(node_->get_logger(), "ALGLIB exception: %s", alglib_exception.msg.c_str());
                 }
+            }
+            else
+            {
+                Kx_vec_[5] = Kz_max_;
+                Kx_(5) = Kz_max_;
+                Bx_(5) = 1.42 * sqrt(Kx_(5));
             }
 
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);

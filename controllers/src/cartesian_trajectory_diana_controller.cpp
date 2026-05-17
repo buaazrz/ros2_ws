@@ -197,9 +197,9 @@ namespace controllers
             // === 新增：初始化传感器补偿参数与重置滤波器 ===
             // =======================================================
             f_filter_.reset();
-            sensor_weight_ =  0.61102;
-            sensor_cog_vec_ = {    0.0001  , -0.0008  ,  0.0029};
-            sensor_offset_vec_ = {   -6.9216 +0.24   , 5.3981 -0.043 , -6.1761-1.626,   0.4643 -0.008 ,  0.3061-0.007 ,   0.2923-0.006
+            sensor_weight_ =  0.61583;
+            sensor_cog_vec_ = {    0.0001  , 0.000  ,  0.0029};
+            sensor_offset_vec_ = {0.0,0.0,0.0,0.0,0.0,0.0
             };
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
