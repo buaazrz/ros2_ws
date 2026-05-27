@@ -68,6 +68,7 @@ add_executable(test_controller test/test_controller.cpp)
 add_executable(debug_all test/debug_all.cpp)
 add_executable(test_joint_controller test/test_joint_controller.cpp)
 add_executable(test_cartesian_controller test/test_cartesian_controller.cpp)
+add_executable(fri_calibration test/fri_calibration.cpp)
 add_executable(test_trajectory_controller test/test_trajectory_controller.cpp)
 add_executable(test_trajectory_controller_zrz test/test_trajectory_controller_zrz.cpp)
 add_executable(test_trajectory_controller_diana test/test_trajectory_controller_diana.cpp)
@@ -121,6 +122,11 @@ ament_target_dependencies(
 )
 
 ament_target_dependencies(
+  fri_calibration
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+ament_target_dependencies(
   movej
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -136,7 +142,7 @@ ament_target_dependencies(
 )
 
 install(TARGETS test_controller debug_all test_joint_controller  test_trajectory_controller test_trajectory_controller_zrz  
-test_trajectory_controller_diana  movej movel move_zrz test_cartesian_controller test_joint_motion_diana
+test_trajectory_controller_diana  movej movel move_zrz test_cartesian_controller  fri_calibration test_joint_motion_diana
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

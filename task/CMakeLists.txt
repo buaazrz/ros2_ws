@@ -19,6 +19,10 @@ add_executable(task_manager
   src/task_manager.cpp
   src/utils/task_helpers.cpp
 )
+add_executable(task_VIC 
+  src/task_VIC.cpp
+  src/utils/task_helpers.cpp
+)
 # ================================================
 
 ament_target_dependencies(task_manager
@@ -27,8 +31,15 @@ ament_target_dependencies(task_manager
   robot_control_msgs
 )
 
+ament_target_dependencies(task_VIC
+  rclcpp
+  rclcpp_action
+  robot_control_msgs
+)
+
 install(TARGETS
   task_manager
+  task_VIC
   DESTINATION lib/${PROJECT_NAME}
 )
 

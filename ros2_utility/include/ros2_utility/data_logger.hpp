@@ -277,7 +277,7 @@ public:
             {
                 file << dataLog[i + j] << ", ";
             }
-            file << std::endl;
+            file << '\n';
         }
 
         file.close();

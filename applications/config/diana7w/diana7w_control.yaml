@@ -33,6 +33,7 @@ DIANARobot:
       - velocity
       - acceleration
       - torque
+      - o_torque
     # other interface:
     command_interface: [mode, pose]
     command_length: [2, 6]
@@ -57,6 +58,7 @@ ForwardController:
 JointMotionController:
   ros__parameters:
     cmd_name: "position"
+    speed: 0.7
 
 CartesianImpedancePDController:
   ros__parameters:
@@ -107,11 +109,14 @@ VariableImpedanceController:
     R_weight: 0.1           
     
     # --- 2. 力控参数 (Z方向) ---
-    F_des_z: -4.0            # 期望接触力 (N)，根据实际需求设置正负
+    F_des_z: -5.0            # 期望接触力 (N)，根据实际需求设置正负
     F_max_z: 10.0            # 最大安全力限制 (N)
     Kp_f: 1.2               # 力外环 P (建议先设为0，只用优化器调整)
-    Ki_f: 0.0              # 力外环 I (建议先设为0)  
+    Ki_f: 1.5              # 力外环 I (建议先设为0)  
+    kd_f: 0.0             # 力外环 D (建议先设为0)
     
     # --- 3. 刚度边界 (Z方向) ---
     Kz_min: 100.0             # 最小刚度 (自由空间/软接触)
-    Kz_max: 2500.0           # 最大刚度 (硬接触)
+    Kz_max: 2500.0    # 最大刚度 (硬接触)
+
+    dob_gain_val: 12.5

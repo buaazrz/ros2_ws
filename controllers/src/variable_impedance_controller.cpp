@@ -19,6 +19,8 @@
 #include <fstream>
 #include <iomanip>
 #include "optimization.h"
+#include <deque>
+#include <numeric>
 
 // 定义传给 ALGLIB 目标函数回调的动态参数结构体
 struct OptParams
@@ -87,8 +89,10 @@ namespace controllers
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
             node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
             node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
+            node_->get_parameter_or<double>("Kd_f", Kd_f_, 0.0);
             node_->get_parameter_or<double>("Kz_min", Kz_min_, 100.0);
             node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0);
+            node_->get_parameter_or<double>("dob_gain", dob_gain_val_, 0.0);
 
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
@@ -137,10 +141,19 @@ namespace controllers
             time_ = 0;
             traj_time_ = 0;
             force_int_z_ = 0.0;
+            force_err_z_prev_ = 0.0;
+            force_err_window_.clear();
+            is_contact_established_ = false; // 重置接触状态
+
             real_time_buffer_.reset();
             tau_d.setZero();
             f_filter_.reset();
             F_imp_.setZero();
+
+            z_ = Eigen::VectorXd::Zero(dof_);
+            tau_d_est_ = Eigen::VectorXd::Zero(dof_);
+            tau_x_est_ = Eigen::VectorXd::Zero(dof_);
+            Y_ = Eigen::VectorXd::Constant(dof_, dob_gain_val_);
 
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
             real_time_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>>(robot_state_publisher_);
@@ -166,8 +179,7 @@ namespace controllers
 
             sensor_weight_ =  0.61583;
             sensor_cog_vec_ = {    0.0001  , 0.000  ,  0.0029};
-            sensor_offset_vec_ = {0.0,0.0,0.0,0.0,0.0,0.0
-            };
+            sensor_offset_vec_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
                 0, -1, 0, 0,
@@ -211,6 +223,10 @@ namespace controllers
                 trajectory->set_traj(goal_data);
 
                 traj_time_ = 0.0;
+                is_contact_established_ = false; // 接收新目标时重置接触状态
+                force_int_z_ = 0.0; // 重置积分项
+                force_err_z_prev_ = 0.0; // 重置微分项历史
+                force_err_window_.clear();
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
             };
 
@@ -230,12 +246,14 @@ namespace controllers
                     DATA_WRAPPER(params_.F_target),
                     DATA_WRAPPER(F_imp_(5)), 
                     DATA_WRAPPER(force_(2)),
-                    // DATA_WRAPPER(pose_),
+                    DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
                     // DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_), 
                     DATA_WRAPPER(Kx_(5)),
-                    DATA_WRAPPER(xe_(5)),
+                    DATA_WRAPPER(xe_),
+                    DATA_WRAPPER(tau_d_est_),
+                    DATA_WRAPPER(tau_x_est_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -263,6 +281,7 @@ namespace controllers
         void update(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
             time_ += period.seconds();
+            double dt = period.seconds();
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -286,10 +305,12 @@ namespace controllers
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             std::fill(tau_cmd_vec.begin(), tau_cmd_vec.end(), 0);
 
-            Kx_in_box_.try_get([=](auto const &value)
-                               { Kx_vec_ = value; });
-            Bx_in_box_.try_get([=](auto const &value)
-                               { Bx_vec_ = value; });
+            
+
+            // Kx_in_box_.try_get([=](auto const &value)
+            //                    { Kx_vec_ = value; });
+            // Bx_in_box_.try_get([=](auto const &value)
+            //                    { Bx_vec_ = value; });
             Kn_in_box_.try_get([=](auto const &value)
                                { Kn_vec_ = value; });
             Bn_in_box_.try_get([=](auto const &value)
@@ -379,38 +400,47 @@ namespace controllers
 
             xe_.head(3) = robot_math::logR(R_.transpose() * Rd_);
             xe_.tail(3) = R_.transpose() * (pd_ - p_);
-            // std::cerr << "xe_(5): " << xe_(5) << std::endl;
-            // std::cerr << "pd_(2): " << pd_(2) << std::endl;
-            // std::cerr << "p_(2): " << p_(2) << std::endl;
             dxe_.head(3) = R_.transpose() * wd_ - w;
             dxe_.tail(3) = R_.transpose() * vd_ - v;
-            // Eigen::Vector3d vd = R_.transpose() * vd_;
-            // std::cerr << vd(2) << std::endl;
-
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
 
-            // double F_ext_z = force_(2);
-            // double F_err_z = F_des_z_ -(- F_ext_z);
-            // std::cerr << "F_des_z: " << F_des_z_ << std::endl;
-            // std::cerr << "F_ext_z: " << F_ext_z << std::endl;
-            // std::cerr << "F_err_z: " << F_err_z << std::endl;
-
-            // force_int_z_ += F_err_z * period.seconds();
-            // double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
             double xe_z = xe_(5); 
             double dxe_z = dxe_(5);
-            // // std::cerr << "dxe_z: " << dxe_z << std::endl;
             double B_z = Bx_(5);
 
-            if (std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
+            if (!is_contact_established_) {
+                if (std::abs(force_(2)) >= std::abs(F_des_z_)) {
+                    is_contact_established_ = true;
+                    force_int_z_ = 0.0; 
+                    force_err_z_prev_ = 0.0;
+                    RCLCPP_WARN(node_->get_logger(), "Z轴接触力到达阈值: %.2f N, 开始变刚度模式!", force_(2));
+                }
+            }
+
+            if (is_contact_established_ && std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
             {
                 double F_ext_z = force_(2);
                 double F_err_z = F_des_z_ -(- F_ext_z);
-
-                force_int_z_ += F_err_z * period.seconds();
-                std::cerr << "F_err_z: " << F_err_z << std::endl;
-                double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_;
+                double current_integral_step = F_err_z * dt;
+                force_err_window_.push_back(current_integral_step);
+                force_int_z_ += current_integral_step; 
+                if (force_err_window_.size() > static_cast<size_t>(integral_window_size_)) {
+                    force_int_z_ -= force_err_window_.front();
+                    force_err_window_.pop_front();
+                }
+                // force_int_z_ += F_err_z * dt;
+                // std::cerr << "F_err_z: " << F_err_z << std::endl;
+                double dF_err_z = 0.0;
+                if (dt > 1e-6) {
+                    if (force_err_z_prev_ == 0.0) {
+                        dF_err_z = 0.0;
+                    } else {
+                        dF_err_z = (F_err_z - force_err_z_prev_) / dt;
+                    }
+                }
+                double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_ + Kd_f_ * dF_err_z;
+                force_err_z_prev_ = F_err_z;
 
                 params_.Q_weight = Q_weight_;
                 params_.R_weight = R_weight_;
@@ -423,32 +453,26 @@ namespace controllers
                 {
                     x_opt_[0] = Kx_(5);
 
-                    // 2. 更新约束系数
                     c_[0][0] = xe_z;
                     c_[0][1] = -F_max_z_ + params_.dx_B;
                     c_[1][0] = xe_z;
                     c_[1][1] = F_max_z_ + params_.dx_B;
 
-                    // 3. 将新约束和新起点注入原有黑盒 (绝对不能再调 create!)
                     alglib::minbleicsetlc(alglib_state_, c_, ct_);
-                    alglib::minbleicrestartfrom(alglib_state_, x_opt_); // <--- 高级接口：复用内存并更换起点
-
-                    // 4. 执行优化
+                    alglib::minbleicrestartfrom(alglib_state_, x_opt_);
                     alglib::minbleicoptimize(alglib_state_, alglib_grad_callback, NULL, &params_);
-
-                    // 5. 提取结果 (使用 buffered 版本，防止内部 malloc)
                     alglib::minbleicresultsbuf(alglib_state_, x_opt_, rep_);
 
-                    // 提取结果并注入底层阻抗控制器
                     if (int(rep_.terminationtype) > 0)
                     {
+                        double max_step = 20.0; 
+                        x_opt_[0] = std::clamp(x_opt_[0], Kx_(5) - max_step, Kx_(5) + max_step);
                         Kx_vec_[5] = x_opt_[0];
                         Kx_(5) = x_opt_[0];
                         Bx_(5) = 1.42 * sqrt(Kx_(5));
                     }
                     else
                     {
-                        // 如果无解(通常是因为力太大,约束打架),强制设为最小刚度
                         RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
                                              "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
                         std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
@@ -466,25 +490,36 @@ namespace controllers
                 Kx_vec_[5] = Kz_max_;
                 Kx_(5) = Kz_max_;
                 Bx_(5) = 1.42 * sqrt(Kx_(5));
+                force_int_z_ = 0.0;
+                force_err_z_prev_ = 0.0;
             }
 
+            double current_M_dot_norm = dM_.norm();
+            RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
+                                "当前质量矩阵导数范数 ||dM||: %f", current_M_dot_norm);
+
+            Eigen::VectorXd H = C_ * dq + g_;
+            Eigen::VectorXd p_dob = Y_.cwiseProduct(dq);
+            Eigen::VectorXd dob_rhs = H - tau_d - z_ - p_dob;
+            Eigen::VectorXd Minv_rhs = M_.ldlt().solve(dob_rhs);
+            Eigen::VectorXd dz = Y_.cwiseProduct(Minv_rhs);
+
+            z_ += dz * dt;
+            tau_d_est_ = z_ + p_dob;
+            Eigen::MatrixXd Lambda_inv = robot_math::A_x_inv(Jb_, M_);
+            Eigen::VectorXd Minv_taud = M_.ldlt().solve(tau_d_est_);
+            tau_x_est_ = Jb_.transpose() * Lambda_inv * (Jb_ * Minv_taud);
+         
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
-            Eigen::MatrixXd Lambda_inv = robot_math::A_x_inv(Jb_, M_);
+            
 
-            // 2. 解方程: Lambda_inv * F_imp_ = ddxc_ - dJb_ * dq
-            // 使用 LDLT 分解求解，比直接求逆速度快且极其稳定
             F_imp_ = Lambda_inv.ldlt().solve(ddxc_ - dJb_ * dq);
 
-            // 3. 在终端打印查看 (限制频率，每 500 毫秒打印一次防止刷屏)
-            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
-            //                      "F_imp (Rx Ry Rz x y z): [%.2f, %.2f, %.2f, %.2f, %.2f, %.2f] N/Nm",
-            //                      F_imp_(0), F_imp_(1), F_imp_(2), F_imp_(3), F_imp_(4), F_imp_(5));
-
-            tau_cmd = tau_task_ + tau_null_;
+            tau_cmd = tau_task_ + tau_null_ -tau_x_est_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -553,12 +588,21 @@ namespace controllers
         double F_des_z_, F_max_z_;
         double Kz_min_, Kz_max_;
         double Q_weight_, R_weight_;
-        double Kp_f_, Ki_f_, force_int_z_;
+        double Kp_f_, Ki_f_, Kd_f_, force_int_z_;
+        double force_err_z_prev_;
         double cal_time_;
         std::unique_ptr<DataLogger> data_logger_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
         robot_math::MovingFilter<double> f_filter_;
+        bool is_contact_established_{false};
+        std::deque<double> force_err_window_;
+        int integral_window_size_ ={50};
+        Eigen::VectorXd z_;
+        Eigen::VectorXd Y_;
+        Eigen::VectorXd tau_d_est_;
+        Eigen::VectorXd tau_x_est_;
+        double dob_gain_val_;
     };
 } // namespace controllers
 

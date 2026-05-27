@@ -8,6 +8,7 @@
 #include "robot_control_msgs/action/robot_motion.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robot_math/TrapezoidFunction.hpp"
+#include "ros2_utility/data_logger.hpp"
 namespace controllers
 {
 
@@ -19,16 +20,27 @@ namespace controllers
         JointMotionController() : speed_(0.5), planner(0.02)
         {
         }
+        ~JointMotionController()
+        {
+            // if (data_logger_) {
+            //     data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
+            // }
+        }
         void update(const rclcpp::Time & t, const rclcpp::Duration & period) override
         {
+            current_time_ += period.seconds();
             auto goal_handle = *real_time_buffer_.readFromRT();
             auto &cmd = command_->get<double>("position");
-            auto &q = state_->get<double>("position");
-            auto &dq = state_->get<double>("velocity");
+            // auto &q = state_->get<double>("position");
+            // auto &dq = state_->get<double>("velocity");
+            q_actual_   = state_->get<double>("position");
+            dq_actual_  = state_->get<double>("velocity");
+            tau_actual_ = state_->get<double>("torque");
+            o_torque = state_->get<double>("o_torque");
             // inital reading should be put here!!
             if(period.seconds() == 0)
             {
-                q0_ = q;
+                q0_ = q_actual_;
             }
             command_->get<int>("mode")[0] = 1;
             if (goal_handle && goal_handle->is_active())
@@ -38,7 +50,7 @@ namespace controllers
                     auto result = std::make_shared<ACTION::Result>();
                     result->success = false;
                     goal_handle->canceled(result);
-                    q0_ = q;
+                    q0_ = q_actual_;
                     planner.reset();
                     //RCLCPP_INFO(node_->get_logger(), "Goal canceled");
                 }
@@ -46,13 +58,13 @@ namespace controllers
                 {
                     auto goal = goal_handle->get_goal()->target_position.data;
                     
-                    double err = robot_math::distance(q, goal);
+                    double err = robot_math::distance(q_actual_, goal);
                     if (err < 1e-5)
                     {
                         auto result = std::make_shared<ACTION::Result>();
                         result->success = true;
                         goal_handle->succeed(result);
-                        q0_ = q;
+                        q0_ = q_actual_;
                         planner.reset();
                         //RCLCPP_INFO(node_->get_logger(), "Goal succeeded");
                     }
@@ -61,8 +73,11 @@ namespace controllers
                         int flag = 0;
                         if (!planner.is_valid() || !planner.has_same_goal(goal))
                         {
-                            //RCLCPP_INFO(node_->get_logger(), "%f %f", goal[0], dq[0]);
-                            planner.generate_speed(q, dq, goal, speed_);
+                            // RCLCPP_INFO(node_->get_logger(), "%f", speed_);
+                            planner.generate_speed(q_actual_, dq_actual_, goal, speed_); 
+                            // planner.generate_speed(q_actual_, goal, speed_);
+
+                            // std::cerr << speed_ <<std::endl;
                             flag = 1;
                             last_time_ = node_->now();
                         }
@@ -70,6 +85,12 @@ namespace controllers
                         std::vector<double> interp_q, interp_dq, interp_ddq;
                         planner.evaluate(dt.seconds(), interp_q, interp_dq, interp_ddq);
                         cmd = interp_q;
+
+                        q_cmd_   = interp_q;
+                        dq_cmd_  = interp_dq;
+                        ddq_cmd_ = interp_ddq;
+
+                        data_logger_->record();
                         // if(period.seconds() > 0)
                         // {
                         //     double diff = q[0] - interp_q[0];
@@ -100,7 +121,11 @@ namespace controllers
         }
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
-
+            if (!node_->has_parameter("speed")) {
+                speed_ = node_->declare_parameter<double>("speed", 0.5);
+            } else {
+                node_->get_parameter("speed", speed_);
+            }
             return CallbackReturn::SUCCESS;
         }
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -108,6 +133,34 @@ namespace controllers
             node_->get_parameter_or<double>("speed", speed_, 0.5);
             real_time_buffer_.reset();
             planner.reset();
+
+            current_time_ = 0.0;
+            q_actual_.resize(7, 0.0);
+            dq_actual_.resize(7, 0.0);
+            tau_actual_.resize(7, 0.0);
+            o_torque.resize(7, 0.0);
+            q_cmd_.resize(7, 0.0);
+            dq_cmd_.resize(7, 0.0);
+            ddq_cmd_.resize(7, 0.0);
+
+            // 2. 初始化 DataLogger
+            data_logger_ = std::make_unique<DataLogger>(
+                std::initializer_list<DataInfo>{
+                    DATA_WRAPPER(current_time_),
+                    DATA_WRAPPER(q_actual_),
+                    DATA_WRAPPER(dq_actual_),
+                    DATA_WRAPPER(tau_actual_),
+                    // DATA_WRAPPER(o_torque),
+                    DATA_WRAPPER(q_cmd_),
+                    DATA_WRAPPER(dq_cmd_),
+                    DATA_WRAPPER(ddq_cmd_)
+                },
+                std::initializer_list<ExperimentContext>{
+                    // 可以把你测试的 speed_ 作为上下文记录下来
+                    CONFIG_WRAPPER(speed_) 
+                },
+                500000 // 预分配足够大的 Buffer
+            );
 
             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid,
                                    std::shared_ptr<const ACTION::Goal> goal)
@@ -154,6 +207,12 @@ namespace controllers
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
             action_server_ = nullptr;
+
+            if (data_logger_) {
+                RCLCPP_INFO(node_->get_logger(), "Saving data to disk... Please wait, this may take a while!");
+                data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
+                RCLCPP_INFO(node_->get_logger(), "Data saved successfully.");
+            }
             return CallbackReturn::SUCCESS;
         }
 
@@ -166,6 +225,10 @@ namespace controllers
         rclcpp_action::Server<ACTION>::SharedPtr action_server_;
         rclcpp::CallbackGroup::SharedPtr call_back_group_;
         double speed_;
+        std::unique_ptr<DataLogger> data_logger_;
+        double current_time_;
+        std::vector<double> q_actual_, dq_actual_, tau_actual_, o_torque;
+        std::vector<double> q_cmd_, dq_cmd_, ddq_cmd_;
     };
 
 } // namespace controllers

@@ -67,7 +67,8 @@ namespace hardwares
                     auto &cmd_pos = command_.get<double>("position");
                     double pos_cmd[7];
                     std::copy(cmd_pos.begin(), cmd_pos.begin() + 7, pos_cmd);
-                    servoJ(pos_cmd, dt, 0.05, 500.0, robot_ip_.c_str());
+                    servoJ(pos_cmd, dt, 0.1, 300.0, robot_ip_.c_str());
+                    // servoJ_ex(pos_cmd, dt, 0.05, 500.0, false, robot_ip_.c_str());
                     break;
                 }
                 case 2: 
@@ -119,6 +120,7 @@ namespace hardwares
             auto& pose = state_.get<double>("pose");
             auto& pose_q_ = state_.get<double>("pose_q_");
             auto& torque = state_.get<double>("torque");
+            auto& origin_torque = state_.get<double>("o_torque");
             // auto& force = state_.get<double>("force");
 
 
@@ -126,7 +128,8 @@ namespace hardwares
             getJointPos(q.data(), robot_ip_.c_str());
             getJointAngularVel(dq.data(), robot_ip_.c_str());
             getTcpPos(pose.data(), robot_ip_.c_str());
-            getJointForce(torque.data(),robot_ip_.c_str());
+            getJointTorque(torque.data(),robot_ip_.c_str());
+            getOriginalJointTorque(origin_torque.data(),robot_ip_.c_str());
             // getTcpForce(force.data(),robot_ip_.c_str());
             forward(q.data(), pose_q_.data(), nullptr, robot_ip_.c_str());
 
@@ -146,7 +149,9 @@ namespace hardwares
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
             // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
-            //                       "Diana read() execution time: %ld us", duration_us);
+            //                       "torque: %f", torque.data());
+            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
+            //                       "o_torque: %f", origin_torque.data());
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State& prev) override
@@ -194,9 +199,16 @@ namespace hardwares
                 setJointCollision(joint_collision, robot_ip_.c_str());
                 setCartCollision(cart_collision, robot_ip_.c_str());
                 
-                double payload[10] = {0.0};
-                setActiveTcpPayload(payload, robot_ip_.c_str());
-                prev_mode_ = -1; 
+                // double payload[10] = {0.0};
+                // setActiveTcpPayload(payload, robot_ip_.c_str());
+                // int tcp_ret = setDefaultToolTcpCoordinate("zrz", robot_ip_.c_str());
+                // if (tcp_ret == 0) {
+                //     RCLCPP_INFO(node_->get_logger(), "Diana: Successfully set Tool TCP Coordinate to 'zrz'");
+                // } else {
+                //     // 如果名字拼写错误或控制器里没这个TCP，会返回 -1
+                //     RCLCPP_ERROR(node_->get_logger(), "Diana: Failed to set Tool TCP Coordinate to 'zrz'");
+                // }
+                prev_mode_ = 1; 
                 
                 std::fill(prev_torque_.begin(), prev_torque_.end(), 0.0);   
                 std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   {
     auto t = (node->now() - start).seconds();
     auto goal_msg = ACTION::Goal();
-    goal_msg.target_position.data = {std::sin(0.5 * t), 0, 0, 0, 0, 0};
+    goal_msg.target_position.data = {std::sin(0.5 * t), 0, 0, 0, 0, 0, 0};
     auto handle_future = client->async_send_goal(goal_msg);
     rclcpp::spin_some(node);
     rate.sleep();

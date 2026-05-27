@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
-        - /RobotModel1/Status1
         - /RobotModel1/Description Topic1
       Splitter Ratio: 0.5
     Tree Height: 542
@@ -202,5 +201,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 1157
-  Y: 101
+  X: 418
+  Y: 63
