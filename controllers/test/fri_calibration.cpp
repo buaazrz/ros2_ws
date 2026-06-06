@@ -61,6 +61,8 @@ int main(int argc, char **argv)
     auto controller_client = node->create_client<robot_control_msgs::srv::ControlCommand>("control_node/control_command");
     auto action_client = rclcpp_action::create_client<ACTION>(node, "JointMotionController/goal");
 
+    auto param_client = std::make_shared<rclcpp::AsyncParametersClient>(node, "JointMotionController");
+
     // ==========================================
     // 1. 激活控制器
     // ==========================================
@@ -91,37 +93,54 @@ int main(int argc, char **argv)
     // 2. 定义往复运动的起点A和终点B
     // ==========================================
     // 以辨识关节 1 (索引0) 为例。注意：运行前务必确保机械臂在这个角度内不会发生干涉！
-    std::vector<double> point_A = {-2.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0};
-    std::vector<double> point_B = { 2.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0}; 
+    std::vector<double> point_A = { 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, -0.6};
+    std::vector<double> point_B = { 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.6};  
     
     // 初始先移动到点 A 准备
-    RCLCPP_INFO(node->get_logger(), "Moving to initial start point A...");
-    move_to_target(node, action_client, point_A);
+    if (param_client->wait_for_service(2s)) {
+        param_client->set_parameters({rclcpp::Parameter("speed", 0.5)});
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(500)); 
+    RCLCPP_INFO(node->get_logger(), "Moving to initial start point A (Init speed: 0.5)...");
+    move_to_target(node, action_client, point_A);  
     rclcpp::sleep_for(2s); // 停顿等待稳定
-
     if (rclcpp::ok())
     {
-        
-        // 正向运动 (Forward) A -> B
-        RCLCPP_INFO(node->get_logger(), "Moving Forward (A -> B)...");
-        move_to_target(node, action_client, point_B);
-        
-        RCLCPP_INFO(node->get_logger(), "Wait 1s...");
-        rclcpp::sleep_for(1s);
+        // ==========================================
+        // 3. 循环递增速度进行摩擦力辨识 (从 0.01 增加到 0.7，每次 +0.01)
+        // ==========================================
+        for (double current_speed = 0.02; current_speed <= 0.705; current_speed += 0.02)
+        {
+            RCLCPP_INFO(node->get_logger(), "==========================================");
+            RCLCPP_INFO(node->get_logger(), "Starting new cycle. Setting speed to: %.2f", current_speed);
+            
+            // 【修改】通过参数客户端异步设置参数
+            param_client->set_parameters({rclcpp::Parameter("speed", current_speed)});
+            rclcpp::sleep_for(std::chrono::milliseconds(200)); // 给控制器更新参数的时间
 
-        // 反向运动 (Backward) B -> A
-        RCLCPP_INFO(node->get_logger(), "Moving Backward (B -> A)...");
-        move_to_target(node, action_client, point_A);
+            // 正向运动 (Forward) A -> B
+            RCLCPP_INFO(node->get_logger(), "Moving Forward (A -> B)...");
+            move_to_target(node, action_client, point_B);
+            
+            RCLCPP_INFO(node->get_logger(), "Wait 1s...");
+            rclcpp::sleep_for(1s);
 
-        RCLCPP_INFO(node->get_logger(), "Wait 1s...");
-        rclcpp::sleep_for(1s);
+            // 反向运动 (Backward) B -> A
+            RCLCPP_INFO(node->get_logger(), "Moving Backward (B -> A)...");
+            move_to_target(node, action_client, point_A);
 
-        RCLCPP_INFO(node->get_logger(), "Sending command to deactivate controller and save data...");
-        request->cmd_name = "deactivate"; // 确保你的 control_node 支持 deactivate 指令
+            RCLCPP_INFO(node->get_logger(), "Wait 1s...");
+            rclcpp::sleep_for(1s);
+        }
+
+        // ==========================================
+        // 4. 辨识结束，保存数据
+        // ==========================================
+        RCLCPP_INFO(node->get_logger(), "All cycles completed! Sending command to deactivate controller and save data...");
+        request->cmd_name = "deactivate"; 
         request->cmd_params = "JointMotionController";
         auto future_stop = controller_client->async_send_request(request);
         
-        // 这一步会阻塞！直到 Controller 那边的 on_deactivate 执行完毕（文件写入完成）才会返回
         if (rclcpp::spin_until_future_complete(node, future_stop) == rclcpp::FutureReturnCode::SUCCESS) {
             RCLCPP_INFO(node->get_logger(), "Controller deactivated and data saved successfully!");
         } else {

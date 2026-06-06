@@ -276,6 +276,11 @@
            <string>VariableImpedanceController</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>TorqueController</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>

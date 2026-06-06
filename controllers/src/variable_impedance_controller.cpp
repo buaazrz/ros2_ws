@@ -68,7 +68,7 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
-        VariableImpedanceController() : f_filter_(6, 15) {}
+        VariableImpedanceController() : f_filter_(6, 15) , t_filter_(7, 15) {}
         ~VariableImpedanceController()
         {
             if (data_logger_)
@@ -148,12 +148,16 @@ namespace controllers
             real_time_buffer_.reset();
             tau_d.setZero();
             f_filter_.reset();
+            t_filter_.reset();
             F_imp_.setZero();
 
             z_ = Eigen::VectorXd::Zero(dof_);
             tau_d_est_ = Eigen::VectorXd::Zero(dof_);
             tau_x_est_ = Eigen::VectorXd::Zero(dof_);
             Y_ = Eigen::VectorXd::Constant(dof_, dob_gain_val_);
+
+            tau_fric_ff_ = Eigen::VectorXd::Zero(dof_); 
+            tau_fric_ff_prev_ = Eigen::VectorXd::Zero(dof_);
 
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
             real_time_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>>(robot_state_publisher_);
@@ -246,14 +250,14 @@ namespace controllers
                     DATA_WRAPPER(params_.F_target),
                     DATA_WRAPPER(F_imp_(5)), 
                     DATA_WRAPPER(force_(2)),
-                    DATA_WRAPPER(pose_),
+                    // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    // DATA_WRAPPER(tau_d),
+                    DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_), 
                     DATA_WRAPPER(Kx_(5)),
-                    DATA_WRAPPER(xe_),
-                    DATA_WRAPPER(tau_d_est_),
-                    DATA_WRAPPER(tau_x_est_),
+                    // DATA_WRAPPER(xe_),
+                    // DATA_WRAPPER(tau_d_est_),
+                    // DATA_WRAPPER(tau_x_est_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -495,20 +499,21 @@ namespace controllers
             }
 
             double current_M_dot_norm = dM_.norm();
-            RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
-                                "当前质量矩阵导数范数 ||dM||: %f", current_M_dot_norm);
+            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 500, 
+            //                     "当前质量矩阵导数范数 ||dM||: %f", current_M_dot_norm);
 
-            Eigen::VectorXd H = C_ * dq + g_;
+            // Eigen::VectorXd H = C_ * dq + g_;
             Eigen::VectorXd p_dob = Y_.cwiseProduct(dq);
-            Eigen::VectorXd dob_rhs = H - tau_d - z_ - p_dob;
+            Eigen::VectorXd dob_rhs =  - tau_d - z_ - p_dob;
             Eigen::VectorXd Minv_rhs = M_.ldlt().solve(dob_rhs);
             Eigen::VectorXd dz = Y_.cwiseProduct(Minv_rhs);
 
             z_ += dz * dt;
             tau_d_est_ = z_ + p_dob;
+            Eigen::MatrixXd Lambda = robot_math::A_x(Jb_, M_);
             Eigen::MatrixXd Lambda_inv = robot_math::A_x_inv(Jb_, M_);
             Eigen::VectorXd Minv_taud = M_.ldlt().solve(tau_d_est_);
-            tau_x_est_ = Jb_.transpose() * Lambda_inv * (Jb_ * Minv_taud);
+            tau_x_est_ = Jb_.transpose() * Lambda * (Jb_ * Minv_taud);
          
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
@@ -519,7 +524,88 @@ namespace controllers
 
             F_imp_ = Lambda_inv.ldlt().solve(ddxc_ - dJb_ * dq);
 
-            tau_cmd = tau_task_ + tau_null_ -tau_x_est_;
+            double fric_comp_ratio = 0.0;
+            Eigen::VectorXd tau_base = tau_task_ + tau_null_ - tau_x_est_;   
+            t_filter_.filtering(tau_base.data(), tau_base.data());
+
+            // std::cerr<<"tau_base: "<<tau_base.transpose()<<std::endl;
+            double max_torque_rate = 40.0; 
+            double max_delta_tau = max_torque_rate * dt; 
+
+            // ★ Karnopp 模型参数
+            double DV = 0.01; // 速度死区 (Deviation Velocity)，可根据底噪调整 0.002~0.005
+            double K_assist = 3.0; // 意图放大系数 (通常 1.0 ~ 3.0，决定起步时的"助力"有多快跟上)
+
+            for (int i = 0; i < dof_; i++)
+            {
+                double v = dq(i);
+                double tau_f_i = 0.0;
+                
+                // =========================================
+                // Karnopp 摩擦力模型逻辑分发
+                // =========================================
+                if (std::abs(v) > DV) {
+                    // -------------------------------------
+                    // 状态 1: 滑移阶段 (Sliding) 
+                    // 对应公式：|v| >= DV, f = -Fc*sign(v) - Fv*v (此处我们用更高级的Stribeck替换)
+                    // -------------------------------------
+                    double sign_v = (v > 0) ? 1.0 : -1.0; 
+                    double term1 = F_c_[i];
+                    // 注意：滑移时使用的是实测最大摩擦力 F_s_actual_ 作为峰值，保证过渡平滑
+                    double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
+                    double term3 = sigma2_[i] * v;
+                    
+                    tau_f_i = (term1 + term2) * sign_v + term3;
+
+                } else {
+                    // -------------------------------------
+                    // 状态 2: 黏滞阶段 (Sticking) - Karnopp 的精髓
+                    // 对应公式：|v| < DV, 摩擦力根据外力变化
+                    // 前馈策略：提供按比例放大的辅助力矩，上限被最大静摩擦力截断
+                    // -------------------------------------
+                    double base_deadband = 0.3; 
+                    double valid_tau_base = 0.0;
+                    if (tau_base(i) > base_deadband) {
+                        valid_tau_base = tau_base(i);
+                    } else if (tau_base(i) < -base_deadband) {
+                        valid_tau_base = tau_base(i);
+                    }
+
+                    double assist_torque = K_assist * valid_tau_base;
+                    
+                    // 打个安全折扣，防止过补偿
+                    double current_Fs_limit = F_s_actual_[i]; 
+
+                    // 截断逻辑（等同于图中公式的分段判断）
+                    if (assist_torque > current_Fs_limit) {
+                        tau_f_i = current_Fs_limit;
+                    } else if (assist_torque < -current_Fs_limit) {
+                        tau_f_i = -current_Fs_limit;
+                    } else {
+                        tau_f_i = assist_torque;
+                    }
+                }
+
+                // =========================================
+                // 终极硬件保护：力矩变化率限制 (Rate Limiter)
+                // 解决 "力矩插值失败" 报错的核心！
+                // =========================================
+                double delta_tau = tau_f_i - tau_fric_ff_prev_(i);
+                if (delta_tau > max_delta_tau) {
+                    tau_f_i = tau_fric_ff_prev_(i) + max_delta_tau;
+                } else if (delta_tau < -max_delta_tau) {
+                    tau_f_i = tau_fric_ff_prev_(i) - max_delta_tau;
+                }
+                
+                // 更新记忆状态
+                tau_fric_ff_prev_(i) = tau_f_i;
+                
+                // 输出最终前馈
+                tau_fric_ff_(i) = tau_f_i * fric_comp_ratio;
+            }
+
+            // 叠加指令并下发
+            tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -594,7 +680,7 @@ namespace controllers
         std::unique_ptr<DataLogger> data_logger_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
-        robot_math::MovingFilter<double> f_filter_;
+        robot_math::MovingFilter<double> f_filter_,t_filter_;
         bool is_contact_established_{false};
         std::deque<double> force_err_window_;
         int integral_window_size_ ={50};
@@ -603,6 +689,14 @@ namespace controllers
         Eigen::VectorXd tau_d_est_;
         Eigen::VectorXd tau_x_est_;
         double dob_gain_val_;
+        const std::vector<double> F_c_ = {0.000, 0.976, 0.000, 0.453, 0.254, 0.468, 0.000};
+        const std::vector<double> F_s_ = {11.872, 11.722, 1.155, 1.256, 0.539, 0.573, 1.038};
+        const std::vector<double> v_s_ = {0.010, 0.001, 0.103, 0.181, 1.000, 0.397, 0.469};
+        const std::vector<double> sigma2_ = {0.086, 0.134, 0.000, 0.000, 0.000, 0.000, 0.000};
+        const std::vector<double> alpha_ = {0.167, 0.199, 0.493, 0.654, 0.362, 1.276, 0.164};
+        const std::vector<double> F_s_actual_ = {4.1, 3.0, 2.6, 3.0, 0.9, 1.1, 1.3};
+        Eigen::VectorXd tau_fric_ff_;
+        Eigen::VectorXd tau_fric_ff_prev_;
     };
 } // namespace controllers
 

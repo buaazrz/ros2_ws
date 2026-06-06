@@ -30,22 +30,23 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
 
-        CartesianTrajImpPDController() : f_filter_(6, 15) {}
-        ~CartesianTrajImpPDController() 
+        CartesianTrajImpPDController() : f_filter_(6, 15), t_filter_(7, 15) {}
+        ~CartesianTrajImpPDController()
         {
             if (data_logger_)
-               data_logger_->save("/home/wjc/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+                data_logger_->save("/home/wjc/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
             dof_ = robot_->dof;
-            
+
             node_->get_parameter_or<std::vector<double>>("Kx", Kx_vec_, {500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0});
             node_->get_parameter_or<std::vector<double>>("Bx", Bx_vec_, {30.0, 30.0, 30.0, 150.0, 150.0, 150.0});
             node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
-            
+            node_->get_parameter_or<double>("dob_gain", dob_gain_val_, 0.0);
+
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
             Kn_in_box_.set(Kn_vec_);
@@ -56,19 +57,27 @@ namespace controllers
                 {
                     for (const auto &parameter : parameters)
                     {
-                        if (parameter.get_name() == "Kx") Kx_in_box_.set([=](auto &value) { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Bx") Bx_in_box_.set([=](auto &value) { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Kn") Kn_in_box_.set([=](auto &value) { value = parameter.as_double_array(); });
-                        else if (parameter.get_name() == "Bn") Bn_in_box_.set([=](auto &value) { value = parameter.as_double_array(); });
+                        if (parameter.get_name() == "Kx")
+                            Kx_in_box_.set([=](auto &value)
+                                           { value = parameter.as_double_array(); });
+                        else if (parameter.get_name() == "Bx")
+                            Bx_in_box_.set([=](auto &value)
+                                           { value = parameter.as_double_array(); });
+                        else if (parameter.get_name() == "Kn")
+                            Kn_in_box_.set([=](auto &value)
+                                           { value = parameter.as_double_array(); });
+                        else if (parameter.get_name() == "Bn")
+                            Bn_in_box_.set([=](auto &value)
+                                           { value = parameter.as_double_array(); });
                     }
                     auto result = rcl_interfaces::msg::SetParametersResult();
                     result.successful = true;
                     return result;
                 });
-                
+
             return CallbackReturn::SUCCESS;
         }
-        
+
         Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 1.0)
         {
             Eigen::VectorXd tau_d_saturated(dof_);
@@ -87,22 +96,32 @@ namespace controllers
             real_time_buffer_.reset();
             tau_d.setZero();
             f_filter_.reset();
+            t_filter_.reset();
+
+
+            z_ = Eigen::VectorXd::Zero(dof_);
+            tau_d_est_ = Eigen::VectorXd::Zero(dof_);
+            tau_x_est_ = Eigen::VectorXd::Zero(dof_);
+            Y_ = Eigen::VectorXd::Constant(dof_, dob_gain_val_);
+
+            tau_fric_ff_ = Eigen::VectorXd::Zero(dof_); 
+            tau_fric_ff_prev_ = Eigen::VectorXd::Zero(dof_);
 
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
             real_time_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<robot_control_msgs::msg::RobotState>>(robot_state_publisher_);
 
             const std::vector<double> &q_vec = state_->get<double>("position");
-            qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval(); 
+            qd_ = Eigen::Map<const Eigen::VectorXd>(q_vec.data(), dof_).eval();
             dqd_ = Eigen::VectorXd::Zero(dof_);
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
             const std::vector<double> &pose = state_->get<double>("pose");
             Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
-            Eigen::Matrix4d Tb_tmp; 
+            Eigen::Matrix4d Tb_tmp;
             robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
-            
+
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
             ddxd_ = Eigen::Vector6d::Zero();
@@ -110,44 +129,48 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.59702; 
-            sensor_cog_vec_ = {0.0008   , 0.0001 ,   0.0030};
-            sensor_offset_vec_ = {-4.8164  ,  5.5965  , -9.3466  ,  0.4178   , 0.2654  ,  0.2582};
+            sensor_weight_ = 0.59702;
+            sensor_cog_vec_ = {0.0008, 0.0001, 0.0030};
+            sensor_offset_vec_ = {-4.8164, 5.5965, -9.3466, 0.4178, 0.2654, 0.2582};
             T_sensor_ = Eigen::Matrix4d::Identity();
-            T_sensor_ << 1,  0,  0, 0,
-             0, -1,  0, 0,
-             0,  0, -1, 0,
-             0,  0,  0, 1;
+            T_sensor_ << 1, 0, 0, 0,
+                0, -1, 0, 0,
+                0, 0, -1, 0,
+                0, 0, 0, 1;
 
-            auto handle_goal =[this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal) {
+            auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal)
+            {
                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
             };
 
-            auto handle_cancel = [this](const std::shared_ptr<GoalHandle> goal_handle) {
+            auto handle_cancel = [this](const std::shared_ptr<GoalHandle> goal_handle)
+            {
                 return rclcpp_action::CancelResponse::ACCEPT;
             };
 
-            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle) {
+            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
+            {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
                 const std::vector<double> &pose_current = state_->get<double>("pose");
                 std::vector<double> full_traj_data;
-                full_traj_data.push_back(0.0); 
-                for(int i = 0; i < 6; ++i) {
-                    full_traj_data.push_back(pose_current[i]); 
+                full_traj_data.push_back(0.0);
+                for (int i = 0; i < 6; ++i)
+                {
+                    full_traj_data.push_back(pose_current[i]);
                 }
-                const auto& goal_data = goal_handle->get_goal()->target_position.data;
+                const auto &goal_data = goal_handle->get_goal()->target_position.data;
                 full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
                 trajectory->set_traj(full_traj_data);
-                
-                traj_time_ = 0.0; 
+
+                traj_time_ = 0.0;
                 real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
             this->action_server_ = rclcpp_action::create_server<ACTION>(
-                node_, "~/goal", handle_goal, handle_cancel, handle_accepted, 
+                node_, "~/goal", handle_goal, handle_cancel, handle_accepted,
                 rcl_action_server_get_default_options(), call_back_group_);
-            
+
             pose_ = Eigen::Vector6d::Zero();
             force_ = Eigen::Vector6d::Zero();
             dq_ = Eigen::Vector7d::Zero();
@@ -158,10 +181,13 @@ namespace controllers
                     DATA_WRAPPER(cal_time_),
                     // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
-                    // DATA_WRAPPER(tau_d),
+                    DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
-                    DATA_WRAPPER(force_),
-                    DATA_WRAPPER(Kx_),
+                    // DATA_WRAPPER(force_),
+                    // DATA_WRAPPER(Kx_),
+                    // DATA_WRAPPER(tau_d_est_),
+                    // DATA_WRAPPER(tau_x_est_),
+                    // DATA_WRAPPER(tau_fric_ff_),
                     // DATA_WRAPPER(tau_null_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(dxe_),
@@ -190,54 +216,58 @@ namespace controllers
         {
             time_ += period.seconds();
             auto start_time = std::chrono::high_resolution_clock::now();
+            double dt = period.seconds();
 
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             const std::vector<double> &pose_vec = state_->get<double>("pose");
             auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
-            command_->get<int>("mode")[0] = 3; 
+            command_->get<int>("mode")[0] = 3;
             pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
             Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
-            // R_ = T.block(0, 0, 3, 3); 
-            // p_ = T.block(0, 3, 3, 1); 
-         
+            // R_ = T.block(0, 0, 3, 3);
+            // p_ = T.block(0, 3, 3, 1);
+
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> force(force_vec.data(), 6);
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             std::fill(tau_cmd_vec.begin(), tau_cmd_vec.end(), 0);
 
-            Kx_in_box_.try_get([=](auto const &value) { Kx_vec_ = value; });
-            Bx_in_box_.try_get([=](auto const &value) { Bx_vec_ = value; });
-            Kn_in_box_.try_get([=](auto const &value) { Kn_vec_ = value; });
-            Bn_in_box_.try_get([=](auto const &value) { Bn_vec_ = value; });
+            Kx_in_box_.try_get([=](auto const &value)
+                               { Kx_vec_ = value; });
+            Bx_in_box_.try_get([=](auto const &value)
+                               { Bx_vec_ = value; });
+            Kn_in_box_.try_get([=](auto const &value)
+                               { Kn_vec_ = value; });
+            Bn_in_box_.try_get([=](auto const &value)
+                               { Bn_vec_ = value; });
             Kx_ = Eigen::Map<Eigen::VectorXd>(Kx_vec_.data(), 6);
             Bx_ = Eigen::Map<Eigen::VectorXd>(Bx_vec_.data(), 6);
             Kn_ = Eigen::Map<Eigen::VectorXd>(Kn_vec_.data(), dof_);
             Bn_ = Eigen::Map<Eigen::VectorXd>(Bn_vec_.data(), dof_);
 
             m_c_g_matrix(robot_, q_vec, dq_vec, M_, C_, g_, Jb_, dJb_, dM_, dTb_, Tb_);
-            R_ = Tb_.block(0, 0, 3, 3); 
+            R_ = Tb_.block(0, 0, 3, 3);
             p_ = Tb_.block(0, 3, 3, 1);
-            
+
             Eigen::Vector6d raw_compensated = robot_math::get_ext_force(
-                force_vec, 
-                sensor_weight_, 
-                sensor_offset_vec_, 
-                sensor_cog_vec_, 
-                T_sensor_, 
-                Tb_
-            );
-            force_.head(3) = raw_compensated.tail(3); 
-            force_.tail(3) = raw_compensated.head(3); 
-            Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3,3>(0,0);
+                force_vec,
+                sensor_weight_,
+                sensor_offset_vec_,
+                sensor_cog_vec_,
+                T_sensor_,
+                Tb_);
+            force_.head(3) = raw_compensated.tail(3);
+            force_.tail(3) = raw_compensated.head(3);
+            Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3, 3>(0, 0);
             force_.head(3) = R_tcp_to_sensor * force_.head(3);
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
- 
+
             f_filter_.filtering(force_.data(), force_.data());
 
             auto handle_pair = *real_time_buffer_.readFromRT();
@@ -253,7 +283,9 @@ namespace controllers
                     auto result = std::make_shared<ACTION::Result>();
                     result->success = false;
                     goal_handle->canceled(result);
-                    vd_.setZero(); wd_.setZero(); ddxd_.setZero();
+                    vd_.setZero();
+                    wd_.setZero();
+                    ddxd_.setZero();
                 }
                 else
                 {
@@ -265,10 +297,9 @@ namespace controllers
 
                     Rd_ = Td_curr.block(0, 0, 3, 3);
                     pd_ = Td_curr.block(0, 3, 3, 1);
-                    wd_ = Vd_curr.head(3); 
-                    vd_ = Vd_curr.tail(3); 
+                    wd_ = Vd_curr.head(3);
+                    vd_ = Vd_curr.tail(3);
                     dVd = dVd_curr;
-
 
                     Eigen::Vector3d pos_err = pd_ - p_;
                     Eigen::Vector3d rot_err = robot_math::logR(R_.transpose() * Rd_);
@@ -277,15 +308,19 @@ namespace controllers
                         auto result = std::make_shared<ACTION::Result>();
                         result->success = true;
                         goal_handle->succeed(result);
-                        vd_.setZero(); wd_.setZero(); ddxd_.setZero();
+                        vd_.setZero();
+                        wd_.setZero();
+                        ddxd_.setZero();
                     }
                 }
             }
             else
             {
-                vd_.setZero(); wd_.setZero(); ddxd_.setZero();
+                vd_.setZero();
+                wd_.setZero();
+                ddxd_.setZero();
             }
-            
+
             Eigen::Vector3d w = (Jb_ * dq).head(3);
             Eigen::Vector3d v = (Jb_ * dq).tail(3);
 
@@ -296,14 +331,53 @@ namespace controllers
 
             ddxd_.head(3) = R_.transpose() * (dVd.head(3) - (R_ * w).cross(wd_));
             ddxd_.tail(3) = R_.transpose() * (dVd.tail(3) - (R_ * w).cross(vd_));
-            Eigen::Matrix6d Lambda = robot_math::A_x_inv(Jb_, M_).inverse();
-            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
-            tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_- dJb_* dq);
+
+            // Eigen::VectorXd H = C_ * dq + g_;
+            Eigen::VectorXd p_dob = Y_.cwiseProduct(dq);
+            Eigen::VectorXd dob_rhs = -tau_d - z_ - p_dob;
+            Eigen::VectorXd Minv_rhs = M_.ldlt().solve(dob_rhs);
+            Eigen::VectorXd dz = Y_.cwiseProduct(Minv_rhs);
+
+            z_ += dz * dt;
+            tau_d_est_ = z_ + p_dob;
+            Eigen::MatrixXd Lambda_inv = robot_math::A_x(Jb_, M_);
+            Eigen::VectorXd Minv_taud = M_.ldlt().solve(tau_d_est_);
+            tau_x_est_ = Jb_.transpose() * Lambda_inv * (Jb_ * Minv_taud);
+
+            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
+            tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
-            tau_cmd = tau_task_ + tau_null_ ;
+            double fric_comp_ratio = 1.0;
+            Eigen::VectorXd tau_base = tau_task_ + tau_null_;   
+            
+            double DV = 0.01; 
+            for (int i = 0; i < dof_; i++)
+            {
+                double v = dq(i);
+                double tau_f_i = 0.0;
+        
+                if (std::abs(v) > DV) {
+                    double sign_v = (v > 0) ? 1.0 : -1.0; 
+                    double term1 = F_c_[i];
+                    double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
+                    double term3 = sigma2_[i] * v;
+                    
+                    tau_f_i = (term1 + term2) * sign_v + term3;
+                } else {
+                    if (std::abs(tau_base(i)) > 0.15) {
+                        double sign_tau = (tau_base(i) > 0) ? 1.0 : -1.0;
+                        tau_f_i =  F_s_actual_[i] * sign_tau; 
+                    } else {
+                        tau_f_i = 0.0;
+                    }
+                }
+                tau_fric_ff_(i) = fric_comp_ratio * tau_f_i;
+            }
+
+            tau_cmd = tau_task_ + tau_null_ + tau_fric_ff_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -311,29 +385,29 @@ namespace controllers
 
             cal_time_ = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
             data_logger_->record();
-
         }
-    
+
     private:
-        void publish_robot_state(const rclcpp::Time &t, 
-            const std::vector<double> &q, 
-            const std::vector<double> &dq,
-            const Eigen::Vector6d &force 
-        )
+        void publish_robot_state(const rclcpp::Time &t,
+                                 const std::vector<double> &q,
+                                 const std::vector<double> &dq,
+                                 const Eigen::Vector6d &force)
         {
-        if (!real_time_publisher_) return;
-        robot_control_msgs::msg::RobotState msg;
-        msg.header.stamp = t;
-        std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
-        std::copy(q.begin(), q.end(), msg.robot_state.begin());
-        std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
-        std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
-        if (real_time_publisher_->trylock())
+            if (!real_time_publisher_)
+                return;
+            robot_control_msgs::msg::RobotState msg;
+            msg.header.stamp = t;
+            std::fill_n(std::back_inserter(msg.robot_state), 28, 0);
+            std::copy(q.begin(), q.end(), msg.robot_state.begin());
+            std::copy(dq.begin(), dq.end(), msg.robot_state.begin() + 7);
+            std::copy(force.data(), force.data() + 6, msg.robot_state.begin() + 14);
+            if (real_time_publisher_->trylock())
             {
-            real_time_publisher_->msg_ = msg;
-            real_time_publisher_->unlockAndPublish();
+                real_time_publisher_->msg_ = msg;
+                real_time_publisher_->unlockAndPublish();
             }
         }
+
     protected:
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
         rclcpp::Publisher<robot_control_msgs::msg::RobotState>::SharedPtr robot_state_publisher_;
@@ -363,7 +437,20 @@ namespace controllers
         std::unique_ptr<DataLogger> data_logger_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
-        robot_math::MovingFilter<double> f_filter_;
+        robot_math::MovingFilter<double> f_filter_, t_filter_;
+        Eigen::VectorXd z_;
+        Eigen::VectorXd Y_;
+        Eigen::VectorXd tau_d_est_;
+        Eigen::VectorXd tau_x_est_;
+        double dob_gain_val_;
+        const std::vector<double> F_c_ = {0.000, 0.976, 0.000, 0.453, 0.254, 0.468, 0.000};
+        const std::vector<double> F_s_ = {11.872, 11.722, 1.155, 1.256, 0.539, 0.573, 1.038};
+        const std::vector<double> v_s_ = {0.010, 0.001, 0.103, 0.181, 1.000, 0.397, 0.469};
+        const std::vector<double> sigma2_ = {0.086, 0.134, 0.000, 0.000, 0.000, 0.000, 0.000};
+        const std::vector<double> alpha_ = {0.167, 0.199, 0.493, 0.654, 0.362, 1.276, 0.164};
+        const std::vector<double> F_s_actual_ = {4.1, 3.0, 2.6, 3.0, 0.9, 1.1, 1.3};
+        Eigen::VectorXd tau_fric_ff_;
+        Eigen::VectorXd tau_fric_ff_prev_;
     };
 } // namespace controllers
 
@@ -371,34 +458,66 @@ namespace controllers
 PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_interface::ControllerInterface)
 
 
-                // double dt = 0.001;
+// // ★ Karnopp 模型参数
+// double DV = 0.01; // 速度死区 (Deviation Velocity)，可根据底噪调整 0.002~0.005
+// double K_assist = 50.0; // 意图放大系数 (通常 1.0 ~ 3.0，决定起步时的"助力"有多快跟上)
 
-                // std::ofstream outfile("/tmp/reference_trajectory.csv"); 
-                // if (outfile.is_open())
-                // {
-                //     outfile << "time,x,y,z,qw,qx,qy,qz\n";
-                    
-                //     for (double t = 0; t <= trajectory->total_time(); t += dt)
-                //     {
-                //         Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-                //         Eigen::Vector6d V, dV;
-                        
-                //         trajectory->evaluate(t, T, V, dV);
+// for (int i = 0; i < dof_; i++)
+// {
+//     double v = dq(i);
+//     double tau_f_i = 0.0;
+    
+//     // =========================================
+//     // Karnopp 摩擦力模型逻辑分发
+//     // =========================================
+//     if (std::abs(v) > DV) {
+//         // -------------------------------------
+//         // 状态 1: 滑移阶段 (Sliding) 
+//         // 对应公式：|v| >= DV, f = -Fc*sign(v) - Fv*v (此处我们用更高级的Stribeck替换)
+//         // -------------------------------------
+//         double sign_v = (v > 0) ? 1.0 : -1.0; 
+//         double term1 = F_c_[i];
+//         // 注意：滑移时使用的是实测最大摩擦力 F_s_actual_ 作为峰值，保证过渡平滑
+//         double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
+//         double term3 = sigma2_[i] * v;
+        
+//         tau_f_i = (term1 + term2) * sign_v + term3;
 
-                //         double x = T(0, 3);
-                //         double y = T(1, 3);
-                //         double z = T(2, 3);
-                //         Eigen::Quaterniond q(T.block<3, 3>(0, 0));
+//     } else {
+//         // -------------------------------------
+//         // 状态 2: 黏滞阶段 (Sticking) - Karnopp 的精髓
+//         // 对应公式：|v| < DV, 摩擦力根据外力变化
+//         // 前馈策略：提供按比例放大的辅助力矩，上限被最大静摩擦力截断
+//         // -------------------------------------
+//         double assist_torque = K_assist * tau_base(i);
+        
+//         // 打个安全折扣，防止过补偿
+//         double current_Fs_limit = F_s_actual_[i]; 
 
-                //         outfile << std::fixed << std::setprecision(6)
-                //                 << t << ","
-                //                 << x << "," << y << "," << z << ","
-                //                 << q.w() << "," << q.x() << "," << q.y() << "," << q.z() << "\n";
-                //     }
-                //     outfile.close();
-                //     RCLCPP_INFO(node_->get_logger(), "Reference trajectory saved to /tmp/reference_trajectory.csv");
-                // }
-                // else
-                // {
-                //     RCLCPP_ERROR(node_->get_logger(), "Failed to open file for trajectory saving!");
-                // }
+//         // 截断逻辑（等同于图中公式的分段判断）
+//         if (assist_torque > current_Fs_limit) {
+//             tau_f_i = current_Fs_limit;
+//         } else if (assist_torque < -current_Fs_limit) {
+//             tau_f_i = -current_Fs_limit;
+//         } else {
+//             tau_f_i = assist_torque;
+//         }
+//     }
+
+//     // =========================================
+//     // 终极硬件保护：力矩变化率限制 (Rate Limiter)
+//     // 解决 "力矩插值失败" 报错的核心！
+//     // =========================================
+//     double delta_tau = tau_f_i - tau_fric_ff_prev_(i);
+//     if (delta_tau > max_delta_tau) {
+//         tau_f_i = tau_fric_ff_prev_(i) + max_delta_tau;
+//     } else if (delta_tau < -max_delta_tau) {
+//         tau_f_i = tau_fric_ff_prev_(i) - max_delta_tau;
+//     }
+    
+//     // 更新记忆状态
+//     tau_fric_ff_prev_(i) = tau_f_i;
+    
+//     // 输出最终前馈
+//     tau_fric_ff_(i) = tau_f_i * fric_comp_ratio;
+// }

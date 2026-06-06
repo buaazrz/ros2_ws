@@ -9,6 +9,9 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robot_math/TrapezoidFunction.hpp"
 #include "ros2_utility/data_logger.hpp"
+#include "realtime_tools/realtime_box.hpp"
+#include "realtime_tools/realtime_buffer.hpp"
+
 namespace controllers
 {
 
@@ -36,13 +39,14 @@ namespace controllers
             q_actual_   = state_->get<double>("position");
             dq_actual_  = state_->get<double>("velocity");
             tau_actual_ = state_->get<double>("torque");
-            o_torque = state_->get<double>("o_torque");
+            // o_torque = state_->get<double>("o_torque");
             // inital reading should be put here!!
             if(period.seconds() == 0)
             {
                 q0_ = q_actual_;
             }
             command_->get<int>("mode")[0] = 1;
+            speed_in_box_.try_get([this](auto const &value) { speed_ = value; });
             if (goal_handle && goal_handle->is_active())
             {
                 if (goal_handle->is_canceling())
@@ -90,7 +94,10 @@ namespace controllers
                         dq_cmd_  = interp_dq;
                         ddq_cmd_ = interp_ddq;
 
-                        data_logger_->record();
+                        // data_logger_->record();
+                        if (log_counter_ % 2 == 0) {
+                            data_logger_->record();
+                        }
                         // if(period.seconds() > 0)
                         // {
                         //     double diff = q[0] - interp_q[0];
@@ -118,6 +125,7 @@ namespace controllers
             {
                 cmd = q0_;
             }
+            log_counter_++;
         }
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
         {
@@ -126,6 +134,24 @@ namespace controllers
             } else {
                 node_->get_parameter("speed", speed_);
             }
+
+            speed_in_box_.set(speed_);
+
+            parameters_callback_handle_ = node_->add_on_set_parameters_callback(
+                [&](std::vector<rclcpp::Parameter> parameters) -> rcl_interfaces::msg::SetParametersResult
+                {
+                    for (const auto &parameter : parameters)
+                    {
+                        if (parameter.get_name() == "speed") {
+                            // 将非实时线程接收到的参数放入 RT Box
+                            speed_in_box_.set(parameter.as_double());
+                            RCLCPP_INFO(node_->get_logger(), "Speed updated to: %f", parameter.as_double());
+                        }
+                    }
+                    auto result = rcl_interfaces::msg::SetParametersResult();
+                    result.successful = true;
+                    return result;
+                });
             return CallbackReturn::SUCCESS;
         }
         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -133,12 +159,13 @@ namespace controllers
             node_->get_parameter_or<double>("speed", speed_, 0.5);
             real_time_buffer_.reset();
             planner.reset();
+            log_counter_ = 0;
 
             current_time_ = 0.0;
             q_actual_.resize(7, 0.0);
             dq_actual_.resize(7, 0.0);
             tau_actual_.resize(7, 0.0);
-            o_torque.resize(7, 0.0);
+            // o_torque.resize(7, 0.0);
             q_cmd_.resize(7, 0.0);
             dq_cmd_.resize(7, 0.0);
             ddq_cmd_.resize(7, 0.0);
@@ -153,13 +180,14 @@ namespace controllers
                     // DATA_WRAPPER(o_torque),
                     DATA_WRAPPER(q_cmd_),
                     DATA_WRAPPER(dq_cmd_),
-                    DATA_WRAPPER(ddq_cmd_)
+                    DATA_WRAPPER(ddq_cmd_),
+                    DATA_WRAPPER(speed_)
                 },
                 std::initializer_list<ExperimentContext>{
                     // 可以把你测试的 speed_ 作为上下文记录下来
                     CONFIG_WRAPPER(speed_) 
                 },
-                500000 // 预分配足够大的 Buffer
+                5000000 // 预分配足够大的 Buffer
             );
 
             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid,
@@ -226,9 +254,13 @@ namespace controllers
         rclcpp::CallbackGroup::SharedPtr call_back_group_;
         double speed_;
         std::unique_ptr<DataLogger> data_logger_;
+        realtime_tools::RealtimeBox<double> speed_in_box_;
+        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
+
         double current_time_;
         std::vector<double> q_actual_, dq_actual_, tau_actual_, o_torque;
         std::vector<double> q_cmd_, dq_cmd_, ddq_cmd_;
+        int log_counter_ = 0;
     };
 
 } // namespace controllers

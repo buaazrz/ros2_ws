@@ -201,13 +201,13 @@ namespace hardwares
                 
                 // double payload[10] = {0.0};
                 // setActiveTcpPayload(payload, robot_ip_.c_str());
-                // int tcp_ret = setDefaultToolTcpCoordinate("zrz", robot_ip_.c_str());
-                // if (tcp_ret == 0) {
-                //     RCLCPP_INFO(node_->get_logger(), "Diana: Successfully set Tool TCP Coordinate to 'zrz'");
-                // } else {
-                //     // 如果名字拼写错误或控制器里没这个TCP，会返回 -1
-                //     RCLCPP_ERROR(node_->get_logger(), "Diana: Failed to set Tool TCP Coordinate to 'zrz'");
-                // }
+                int tcp_ret = setDefaultToolTcpCoordinate("zrz", robot_ip_.c_str());
+                if (tcp_ret == 0) {
+                    RCLCPP_INFO(node_->get_logger(), "Diana: Successfully set Tool TCP Coordinate to 'zrz'");
+                } else {
+                    // 如果名字拼写错误或控制器里没这个TCP，会返回 -1
+                    RCLCPP_ERROR(node_->get_logger(), "Diana: Failed to set Tool TCP Coordinate to 'zrz'");
+                }
                 prev_mode_ = 1; 
                 
                 std::fill(prev_torque_.begin(), prev_torque_.end(), 0.0);   

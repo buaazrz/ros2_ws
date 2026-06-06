@@ -16,9 +16,10 @@ control_node:
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
       - controllers::CartesianImpedancePDController
-      - controllers::CartesianTrajImpPDController
+      - controllers::CartesianTrajImpPDController 
       - controllers::JointMotionControllerDiana
       - controllers::VariableImpedanceController
+      - controllers::TorqueController
     default_controller: "controllers::CartesianImpedancePDController"
 
 DIANARobot:
@@ -49,7 +50,11 @@ ft_sensor:
   ros__parameters:
     sensor_ip: 192.168.124.10
     state_interface: [force]
-    state_length: [6]    
+    state_length: [6]   
+
+TorqueController:
+  ros__parameters:
+    cmd_name: "torque"
 
 ForwardController:
   ros__parameters:
@@ -109,7 +114,7 @@ VariableImpedanceController:
     R_weight: 0.1           
     
     # --- 2. 力控参数 (Z方向) ---
-    F_des_z: -5.0            # 期望接触力 (N)，根据实际需求设置正负
+    F_des_z: -4.0            # 期望接触力 (N)，根据实际需求设置正负
     F_max_z: 10.0            # 最大安全力限制 (N)
     Kp_f: 1.2               # 力外环 P (建议先设为0，只用优化器调整)
     Ki_f: 1.5              # 力外环 I (建议先设为0)  
@@ -119,4 +124,4 @@ VariableImpedanceController:
     Kz_min: 100.0             # 最小刚度 (自由空间/软接触)
     Kz_max: 2500.0    # 最大刚度 (硬接触)
 
-    dob_gain_val: 12.5
+    dob_gain_val: 0.0
