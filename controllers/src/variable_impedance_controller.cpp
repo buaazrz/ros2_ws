@@ -251,10 +251,12 @@ namespace controllers
                     DATA_WRAPPER(F_imp_(5)), 
                     DATA_WRAPPER(force_(2)),
                     // DATA_WRAPPER(pose_),
-                    // DATA_WRAPPER(q_),
                     DATA_WRAPPER(tau_d),
-                    // DATA_WRAPPER(dq_), 
                     DATA_WRAPPER(Kx_(5)),
+                    DATA_WRAPPER(Bx_(5)),
+                    DATA_WRAPPER(tau_fric_ff_),
+                    DATA_WRAPPER(dq_), 
+                    // DATA_WRAPPER(tau_base_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(tau_d_est_),
                     // DATA_WRAPPER(tau_x_est_),
@@ -524,7 +526,7 @@ namespace controllers
 
             F_imp_ = Lambda_inv.ldlt().solve(ddxc_ - dJb_ * dq);
 
-            double fric_comp_ratio = 0.0;
+            double fric_comp_ratio = 1.0;
             Eigen::VectorXd tau_base = tau_task_ + tau_null_ - tau_x_est_;   
             t_filter_.filtering(tau_base.data(), tau_base.data());
 
@@ -605,7 +607,8 @@ namespace controllers
             }
 
             // 叠加指令并下发
-            tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
+            // tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
+            tau_cmd = tau_task_ + tau_null_+ tau_fric_ff_; 
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
