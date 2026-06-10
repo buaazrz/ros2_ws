@@ -118,6 +118,13 @@ def generate_launch_description():
             executable='robot_monitor',
             output="screen",
             )
+    
+    robot_gui_node = Node(
+        package="robot_gui",
+        executable="robot_gui",
+        output="screen",
+        parameters=[{"robot_description": robot_description}], 
+    )
 
     arguments = [
             # DeclareLaunchArgument(
@@ -126,15 +133,37 @@ def generate_launch_description():
             #     description="is simulation ?",
             # ),
             ]
+    
+    def start_robot_state_publisher_node(event: ProcessStarted, context: LaunchContext):
+        print('start state publisher')
+        return robot_state_publisher
+
+    def start_control_node(event: ProcessStarted, context: LaunchContext):
+        print('start control node')
+        return control_node
+
+    def start_rviz_node(event: ProcessStarted, context: LaunchContext):
+        print('start rviz node')
+        return rviz_node
+    
+    def start_monitor_node(event: ProcessStarted, context: LaunchContext):
+        print('start monitor node')
+        return robot_monitor
+    
+    def start_gui_node(event: ProcessStarted, context: LaunchContext):
+        print('start robot gui')
+        return robot_gui_node
 
 
  
 
     nodes = arguments  + [
-            # robot_state_publisher,
-            # rviz_node,
-            # robot_monitor,
-            control_node,
-            ]
+        robot_state_publisher,
+        rviz_node,
+        robot_monitor,
+        control_node,
+        robot_gui_node,
+    ]
+
 
     return LaunchDescription(nodes)
