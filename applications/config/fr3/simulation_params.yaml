@@ -45,6 +45,8 @@ control_node:
       - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
       - controllers::CartesianImpedancePDController
+      - controllers::CartesianTrajImpPDController
+
 
 
     default_controller: ""
@@ -70,15 +72,15 @@ SimulationRobot:
     state_interface: [T, c, g, external_torque, success, m]
     state_length: [16, 7, 7, 7, 1, 49]
     state_type: [double, double, double, double, double, double]
-    # sensors: [ft_sensor]
-    # ft_sensor: hardwares::FTDummySensor
+    sensors: [ft_sensor]
+    ft_sensor: hardwares::FTDummySensor
 
-# ft_sensor:
-#   ros__parameters:
-#     state_interface: [force]
-#     state_length: [6]
-#     sensor_ip: 192.168.110.101
-#     sensor_port: 4008
+ft_sensor:
+  ros__parameters:
+    state_interface: [force]
+    state_length: [6]
+    sensor_ip: 192.168.110.101
+    sensor_port: 4008
 
 
 ForwardController:
@@ -88,6 +90,15 @@ ForwardController:
 JointMotionController:
   ros__parameters:
     cmd_name: "position"
+
+
+CartesianTrajImpPDController:
+  ros__parameters:
+    cmd_name: "torque"
+    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0] 
+    Bx: [7.0, 7.0,  7.0,  80.0,  80.0, 80.0] 
+    Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
+    Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 
 
 
 

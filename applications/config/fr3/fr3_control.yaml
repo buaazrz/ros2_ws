@@ -4,21 +4,12 @@ control_node:
     lock_memory: true
     simulation: false
     sim_real_time: false
-    publish_joint_state: false
+    publish_joint_state: true
     robot: hardwares::FC3Robot
     controllers: 
       - controllers::TorqueController
       - controllers::RCMController
       - controllers::CartesianTrajImpPDController
-    sensors: [ft_sensor]
-    ft_sensor: hardwares::FTATISensor
-
-
-ft_sensor:
-  ros__parameters:
-    sensor_ip: 192.168.124.10
-    state_interface: [force]
-    state_length: [6]   
       
 
 FC3Robot:
@@ -40,6 +31,15 @@ FC3Robot:
     state_interface: [T, c, g, external_torque, success, m]
     state_length: [16, 7, 7, 7, 1, 49]
     state_type: [double, double, double, double, double, double]
+    sensors: [ft_sensor]
+    ft_sensor: hardwares::FTATISensor
+
+
+ft_sensor:
+  ros__parameters:
+    sensor_ip: 192.168.124.10
+    state_interface: [force]
+    state_length: [6]   
 
 CartesianTrajImpPDController:
   ros__parameters:
