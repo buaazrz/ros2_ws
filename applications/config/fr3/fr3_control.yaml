@@ -9,6 +9,16 @@ control_node:
     controllers: 
       - controllers::TorqueController
       - controllers::RCMController
+      - controllers::CartesianTrajImpPDController
+    sensors: [ft_sensor]
+    ft_sensor: hardwares::FTATISensor
+
+
+ft_sensor:
+  ros__parameters:
+    sensor_ip: 192.168.124.10
+    state_interface: [force]
+    state_length: [6]   
       
 
 FC3Robot:
@@ -22,6 +32,7 @@ FC3Robot:
       - position
       - velocity
       - torque
+      - pose
     # other interface:
     command_interface: [mode, pose]
     command_length: [2, 6]
@@ -29,3 +40,11 @@ FC3Robot:
     state_interface: [T, c, g, external_torque, success, m]
     state_length: [16, 7, 7, 7, 1, 49]
     state_type: [double, double, double, double, double, double]
+
+CartesianTrajImpPDController:
+  ros__parameters:
+    cmd_name: "torque"
+    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0] 
+    Bx: [7.0, 7.0,  7.0,  80.0,  80.0, 80.0] 
+    Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
+    Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 

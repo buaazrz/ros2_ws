@@ -33,7 +33,10 @@ endforeach()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
 
-qt_standard_project_setup()
+# qt_standard_project_setup()
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 file(GLOB_RECURSE srcs src/*.cpp src/*.ui)
 # file(GLOB_RECURSE uis  ui/*.ui)

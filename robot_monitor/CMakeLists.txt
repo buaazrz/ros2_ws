@@ -13,7 +13,10 @@ find_package(std_srvs REQUIRED)
 find_package(robot_control_msgs REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
 
-qt_standard_project_setup()
+# qt_standard_project_setup()
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 add_executable(robot_monitor 
                   src/main.cpp 

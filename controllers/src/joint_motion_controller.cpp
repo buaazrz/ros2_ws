@@ -1,270 +1,270 @@
-#include "robot_controller_interface/controller_interface.hpp"
-#include <iostream>
-#include "robot_math/robot_math.hpp"
-#include "robot_math/JointTrajectoryPlanner.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
-#include "robot_control_msgs/action/robot_motion.hpp"
-#include "rclcpp_action/rclcpp_action.hpp"
-#include "robot_math/TrapezoidFunction.hpp"
-#include "ros2_utility/data_logger.hpp"
-#include "realtime_tools/realtime_box.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
+// #include "robot_controller_interface/controller_interface.hpp"
+// #include <iostream>
+// #include "robot_math/robot_math.hpp"
+// #include "robot_math/JointTrajectoryPlanner.hpp"
+// #include "realtime_tools/realtime_buffer.hpp"
+// #include "sensor_msgs/msg/joint_state.hpp"
+// #include "std_msgs/msg/float64_multi_array.hpp"
+// #include "robot_control_msgs/action/robot_motion.hpp"
+// #include "rclcpp_action/rclcpp_action.hpp"
+// #include "robot_math/TrapezoidFunction.hpp"
+// #include "ros2_utility/data_logger.hpp"
+// #include "realtime_tools/realtime_box.hpp"
+// #include "realtime_tools/realtime_buffer.hpp"
 
-namespace controllers
-{
+// namespace controllers
+// {
 
-    class JointMotionController : public controller_interface::ControllerInterface
-    {
-    public:
-        using ACTION = robot_control_msgs::action::RobotMotion;
-        using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
-        JointMotionController() : speed_(0.5), planner(0.02)
-        {
-        }
-        ~JointMotionController()
-        {
-            // if (data_logger_) {
-            //     data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
-            // }
-        }
-        void update(const rclcpp::Time & t, const rclcpp::Duration & period) override
-        {
-            current_time_ += period.seconds();
-            auto goal_handle = *real_time_buffer_.readFromRT();
-            auto &cmd = command_->get<double>("position");
-            // auto &q = state_->get<double>("position");
-            // auto &dq = state_->get<double>("velocity");
-            q_actual_   = state_->get<double>("position");
-            dq_actual_  = state_->get<double>("velocity");
-            tau_actual_ = state_->get<double>("torque");
-            // o_torque = state_->get<double>("o_torque");
-            // inital reading should be put here!!
-            if(period.seconds() == 0)
-            {
-                q0_ = q_actual_;
-            }
-            command_->get<int>("mode")[0] = 1;
-            speed_in_box_.try_get([this](auto const &value) { speed_ = value; });
-            if (goal_handle && goal_handle->is_active())
-            {
-                if (goal_handle->is_canceling())
-                {
-                    auto result = std::make_shared<ACTION::Result>();
-                    result->success = false;
-                    goal_handle->canceled(result);
-                    q0_ = q_actual_;
-                    planner.reset();
-                    //RCLCPP_INFO(node_->get_logger(), "Goal canceled");
-                }
-                else
-                {
-                    auto goal = goal_handle->get_goal()->target_position.data;
+//     class JointMotionController : public controller_interface::ControllerInterface
+//     {
+//     public:
+//         using ACTION = robot_control_msgs::action::RobotMotion;
+//         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
+//         JointMotionController() : speed_(0.5), planner(0.02)
+//         {
+//         }
+//         ~JointMotionController()
+//         {
+//             // if (data_logger_) {
+//             //     data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
+//             // }
+//         }
+//         void update(const rclcpp::Time & t, const rclcpp::Duration & period) override
+//         {
+//             current_time_ += period.seconds();
+//             auto goal_handle = *real_time_buffer_.readFromRT();
+//             auto &cmd = command_->get<double>("position");
+//             // auto &q = state_->get<double>("position");
+//             // auto &dq = state_->get<double>("velocity");
+//             q_actual_   = state_->get<double>("position");
+//             dq_actual_  = state_->get<double>("velocity");
+//             tau_actual_ = state_->get<double>("torque");
+//             // o_torque = state_->get<double>("o_torque");
+//             // inital reading should be put here!!
+//             if(period.seconds() == 0)
+//             {
+//                 q0_ = q_actual_;
+//             }
+//             command_->get<int>("mode")[0] = 1;
+//             speed_in_box_.try_get([this](auto const &value) { speed_ = value; });
+//             if (goal_handle && goal_handle->is_active())
+//             {
+//                 if (goal_handle->is_canceling())
+//                 {
+//                     auto result = std::make_shared<ACTION::Result>();
+//                     result->success = false;
+//                     goal_handle->canceled(result);
+//                     q0_ = q_actual_;
+//                     planner.reset();
+//                     //RCLCPP_INFO(node_->get_logger(), "Goal canceled");
+//                 }
+//                 else
+//                 {
+//                     auto goal = goal_handle->get_goal()->target_position.data;
                     
-                    double err = robot_math::distance(q_actual_, goal);
-                    if (err < 1e-5)
-                    {
-                        auto result = std::make_shared<ACTION::Result>();
-                        result->success = true;
-                        goal_handle->succeed(result);
-                        q0_ = q_actual_;
-                        planner.reset();
-                        //RCLCPP_INFO(node_->get_logger(), "Goal succeeded");
-                    }
-                    else
-                    {
-                        int flag = 0;
-                        if (!planner.is_valid() || !planner.has_same_goal(goal))
-                        {
-                            // RCLCPP_INFO(node_->get_logger(), "%f", speed_);
-                            planner.generate_speed(q_actual_, dq_actual_, goal, speed_); 
-                            // planner.generate_speed(q_actual_, goal, speed_);
+//                     double err = robot_math::distance(q_actual_, goal);
+//                     if (err < 1e-5)
+//                     {
+//                         auto result = std::make_shared<ACTION::Result>();
+//                         result->success = true;
+//                         goal_handle->succeed(result);
+//                         q0_ = q_actual_;
+//                         planner.reset();
+//                         //RCLCPP_INFO(node_->get_logger(), "Goal succeeded");
+//                     }
+//                     else
+//                     {
+//                         int flag = 0;
+//                         if (!planner.is_valid() || !planner.has_same_goal(goal))
+//                         {
+//                             // RCLCPP_INFO(node_->get_logger(), "%f", speed_);
+//                             planner.generate_speed(q_actual_, dq_actual_, goal, speed_); 
+//                             // planner.generate_speed(q_actual_, goal, speed_);
 
-                            // std::cerr << speed_ <<std::endl;
-                            flag = 1;
-                            last_time_ = node_->now();
-                        }
-                        auto dt = node_->now() - last_time_;
-                        std::vector<double> interp_q, interp_dq, interp_ddq;
-                        planner.evaluate(dt.seconds(), interp_q, interp_dq, interp_ddq);
-                        cmd = interp_q;
+//                             // std::cerr << speed_ <<std::endl;
+//                             flag = 1;
+//                             last_time_ = node_->now();
+//                         }
+//                         auto dt = node_->now() - last_time_;
+//                         std::vector<double> interp_q, interp_dq, interp_ddq;
+//                         planner.evaluate(dt.seconds(), interp_q, interp_dq, interp_ddq);
+//                         cmd = interp_q;
 
-                        q_cmd_   = interp_q;
-                        dq_cmd_  = interp_dq;
-                        ddq_cmd_ = interp_ddq;
+//                         q_cmd_   = interp_q;
+//                         dq_cmd_  = interp_dq;
+//                         ddq_cmd_ = interp_ddq;
 
-                        // data_logger_->record();
-                        if (log_counter_ % 2 == 0) {
-                            data_logger_->record();
-                        }
-                        // if(period.seconds() > 0)
-                        // {
-                        //     double diff = q[0] - interp_q[0];
-                        //     if(std::abs(diff) > 0.01)
-                        //     {
-                        //         planner.generate_speed(q, dq, goal, speed_);
-                        //         RCLCPP_INFO(node_->get_logger(), "attention %d %f %f", flag, dt.seconds(), speed_);
-                        //         RCLCPP_INFO(node_->get_logger(), "q: %f %f %f %f %f %f", q[0], q[1], q[2], q[3], q[4], q[5]);
-                        //         RCLCPP_INFO(node_->get_logger(), "interp_q: %f %f %f %f %f %f", interp_q[0], interp_q[1], interp_q[2], interp_q[3], interp_q[4], interp_q[5]);
-                        //         RCLCPP_INFO(node_->get_logger(), "goal: %f %f %f %f %f %f", goal[0], goal[1], goal[2], goal[3], goal[4], goal[5]);
-                        //         RCLCPP_INFO(node_->get_logger(), "dq: %f %f %f %f %f %f", dq[0], dq[1], dq[2], dq[3], dq[4], dq[5]);
-                        //         planner.evaluate(0, interp_q, interp_dq, interp_ddq);
-                        //         RCLCPP_INFO(node_->get_logger(), "interp_q with 0: %f %f %f %f %f %f", interp_q[0], interp_q[1], interp_q[2], interp_q[3], interp_q[4], interp_q[5]);
-                        //         throw std::runtime_error("goal not reached");
-                        //     }
-                        // }
-                        // RCLCPP_INFO(node_->get_logger(), "%f %f", q[0], dq[0]);
-                        // auto feedback = std::make_shared<ACTION::Feedback>();
-                        // feedback->current_position.data = q;
-                        // goal_handle->publish_feedback(feedback);
-                    }
-                }
-            }
-            else
-            {
-                cmd = q0_;
-            }
-            log_counter_++;
-        }
-        CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
-        {
-            if (!node_->has_parameter("speed")) {
-                speed_ = node_->declare_parameter<double>("speed", 0.5);
-            } else {
-                node_->get_parameter("speed", speed_);
-            }
+//                         // data_logger_->record();
+//                         if (log_counter_ % 2 == 0) {
+//                             data_logger_->record();
+//                         }
+//                         // if(period.seconds() > 0)
+//                         // {
+//                         //     double diff = q[0] - interp_q[0];
+//                         //     if(std::abs(diff) > 0.01)
+//                         //     {
+//                         //         planner.generate_speed(q, dq, goal, speed_);
+//                         //         RCLCPP_INFO(node_->get_logger(), "attention %d %f %f", flag, dt.seconds(), speed_);
+//                         //         RCLCPP_INFO(node_->get_logger(), "q: %f %f %f %f %f %f", q[0], q[1], q[2], q[3], q[4], q[5]);
+//                         //         RCLCPP_INFO(node_->get_logger(), "interp_q: %f %f %f %f %f %f", interp_q[0], interp_q[1], interp_q[2], interp_q[3], interp_q[4], interp_q[5]);
+//                         //         RCLCPP_INFO(node_->get_logger(), "goal: %f %f %f %f %f %f", goal[0], goal[1], goal[2], goal[3], goal[4], goal[5]);
+//                         //         RCLCPP_INFO(node_->get_logger(), "dq: %f %f %f %f %f %f", dq[0], dq[1], dq[2], dq[3], dq[4], dq[5]);
+//                         //         planner.evaluate(0, interp_q, interp_dq, interp_ddq);
+//                         //         RCLCPP_INFO(node_->get_logger(), "interp_q with 0: %f %f %f %f %f %f", interp_q[0], interp_q[1], interp_q[2], interp_q[3], interp_q[4], interp_q[5]);
+//                         //         throw std::runtime_error("goal not reached");
+//                         //     }
+//                         // }
+//                         // RCLCPP_INFO(node_->get_logger(), "%f %f", q[0], dq[0]);
+//                         // auto feedback = std::make_shared<ACTION::Feedback>();
+//                         // feedback->current_position.data = q;
+//                         // goal_handle->publish_feedback(feedback);
+//                     }
+//                 }
+//             }
+//             else
+//             {
+//                 cmd = q0_;
+//             }
+//             log_counter_++;
+//         }
+//         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+//         {
+//             if (!node_->has_parameter("speed")) {
+//                 speed_ = node_->declare_parameter<double>("speed", 0.5);
+//             } else {
+//                 node_->get_parameter("speed", speed_);
+//             }
 
-            speed_in_box_.set(speed_);
+//             speed_in_box_.set(speed_);
 
-            parameters_callback_handle_ = node_->add_on_set_parameters_callback(
-                [&](std::vector<rclcpp::Parameter> parameters) -> rcl_interfaces::msg::SetParametersResult
-                {
-                    for (const auto &parameter : parameters)
-                    {
-                        if (parameter.get_name() == "speed") {
-                            // 将非实时线程接收到的参数放入 RT Box
-                            speed_in_box_.set(parameter.as_double());
-                            RCLCPP_INFO(node_->get_logger(), "Speed updated to: %f", parameter.as_double());
-                        }
-                    }
-                    auto result = rcl_interfaces::msg::SetParametersResult();
-                    result.successful = true;
-                    return result;
-                });
-            return CallbackReturn::SUCCESS;
-        }
-        CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
-        {
-            node_->get_parameter_or<double>("speed", speed_, 0.5);
-            real_time_buffer_.reset();
-            planner.reset();
-            log_counter_ = 0;
+//             parameters_callback_handle_ = node_->add_on_set_parameters_callback(
+//                 [&](std::vector<rclcpp::Parameter> parameters) -> rcl_interfaces::msg::SetParametersResult
+//                 {
+//                     for (const auto &parameter : parameters)
+//                     {
+//                         if (parameter.get_name() == "speed") {
+//                             // 将非实时线程接收到的参数放入 RT Box
+//                             speed_in_box_.set(parameter.as_double());
+//                             RCLCPP_INFO(node_->get_logger(), "Speed updated to: %f", parameter.as_double());
+//                         }
+//                     }
+//                     auto result = rcl_interfaces::msg::SetParametersResult();
+//                     result.successful = true;
+//                     return result;
+//                 });
+//             return CallbackReturn::SUCCESS;
+//         }
+//         CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+//         {
+//             node_->get_parameter_or<double>("speed", speed_, 0.5);
+//             real_time_buffer_.reset();
+//             planner.reset();
+//             log_counter_ = 0;
 
-            current_time_ = 0.0;
-            q_actual_.resize(7, 0.0);
-            dq_actual_.resize(7, 0.0);
-            tau_actual_.resize(7, 0.0);
-            // o_torque.resize(7, 0.0);
-            q_cmd_.resize(7, 0.0);
-            dq_cmd_.resize(7, 0.0);
-            ddq_cmd_.resize(7, 0.0);
+//             current_time_ = 0.0;
+//             q_actual_.resize(7, 0.0);
+//             dq_actual_.resize(7, 0.0);
+//             tau_actual_.resize(7, 0.0);
+//             // o_torque.resize(7, 0.0);
+//             q_cmd_.resize(7, 0.0);
+//             dq_cmd_.resize(7, 0.0);
+//             ddq_cmd_.resize(7, 0.0);
 
-            // 2. 初始化 DataLogger
-            data_logger_ = std::make_unique<DataLogger>(
-                std::initializer_list<DataInfo>{
-                    DATA_WRAPPER(current_time_),
-                    DATA_WRAPPER(q_actual_),
-                    DATA_WRAPPER(dq_actual_),
-                    DATA_WRAPPER(tau_actual_),
-                    // DATA_WRAPPER(o_torque),
-                    DATA_WRAPPER(q_cmd_),
-                    DATA_WRAPPER(dq_cmd_),
-                    DATA_WRAPPER(ddq_cmd_),
-                    DATA_WRAPPER(speed_)
-                },
-                std::initializer_list<ExperimentContext>{
-                    // 可以把你测试的 speed_ 作为上下文记录下来
-                    CONFIG_WRAPPER(speed_) 
-                },
-                5000000 // 预分配足够大的 Buffer
-            );
+//             // 2. 初始化 DataLogger
+//             data_logger_ = std::make_unique<DataLogger>(
+//                 std::initializer_list<DataInfo>{
+//                     DATA_WRAPPER(current_time_),
+//                     DATA_WRAPPER(q_actual_),
+//                     DATA_WRAPPER(dq_actual_),
+//                     DATA_WRAPPER(tau_actual_),
+//                     // DATA_WRAPPER(o_torque),
+//                     DATA_WRAPPER(q_cmd_),
+//                     DATA_WRAPPER(dq_cmd_),
+//                     DATA_WRAPPER(ddq_cmd_),
+//                     DATA_WRAPPER(speed_)
+//                 },
+//                 std::initializer_list<ExperimentContext>{
+//                     // 可以把你测试的 speed_ 作为上下文记录下来
+//                     CONFIG_WRAPPER(speed_) 
+//                 },
+//                 5000000 // 预分配足够大的 Buffer
+//             );
 
-            auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid,
-                                   std::shared_ptr<const ACTION::Goal> goal)
-            {
-                //RCLCPP_INFO(node_->get_logger(), "Received goal request");
-                (void)uuid;
-                // auto goal_handle = *real_time_buffer_.readFromNonRT();
-                // if(goal_handle)
-                // {
-                //     RCLCPP_INFO(node_->get_logger(), "Goal already in progress");
-                //     return rclcpp_action::GoalResponse::REJECT;
-                // }
-                return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-            };
+//             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid,
+//                                    std::shared_ptr<const ACTION::Goal> goal)
+//             {
+//                 //RCLCPP_INFO(node_->get_logger(), "Received goal request");
+//                 (void)uuid;
+//                 // auto goal_handle = *real_time_buffer_.readFromNonRT();
+//                 // if(goal_handle)
+//                 // {
+//                 //     RCLCPP_INFO(node_->get_logger(), "Goal already in progress");
+//                 //     return rclcpp_action::GoalResponse::REJECT;
+//                 // }
+//                 return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+//             };
 
-            auto handle_cancel = [this](const std::shared_ptr<GoalHandle> goal_handle)
-            {
-                //RCLCPP_INFO(node_->get_logger(), "Received request to cancel goal");
-                (void)goal_handle;
-                return rclcpp_action::CancelResponse::ACCEPT;
-            };
+//             auto handle_cancel = [this](const std::shared_ptr<GoalHandle> goal_handle)
+//             {
+//                 //RCLCPP_INFO(node_->get_logger(), "Received request to cancel goal");
+//                 (void)goal_handle;
+//                 return rclcpp_action::CancelResponse::ACCEPT;
+//             };
 
-            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
-            {
-                // this needs to return quickly to avoid blocking the executor,
-                // so we declare a lambda function to be called inside a new thread
-                // auto execute_in_thread = [this, goal_handle](){return this->execute(goal_handle);};
-                // std::thread{execute_in_thread}.detach();
-                // RCLCPP_INFO(node_->get_logger(), "accept goal");
-                real_time_buffer_.writeFromNonRT(goal_handle);
-            };
+//             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
+//             {
+//                 // this needs to return quickly to avoid blocking the executor,
+//                 // so we declare a lambda function to be called inside a new thread
+//                 // auto execute_in_thread = [this, goal_handle](){return this->execute(goal_handle);};
+//                 // std::thread{execute_in_thread}.detach();
+//                 // RCLCPP_INFO(node_->get_logger(), "accept goal");
+//                 real_time_buffer_.writeFromNonRT(goal_handle);
+//             };
 
-            call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-            this->action_server_ = rclcpp_action::create_server<ACTION>(
-                node_,
-                "~/goal",
-                handle_goal,
-                handle_cancel,
-                handle_accepted,
-                rcl_action_server_get_default_options(),
-                call_back_group_);
-            return CallbackReturn::SUCCESS;
-        }
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) override
-        {
-            action_server_ = nullptr;
+//             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+//             this->action_server_ = rclcpp_action::create_server<ACTION>(
+//                 node_,
+//                 "~/goal",
+//                 handle_goal,
+//                 handle_cancel,
+//                 handle_accepted,
+//                 rcl_action_server_get_default_options(),
+//                 call_back_group_);
+//             return CallbackReturn::SUCCESS;
+//         }
+//         CallbackReturn on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) override
+//         {
+//             action_server_ = nullptr;
 
-            if (data_logger_) {
-                RCLCPP_INFO(node_->get_logger(), "Saving data to disk... Please wait, this may take a while!");
-                data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
-                RCLCPP_INFO(node_->get_logger(), "Data saved successfully.");
-            }
-            return CallbackReturn::SUCCESS;
-        }
+//             if (data_logger_) {
+//                 RCLCPP_INFO(node_->get_logger(), "Saving data to disk... Please wait, this may take a while!");
+//                 data_logger_->save("/home/wjc/experiment_logs/friction_id/", "friction_data");
+//                 RCLCPP_INFO(node_->get_logger(), "Data saved successfully.");
+//             }
+//             return CallbackReturn::SUCCESS;
+//         }
 
-    protected:
-        // rclcpp::Subscription<CmdType>::SharedPtr command_receiver_;
-        realtime_tools::RealtimeBuffer<std::shared_ptr<GoalHandle>> real_time_buffer_;
-        std::vector<double> q0_;
-        robot_math::JointTrajectoryPlanner<robot_math::TrapezoidFunction> planner;
-        rclcpp::Time last_time_;
-        rclcpp_action::Server<ACTION>::SharedPtr action_server_;
-        rclcpp::CallbackGroup::SharedPtr call_back_group_;
-        double speed_;
-        std::unique_ptr<DataLogger> data_logger_;
-        realtime_tools::RealtimeBox<double> speed_in_box_;
-        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
+//     protected:
+//         // rclcpp::Subscription<CmdType>::SharedPtr command_receiver_;
+//         realtime_tools::RealtimeBuffer<std::shared_ptr<GoalHandle>> real_time_buffer_;
+//         std::vector<double> q0_;
+//         robot_math::JointTrajectoryPlanner<robot_math::TrapezoidFunction> planner;
+//         rclcpp::Time last_time_;
+//         rclcpp_action::Server<ACTION>::SharedPtr action_server_;
+//         rclcpp::CallbackGroup::SharedPtr call_back_group_;
+//         double speed_;
+//         std::unique_ptr<DataLogger> data_logger_;
+//         realtime_tools::RealtimeBox<double> speed_in_box_;
+//         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
 
-        double current_time_;
-        std::vector<double> q_actual_, dq_actual_, tau_actual_, o_torque;
-        std::vector<double> q_cmd_, dq_cmd_, ddq_cmd_;
-        int log_counter_ = 0;
-    };
+//         double current_time_;
+//         std::vector<double> q_actual_, dq_actual_, tau_actual_, o_torque;
+//         std::vector<double> q_cmd_, dq_cmd_, ddq_cmd_;
+//         int log_counter_ = 0;
+//     };
 
-} // namespace controllers
+// } // namespace controllers
 
-#include <pluginlib/class_list_macros.hpp>
+// #include <pluginlib/class_list_macros.hpp>
 
-PLUGINLIB_EXPORT_CLASS(controllers::JointMotionController, controller_interface::ControllerInterface)
+// PLUGINLIB_EXPORT_CLASS(controllers::JointMotionController, controller_interface::ControllerInterface)

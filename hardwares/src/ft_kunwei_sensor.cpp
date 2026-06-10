@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include "lifecycle_msgs/msg/state.hpp"
 #include "geometry_msgs/msg/wrench.hpp"
+#include <deque>
 
 namespace hardwares
 {
@@ -172,7 +173,7 @@ namespace hardwares
                                     }
                                     force->at(5) = 1000 * z.n;
                                     get<double>("force").writeFromNonRT(force);
-                                    
+
                                     // printf("Fx= %2f Kg,Fy= %2f Kg,Fz= %2f Kg,Mx= %2f Kg/M,My= %2f Kg/M,Mz= %2f Kg/M\n", Force[0], Force[1], Force[2], Force[3], Force[4], Force[5]);
                                     // geometry_msgs::msg::Wrench::UniquePtr msg = std::make_unique<geometry_msgs::msg::Wrench>();
                                     // msg->force.x = Force[0] * 1000;
@@ -209,7 +210,7 @@ namespace hardwares
                             }
                         }
                     });
-                if(!wait_data_comming())
+                if (!wait_data_comming())
                     return CallbackReturn::FAILURE;
                 return CallbackReturn::SUCCESS;
             }
@@ -217,7 +218,7 @@ namespace hardwares
                 return CallbackReturn::FAILURE;
         }
 
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+        CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override
         {
             SensorInterface::on_deactivate(previous_state);
             write_command("\x43\xAA\x0D\x0A");

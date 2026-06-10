@@ -48,6 +48,7 @@ namespace control_node
         void simulation_observer(const std::vector<double> &x, double t);
         bool is_simulation();
         bool is_keep_running();
+
     protected:
         pluginlib::UniquePtr<pluginlib::ClassLoader<hardware_interface::RobotInterface>> robot_loader_;
         pluginlib::UniquePtr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> controller_loader_;

@@ -45,7 +45,7 @@ namespace control_node
         robot_description_ = this->get_parameter_or<std::string>("robot_description", "");
         if (robot_description_.empty())
             throw std::runtime_error("robot description file is empty!");
-        
+
         std::string robot_class = this->get_parameter_or<std::string>("robot", "");
         std::vector<std::string> controller_class = this->get_parameter_or<std::vector<std::string>>("controllers", std::vector<std::string>());
         default_controller_ = this->get_parameter_or<std::string>("default_controller", "");
@@ -100,25 +100,41 @@ namespace control_node
         auto name = controller_name;
         int pos = name.rfind(":");
         name = name.substr(pos + 1);
-        secondary_controllers_box_.set([=, &name](auto &value)
-                                       {
-                                           auto it = std::find_if(value.begin(), value.end(), [=](auto &&v)
-                                                                  { return v->get_node()->get_name() == name; });
-                                           if (it != value.end())
-                                           {
-                                               (*it)->get_node()->deactivate();
-                                               value.erase(it);
-                                           } });
+        // secondary_controllers_box_.set([=, &name](auto &value)
+        //                                {
+        //                                    auto it = std::find_if(value.begin(), value.end(), [=](auto &&v)
+        //                                                           { return v->get_node()->get_name() == name; });
+        //                                    if (it != value.end())
+        //                                    {
+        //                                        (*it)->get_node()->deactivate();
+        //                                        value.erase(it);
+        //                                    } });
+        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> value;
+        secondary_controllers_box_.get(value);
+        auto it = std::find_if(value.begin(), value.end(), [=](auto &&v)
+                               { return v->get_node()->get_name() == name; });
+        if (it != value.end())
+        {
+            (*it)->get_node()->deactivate();
+            value.erase(it);
+        }
+        secondary_controllers_box_.set(value);
 
         return true;
     }
     bool ControlManager::clear_secondary_controllers()
     {
-        secondary_controllers_box_.set([this](auto &value)
-                                       {
-                                           std::for_each(value.begin(), value.end(), [=](auto &&v)
-                                                         { v->get_node()->deactivate(); });
-                                           value.clear(); });
+        // secondary_controllers_box_.set([this](auto &value)
+        //                                {
+        //                                    std::for_each(value.begin(), value.end(), [=](auto &&v)
+        //                                                  { v->get_node()->deactivate(); });
+        //                                    value.clear(); });
+        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> value;
+        secondary_controllers_box_.get(value);
+        std::for_each(value.begin(), value.end(), [=](auto &&v)
+                      { v->get_node()->deactivate(); });
+        value.clear();
+        secondary_controllers_box_.set(value);
         return true;
     }
     bool ControlManager::add_secondary_controller(const std::string &controller_name)
@@ -127,12 +143,20 @@ namespace control_node
         int pos = name.rfind(":");
         name = name.substr(pos + 1);
         bool ret;
-        active_controller_box_.get([=, &ret, &name](const auto &value)
-                                   {
-                                       if (value != nullptr && value->get_node()->get_name() == name)
-                                           ret = false;
-                                       else
-                                           ret = true; });
+        // active_controller_box_.get([=, &ret, &name](const auto &value)
+        //                            {
+        //                                if (value != nullptr && value->get_node()->get_name() == name)
+        //                                    ret = false;
+        //                                else
+        //                                    ret = true; });
+
+        std::shared_ptr<controller_interface::ControllerInterface> value;
+        active_controller_box_.get(value);
+        if (value != nullptr && value->get_node()->get_name() == name)
+            ret = false;
+        else
+            ret = true;
+
         if (!ret)
             return false;
 
@@ -141,11 +165,19 @@ namespace control_node
 
             if (controller->get_node()->get_name() == name)
             {
-                secondary_controllers_box_.set([=](auto &value)
-                                               { 
-                                            if(std::find(value.begin(), value.end(), controller) == value.end())
-                                                value.push_back(controller); 
-                                            controller->get_node()->activate(); });
+                // secondary_controllers_box_.set([=](auto &value)
+                //                                {
+                //                             if(std::find(value.begin(), value.end(), controller) == value.end())
+                //                                 value.push_back(controller);
+                //                             controller->get_node()->activate(); });
+                std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_value;
+                secondary_controllers_box_.get(sec_value);
+                if (std::find(sec_value.begin(), sec_value.end(), controller) == sec_value.end())
+                {
+                    sec_value.push_back(controller);
+                }
+                controller->get_node()->activate();
+                secondary_controllers_box_.set(sec_value);
                 return true;
             }
         }
@@ -189,7 +221,8 @@ namespace control_node
     void ControlManager::interrupt()
     {
         keep_running_ = false;
-        running_box_ = false;
+        // running_box_ = false;
+        running_box_.set(false);
     }
     bool ControlManager::is_keep_running()
     {
@@ -198,10 +231,15 @@ namespace control_node
     bool ControlManager::activate_controller(const std::string &controller_name)
     {
         bool running = false;
-        active_controller_box_.get([=, &running](const auto &value)
-                                   {
-            if (value)
-                running = true; });
+        // active_controller_box_.get([=, &running](const auto &value)
+        //                            {
+        //     if (value)
+        //         running = true; });
+        std::shared_ptr<controller_interface::ControllerInterface> value;
+        active_controller_box_.get(value);
+        if (value)
+            running = true;
+
         if (running)
         {
 
@@ -209,10 +247,14 @@ namespace control_node
             {
                 running_box_.set(false);
                 std::this_thread::sleep_for(5ms);
-                active_controller_box_.get([=, &running](const auto &value)
-                                           {
-            if (!value)
-                running = false; });
+                //     active_controller_box_.get([=, &running](const auto &value)
+                //                                {
+                // if (!value)
+                //     running = false; });
+                std::shared_ptr<controller_interface::ControllerInterface> value;
+                active_controller_box_.get(value);
+                if (!value)
+                    running = false;
 
             } while (running);
         }
@@ -222,26 +264,49 @@ namespace control_node
             if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE && controller->get_node()->get_name() == controller_name)
             {
                 bool ret = true;
-                active_controller_box_.set([=, &ret, &controller](auto &value)
-                                           {
-                    if (value)
+                // active_controller_box_.set([=, &ret, &controller](auto &value)
+                //                            {
+                //     if (value)
+                //     {
+                //         auto state = value->get_node()->deactivate();
+                //         if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+                //         {
+                //             ret = false;
+                //             return;
+                //         }
+                //     }
+                //     value = controller;
+                //     auto state = value->get_node()->activate();
+                //     if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                //     {
+                //         value = nullptr;
+                //         ret = false;
+                //     }
+                //     else
+                //         RCLCPP_INFO(get_logger(), "controller %s is activated!", controller->get_node()->get_name()); });
+                // bool ret = true;
+                std::shared_ptr<controller_interface::ControllerInterface> value;
+                active_controller_box_.get(value);
+                if (value)
+                {
+                    auto state = value->get_node()->deactivate();
+                    if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
                     {
-                        auto state = value->get_node()->deactivate();
-                        if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-                        {
-                            ret = false;
-                            return;
-                        }
+                        return false;
                     }
-                    value = controller;
-                    auto state = value->get_node()->activate();
-                    if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                    {
-                        value = nullptr;
-                        ret = false;
-                    } 
-                    else
-                        RCLCPP_INFO(get_logger(), "controller %s is activated!", controller->get_node()->get_name()); });
+                }
+                value = controller;
+                auto state = value->get_node()->activate();
+                if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                {
+                    value = nullptr;
+                    ret = false;
+                }
+                else
+                {
+                    RCLCPP_INFO(get_logger(), "controller %s is activated!", controller->get_node()->get_name());
+                }
+                active_controller_box_.set(value);
                 return ret;
             }
         }
@@ -265,7 +330,8 @@ namespace control_node
             response->result = clear_secondary_controllers();
         else if (cmd == "stop")
         {
-            running_box_ = false;
+            // running_box_ = false;
+            running_box_.set(false);
             response->result = true;
         }
     }
@@ -323,15 +389,24 @@ namespace control_node
     {
 
         active_controller_->update(t, period);
-        secondary_controllers_box_.try_get([&t, &period](const auto &value)
-                                           {
-            for (auto &&controller : value)
+        // secondary_controllers_box_.try_get([&t, &period](const auto &value)
+        //                                    {
+        //     for (auto &&controller : value)
+        //     {
+        //         if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        //         {
+        //             controller->update(t, period);
+        //         }
+        //     } });
+        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
+        secondary_controllers_box_.get(sec_controllers);
+        for (auto &&controller : sec_controllers)
+        {
+            if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
             {
-                if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                {
-                    controller->update(t, period);
-                }
-            } });
+                controller->update(t, period);
+            }
+        }
         // for (auto &controller : controllers_)
         // {
         //     if (controller->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -468,8 +543,9 @@ namespace control_node
             update(current_time, measured_period);
             write(current_time, measured_period);
             // get running state from box
-            running_box_.try_get([this](const auto &value)
-                                 { running_ = value; });
+            // running_box_.try_get([this](const auto &value)
+            //                      { running_ = value; });
+            running_box_.get(running_);
 
             // wait until we hit the end of the period
             next_iteration_time += period;
@@ -498,20 +574,30 @@ namespace control_node
             ss << controller->get_node()->get_name() << " ";
         }
         RCLCPP_INFO(get_logger(), "available controllers are: %s", ss.str().c_str());
+        // std::stringstream ss2;
+        // secondary_controllers_box_.get([this, &ss2](const auto &value)
+        //                                {
+        //     for (auto &&controller : value)
+        //     {
+        //         ss2 << controller->get_node()->get_name() << " ";
+        //     } });
         std::stringstream ss2;
-        secondary_controllers_box_.get([this, &ss2](const auto &value)
-                                       { 
-            for (auto &&controller : value)
-            {
-                ss2 << controller->get_node()->get_name() << " ";
-            } });
+        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
+        secondary_controllers_box_.get(sec_controllers);
+        for (auto &&controller : sec_controllers)
+        {
+            ss2 << controller->get_node()->get_name() << " ";
+        }
         RCLCPP_INFO(get_logger(), "secondary controllers are: %s", ss2.str().c_str());
         do
         {
             std::this_thread::sleep_for(1s);
             read(this->now(), rclcpp::Duration::from_seconds(1.0));
-            active_controller_box_.get([=](const auto &value)
-                                       { active_controller_ = value; });
+            // active_controller_box_.get([=](const auto &value)
+            //                            { active_controller_ = value; });
+            std::shared_ptr<controller_interface::ControllerInterface> value;
+            active_controller_box_.get(value);
+            active_controller_ = value;
             if (!default_controller_.empty())
             {
                 activate_controller(default_controller_);
@@ -523,22 +609,34 @@ namespace control_node
             running_ = false;
             return;
         }
-        running_box_ = true;
+        // running_box_ = true;
+        running_box_.set(true);
         running_ = true;
     }
 
     void ControlManager::end_loop()
     {
-        active_controller_box_.set([=](auto &value)
-                                   {
-                if (value)
-                {
-                    auto state = value->get_node_state();
-                    if(state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                        value->get_node()->deactivate();
-       
-                    value = nullptr;
-                } });
+        // active_controller_box_.set([=](auto &value)
+        //                            {
+        //         if (value)
+        //         {
+        //             auto state = value->get_node_state();
+        //             if(state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        //                 value->get_node()->deactivate();
+
+        //             value = nullptr;
+        //         } });
+        std::shared_ptr<controller_interface::ControllerInterface> value;
+        active_controller_box_.get(value);
+        if (value)
+        {
+            auto state = value->get_node_state();
+            if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                value->get_node()->deactivate();
+
+            value = nullptr;
+        }
+        active_controller_box_.set(value);
         auto state = robot_->get_node_state();
         if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
             robot_->get_node()->deactivate();

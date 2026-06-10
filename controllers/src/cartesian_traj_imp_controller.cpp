@@ -58,17 +58,21 @@ namespace controllers
                     for (const auto &parameter : parameters)
                     {
                         if (parameter.get_name() == "Kx")
-                            Kx_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
+                            // Kx_in_box_.set([=](auto &value)
+                            //                { value = parameter.as_double_array(); });
+                            Kx_in_box_.set(parameter.as_double_array());
                         else if (parameter.get_name() == "Bx")
-                            Bx_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
+                            // Bx_in_box_.set([=](auto &value)
+                            //                { value = parameter.as_double_array(); });
+                            Bx_in_box_.set(parameter.as_double_array());
                         else if (parameter.get_name() == "Kn")
-                            Kn_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
+                            // Kn_in_box_.set([=](auto &value)
+                            //                { value = parameter.as_double_array(); });
+                            Kn_in_box_.set(parameter.as_double_array());
                         else if (parameter.get_name() == "Bn")
-                            Bn_in_box_.set([=](auto &value)
-                                           { value = parameter.as_double_array(); });
+                            // Bn_in_box_.set([=](auto &value)
+                            //                { value = parameter.as_double_array(); });
+                            Bn_in_box_.set(parameter.as_double_array());
                     }
                     auto result = rcl_interfaces::msg::SetParametersResult();
                     result.successful = true;
@@ -98,13 +102,12 @@ namespace controllers
             f_filter_.reset();
             t_filter_.reset();
 
-
             z_ = Eigen::VectorXd::Zero(dof_);
             tau_d_est_ = Eigen::VectorXd::Zero(dof_);
             tau_x_est_ = Eigen::VectorXd::Zero(dof_);
             Y_ = Eigen::VectorXd::Constant(dof_, dob_gain_val_);
 
-            tau_fric_ff_ = Eigen::VectorXd::Zero(dof_); 
+            tau_fric_ff_ = Eigen::VectorXd::Zero(dof_);
             tau_fric_ff_prev_ = Eigen::VectorXd::Zero(dof_);
 
             robot_state_publisher_ = node_->create_publisher<robot_control_msgs::msg::RobotState>("robot_states", rclcpp::SensorDataQoS());
@@ -238,14 +241,18 @@ namespace controllers
             Eigen::Map<Eigen::VectorXd> tau_cmd(tau_cmd_vec.data(), dof_);
             std::fill(tau_cmd_vec.begin(), tau_cmd_vec.end(), 0);
 
-            Kx_in_box_.try_get([=](auto const &value)
-                               { Kx_vec_ = value; });
-            Bx_in_box_.try_get([=](auto const &value)
-                               { Bx_vec_ = value; });
-            Kn_in_box_.try_get([=](auto const &value)
-                               { Kn_vec_ = value; });
-            Bn_in_box_.try_get([=](auto const &value)
-                               { Bn_vec_ = value; });
+            // Kx_in_box_.try_get([=](auto const &value)
+            //                    { Kx_vec_ = value; });
+            Kx_in_box_.get(Kx_vec_);
+            // Bx_in_box_.try_get([=](auto const &value)
+            //                    { Bx_vec_ = value; });
+            Bx_in_box_.get(Bx_vec_);
+            // Kn_in_box_.try_get([=](auto const &value)
+            //                    { Kn_vec_ = value; });
+            Kn_in_box_.get(Kn_vec_);
+            // Bn_in_box_.try_get([=](auto const &value)
+            //                    { Bn_vec_ = value; });
+            Bn_in_box_.get(Bn_vec_);
             Kx_ = Eigen::Map<Eigen::VectorXd>(Kx_vec_.data(), 6);
             Bx_ = Eigen::Map<Eigen::VectorXd>(Bx_vec_.data(), 6);
             Kn_ = Eigen::Map<Eigen::VectorXd>(Kn_vec_.data(), dof_);
@@ -351,33 +358,39 @@ namespace controllers
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
             double fric_comp_ratio = 1.0;
-            Eigen::VectorXd tau_base = tau_task_ + tau_null_;   
-            
-            double DV = 0.01; 
+            Eigen::VectorXd tau_base = tau_task_ + tau_null_;
+
+            double DV = 0.01;
             for (int i = 0; i < dof_; i++)
             {
                 double v = dq(i);
                 double tau_f_i = 0.0;
-        
-                if (std::abs(v) > DV) {
-                    double sign_v = (v > 0) ? 1.0 : -1.0; 
+
+                if (std::abs(v) > DV)
+                {
+                    double sign_v = (v > 0) ? 1.0 : -1.0;
                     double term1 = F_c_[i];
                     double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
                     double term3 = sigma2_[i] * v;
-                    
+
                     tau_f_i = (term1 + term2) * sign_v + term3;
-                } else {
-                    if (std::abs(tau_base(i)) > 0.15) {
+                }
+                else
+                {
+                    if (std::abs(tau_base(i)) > 0.15)
+                    {
                         double sign_tau = (tau_base(i) > 0) ? 1.0 : -1.0;
-                        tau_f_i =  F_s_actual_[i] * sign_tau; 
-                    } else {
+                        tau_f_i = F_s_actual_[i] * sign_tau;
+                    }
+                    else
+                    {
                         tau_f_i = 0.0;
                     }
                 }
                 tau_fric_ff_(i) = fric_comp_ratio * tau_f_i;
             }
 
-            tau_cmd = tau_task_ + tau_null_ + tau_fric_ff_;
+            tau_cmd = tau_task_ + tau_null_ + g_ + C_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -457,7 +470,6 @@ namespace controllers
 #include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_interface::ControllerInterface)
 
-
 // // ★ Karnopp 模型参数
 // double DV = 0.01; // 速度死区 (Deviation Velocity)，可根据底噪调整 0.002~0.005
 // double K_assist = 50.0; // 意图放大系数 (通常 1.0 ~ 3.0，决定起步时的"助力"有多快跟上)
@@ -466,21 +478,21 @@ PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_int
 // {
 //     double v = dq(i);
 //     double tau_f_i = 0.0;
-    
+
 //     // =========================================
 //     // Karnopp 摩擦力模型逻辑分发
 //     // =========================================
 //     if (std::abs(v) > DV) {
 //         // -------------------------------------
-//         // 状态 1: 滑移阶段 (Sliding) 
+//         // 状态 1: 滑移阶段 (Sliding)
 //         // 对应公式：|v| >= DV, f = -Fc*sign(v) - Fv*v (此处我们用更高级的Stribeck替换)
 //         // -------------------------------------
-//         double sign_v = (v > 0) ? 1.0 : -1.0; 
+//         double sign_v = (v > 0) ? 1.0 : -1.0;
 //         double term1 = F_c_[i];
 //         // 注意：滑移时使用的是实测最大摩擦力 F_s_actual_ 作为峰值，保证过渡平滑
 //         double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
 //         double term3 = sigma2_[i] * v;
-        
+
 //         tau_f_i = (term1 + term2) * sign_v + term3;
 
 //     } else {
@@ -490,9 +502,9 @@ PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_int
 //         // 前馈策略：提供按比例放大的辅助力矩，上限被最大静摩擦力截断
 //         // -------------------------------------
 //         double assist_torque = K_assist * tau_base(i);
-        
+
 //         // 打个安全折扣，防止过补偿
-//         double current_Fs_limit = F_s_actual_[i]; 
+//         double current_Fs_limit = F_s_actual_[i];
 
 //         // 截断逻辑（等同于图中公式的分段判断）
 //         if (assist_torque > current_Fs_limit) {
@@ -514,10 +526,10 @@ PLUGINLIB_EXPORT_CLASS(controllers::CartesianTrajImpPDController, controller_int
 //     } else if (delta_tau < -max_delta_tau) {
 //         tau_f_i = tau_fric_ff_prev_(i) - max_delta_tau;
 //     }
-    
+
 //     // 更新记忆状态
 //     tau_fric_ff_prev_(i) = tau_f_i;
-    
+
 //     // 输出最终前馈
 //     tau_fric_ff_(i) = tau_f_i * fric_comp_ratio;
 // }
