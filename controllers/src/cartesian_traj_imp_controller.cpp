@@ -34,7 +34,7 @@ namespace controllers
         ~CartesianTrajImpPDController()
         {
             if (data_logger_)
-                data_logger_->save("/home/wjc/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+                data_logger_->save("/home/luo/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -82,7 +82,7 @@ namespace controllers
             return CallbackReturn::SUCCESS;
         }
 
-        Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 1.0)
+        Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 0.8)
         {
             Eigen::VectorXd tau_d_saturated(dof_);
             for (int i = 0; i < dof_; i++)
@@ -98,7 +98,9 @@ namespace controllers
             time_ = 0;
             traj_time_ = 0;
             real_time_buffer_.reset();
-            tau_d.setZero();
+            // tau_d.setZero();
+            const std::vector<double> &tau_vec = state_->get<double>("torque");
+            tau_d = Eigen::Map<const Eigen::VectorXd>(tau_vec.data(), dof_);
             f_filter_.reset();
             t_filter_.reset();
 
@@ -118,8 +120,13 @@ namespace controllers
             dqd_ = Eigen::VectorXd::Zero(dof_);
             ddqd_ = Eigen::VectorXd::Zero(dof_);
 
-            const std::vector<double> &pose = state_->get<double>("pose");
-            Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            // const std::vector<double> &pose = state_->get<double>("pose");
+            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
+            const std::vector<double> &T_vec = state_->get<double>("T");
+            Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T);
+            pose_ = Eigen::Map<const Eigen::Vector6d>(tmp_pose_act.data());
+
             Eigen::Matrix4d Tb_tmp;
             robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
@@ -154,7 +161,10 @@ namespace controllers
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                const std::vector<double> &pose_current = state_->get<double>("pose");
+                // const std::vector<double> &pose_current = state_->get<double>("pose");
+                const std::vector<double> &T_vec = state_->get<double>("T");
+                Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+                const std::vector<double> pose_current = robot_math::tform_to_pose(T);
                 std::vector<double> full_traj_data;
                 full_traj_data.push_back(0.0);
                 for (int i = 0; i < 6; ++i)
@@ -182,7 +192,7 @@ namespace controllers
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
                     DATA_WRAPPER(cal_time_),
-                    // DATA_WRAPPER(pose_),
+                    DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(q_),
                     DATA_WRAPPER(tau_d),
                     // DATA_WRAPPER(dq_),
@@ -224,14 +234,18 @@ namespace controllers
             std::vector<double> &tau_cmd_vec = command_->get<double>("torque");
             const std::vector<double> &q_vec = state_->get<double>("position");
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
-            const std::vector<double> &pose_vec = state_->get<double>("pose");
+            // const std::vector<double> &pose_vec = state_->get<double>("pose");
+            const std::vector<double> &T_vec = state_->get<double>("T");
+            Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T);
+            pose_ = Eigen::Map<const Eigen::Vector6d>(tmp_pose_act.data());
             auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             command_->get<int>("mode")[0] = 3;
-            pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
+            // pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
-            Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
+            // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
             // R_ = T.block(0, 0, 3, 3);
             // p_ = T.block(0, 3, 3, 1);
 
@@ -351,9 +365,9 @@ namespace controllers
             Eigen::VectorXd Minv_taud = M_.ldlt().solve(tau_d_est_);
             tau_x_est_ = Jb_.transpose() * Lambda_inv * (Jb_ * Minv_taud);
 
-            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
+            ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
-            // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
+            // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_ - dJb_ * dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
 
@@ -390,7 +404,8 @@ namespace controllers
                 tau_fric_ff_(i) = fric_comp_ratio * tau_f_i;
             }
 
-            tau_cmd = tau_task_ + tau_null_ + g_ + C_;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq;
+            // std::cerr << "g_" << g_ << std::endl;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 

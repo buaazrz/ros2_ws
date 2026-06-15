@@ -69,7 +69,7 @@ def generate_launch_description():
             "false",
             " ",
             "ee_id:=",
-            "frank_hand",
+            "none",
         ]
     )
     robot_description = ParameterValue(robot_description_content, value_type=str)
