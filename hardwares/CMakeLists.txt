@@ -11,6 +11,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(ur_rtde REQUIRED)
 find_package(Franka REQUIRED)
 find_package(diana_api REQUIRED)
+find_package(mujoco_ros2_control REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   "rclcpp_lifecycle"
   "lifecycle_msgs"
@@ -23,6 +24,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   "orocos_kdl_vendor"
   "kdl_parser"
   "diana_api"
+  "mujoco_ros2_control"
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -50,6 +52,7 @@ ament_target_dependencies(
 target_link_libraries(hardwares 
                       ur_rtde::rtde
                       Franka::Franka
+                      mujoco_ros2_control::mujoco_simulation_core
                       )             
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -81,7 +84,8 @@ ament_target_dependencies(
 
 target_link_libraries(test_hardware 
                       ur_rtde::rtde 
-                      Franka::Franka            
+                      Franka::Franka
+                      mujoco_ros2_control::mujoco_simulation_core            
                       )
 
 install(TARGETS test_hardware

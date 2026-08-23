@@ -1,0 +1,152 @@
+control_node:
+  ros__parameters:
+    update_rate: 1000
+
+    # 第一次调试 MuJoCo GUI 时建议关闭。
+    # 仿真稳定且配置好 memlock 后再改为 true。
+    lock_memory: false
+
+    # MuJoCo 仍然属于仿真。
+    simulation: true
+
+    # 决定 ControlManager 调用普通 control_loop()，
+    # 而不是 Boost ODE 的 start_simulation()。
+    simulation_backend: mujoco
+
+    # MuJoCoSimulation 的 speed_factor 控制实时倍率。
+    # 这个参数主要留给原 Boost ODE 后端。
+    sim_real_time: true
+
+    publish_joint_state: true
+
+    # 使用新的自定义 MuJoCo RobotInterface。
+    robot: hardwares::MujocoRobot
+
+    parameters: "parameters.yaml"
+
+    controllers:
+      - controllers::CartesianMotionController
+      - controllers::CartesianTrajectoryController
+      - controllers::CartesianTrajImpPDController
+
+    # 自动激活阻抗控制器。
+    # 如果需要通过 service 手动选择控制器，保留为空字符串。
+    default_controller: "CartesianTrajImpPDController"
+
+
+MujocoRobot:
+  ros__parameters:
+    end_effector: ""
+
+    # 参数 YAML 一般不会自动展开 $(find-pkg-share ...)。
+    # 当前先使用绝对路径，后续建议在 launch 中生成该参数。
+    mujoco_model: "/home/buaazrz/mujoco/myMujoco/mujoco_models/scenes/fr3/us_scene.xml"
+
+    mujoco_headless: false
+    mujoco_speed_factor: 1.0
+
+    # 必须保证 XML 中存在该 keyframe。
+    mujoco_initial_keyframe: "ros_home"
+
+    # MuJoCo 模型中的传感器名称。
+    mujoco_force_sensor: "tool_force"
+    mujoco_torque_sensor: "tool_torque"
+
+    joint_command_interface:
+      - position
+      - velocity
+      - torque
+
+    # 你的 MujocoRobot::read() 使用了 acceleration，
+    # 所以这里必须声明，否则访问空 vector 会越界。
+    joint_state_interface:
+      - position
+      - velocity
+      - acceleration
+      - torque
+
+    # mode[0] 表示控制模式。
+    # 目前几个控制器都只访问 mode[0]，长度应为 1。
+    command_interface:
+      - mode
+      - pose
+
+    command_length:
+      - 1
+      - 6
+
+    command_type:
+      - int
+      - double
+
+    # position、velocity、acceleration、torque 已经由
+    # joint_state_interface 创建，不要在这里重复声明。
+    state_interface:
+      - T
+      - c
+      - g
+      - external_torque
+      - success
+      - m
+      - pose
+      - pose_q_
+
+    state_length:
+      - 16
+      - 7
+      - 7
+      - 7
+      - 1
+      - 49
+      - 6
+      - 6
+
+    state_type:
+      - double
+      - double
+      - double
+      - double
+      - double
+      - double
+      - double
+      - double
+
+    # CartesianTrajImpPDController 无条件访问 ft_sensor，
+    # 因此当前不能直接删除这个组件。
+    sensors:
+      - ft_sensor
+
+    # 正确目标：由 MujocoRobot 将 sensordata 写入该组件。
+    ft_sensor: hardwares::MujocoFTSensor
+
+
+ft_sensor:
+  ros__parameters:
+    state_interface:
+      - force
+
+    # [Fx, Fy, Fz, Tx, Ty, Tz]
+    state_length:
+      - 6
+
+    state_type:
+      - double
+
+
+CartesianTrajImpPDController:
+  ros__parameters:
+    cmd_name: "torque"
+
+    # 前三个：旋转；后三个：平移
+    Kx: [10.0, 10.0, 10.0, 100.0, 100.0, 100.0]
+    Bx: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+    Kn: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+    Bn: [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
+
+    dob_gain: 0.0
+
+    # 初期联合调试时应关闭真实机器人摩擦补偿。
+    # 这两个参数还需要控制器代码支持，见下文。
+    friction_comp_ratio: 0.0
+    use_real_ft_compensation: false

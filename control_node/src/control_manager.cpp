@@ -516,100 +516,376 @@ namespace control_node
         cmd.insert(cmd.end(), active_controller_->get_internal_state().begin(), active_controller_->get_internal_state().end());
         return cmd;
     }
+    // void ControlManager::control_loop()
+    // {
+    //     // for calculating sleep time
+    //     // double dt = 1.0 / update_rate_;
+    //     auto const period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
+    //     auto const cm_now = std::chrono::nanoseconds(this->now().nanoseconds());
+    //     std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+    //         next_iteration_time{cm_now};
+
+    //     rclcpp::Time previous_time = this->now();
+    //     rclcpp::Duration measured_period(0, 0);
+    //     bool flag = false;
+    //     while (running_ && !robot_->is_stop()) // give robot a change to stop running
+    //     {
+    //         // calculate measured period
+    //         auto current_time = this->now();
+    //         if (flag)
+    //             measured_period = current_time - previous_time;
+    //         else
+    //             flag = true;
+    //         previous_time = current_time;
+
+    //         // execute update loop
+    //         read(current_time, measured_period);
+    //         update(current_time, measured_period);
+    //         write(current_time, measured_period);
+    //         // get running state from box
+    //         // running_box_.try_get([this](const auto &value)
+    //         //                      { running_ = value; });
+    //         running_box_.get(running_);
+
+    //         // wait until we hit the end of the period
+    //         next_iteration_time += period;
+    //         std::this_thread::sleep_until(next_iteration_time);
+    //     }
+    // }
     void ControlManager::control_loop()
     {
-        // for calculating sleep time
-        // double dt = 1.0 / update_rate_;
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
-        auto const cm_now = std::chrono::nanoseconds(this->now().nanoseconds());
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
-            next_iteration_time{cm_now};
+        using SteadyClock = std::chrono::steady_clock;
 
-        rclcpp::Time previous_time = this->now();
-        rclcpp::Duration measured_period(0, 0);
-        bool flag = false;
-        while (running_ && !robot_->is_stop()) // give robot a change to stop running
+        const auto nominal_period =
+            std::chrono::nanoseconds(1'000'000'000LL / update_rate_);
+
+        auto next_iteration_time = SteadyClock::now();
+        auto previous_steady_time =
+            next_iteration_time - nominal_period;
+
+        while (running_ && keep_running_ && !robot_->is_stop())
         {
-            // calculate measured period
-            auto current_time = this->now();
-            if (flag)
-                measured_period = current_time - previous_time;
-            else
-                flag = true;
-            previous_time = current_time;
+            const auto current_steady_time = SteadyClock::now();
+            const auto elapsed =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    current_steady_time - previous_steady_time);
 
-            // execute update loop
-            read(current_time, measured_period);
-            update(current_time, measured_period);
-            write(current_time, measured_period);
-            // get running state from box
-            // running_box_.try_get([this](const auto &value)
-            //                      { running_ = value; });
-            running_box_.get(running_);
+            previous_steady_time = current_steady_time;
 
-            // wait until we hit the end of the period
-            next_iteration_time += period;
+            // 传给控制器的时间戳仍然使用 ROS time。
+            const rclcpp::Time ros_time = this->now();
+
+            // period 使用稳态时钟测量，不受 /clock 跳变影响。
+            const rclcpp::Duration measured_period(elapsed);
+
+            read(ros_time, measured_period);
+            update(ros_time, measured_period);
+            write(ros_time, measured_period);
+
+            running_box_.try_get(
+                [this](const auto & value)
+                {
+                    running_ = value;
+                });
+
+            next_iteration_time += nominal_period;
+
+            const auto work_finished_time = SteadyClock::now();
+
+            // 超过一个完整周期时重新同步，避免持续追赶造成空转。
+            if (work_finished_time >
+                next_iteration_time + nominal_period)
+            {
+                RCLCPP_WARN_THROTTLE(
+                    get_logger(),
+                    *get_clock(),
+                    2000,
+                    "Control loop overrun");
+
+                next_iteration_time = work_finished_time;
+            }
+
             std::this_thread::sleep_until(next_iteration_time);
         }
     }
 
+    // void ControlManager::prepare_loop()
+    // {
+    //     auto state = robot_->get_node_state();
+    //     while (keep_running_ && state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+    //     {
+    //         RCLCPP_WARN(this->get_logger(), "robot is not configured!");
+    //         std::this_thread::sleep_for(1s);
+    //     }
+    //     if (!keep_running_)
+    //     {
+    //         running_ = false;
+    //         return;
+    //     }
+    //     robot_->get_node()->activate();
+    //     RCLCPP_INFO(get_logger(), "waiting for controller to be activated...");
+    //     std::stringstream ss;
+    //     for (auto &&controller : controllers_)
+    //     {
+    //         ss << controller->get_node()->get_name() << " ";
+    //     }
+    //     RCLCPP_INFO(get_logger(), "available controllers are: %s", ss.str().c_str());
+    //     // std::stringstream ss2;
+    //     // secondary_controllers_box_.get([this, &ss2](const auto &value)
+    //     //                                {
+    //     //     for (auto &&controller : value)
+    //     //     {
+    //     //         ss2 << controller->get_node()->get_name() << " ";
+    //     //     } });
+    //     std::stringstream ss2;
+    //     std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
+    //     secondary_controllers_box_.get(sec_controllers);
+    //     for (auto &&controller : sec_controllers)
+    //     {
+    //         ss2 << controller->get_node()->get_name() << " ";
+    //     }
+    //     RCLCPP_INFO(get_logger(), "secondary controllers are: %s", ss2.str().c_str());
+    //     do
+    //     {
+    //         std::this_thread::sleep_for(1s);
+    //         read(this->now(), rclcpp::Duration::from_seconds(1.0));
+    //         // active_controller_box_.get([=](const auto &value)
+    //         //                            { active_controller_ = value; });
+    //         std::shared_ptr<controller_interface::ControllerInterface> value;
+    //         active_controller_box_.get(value);
+    //         active_controller_ = value;
+    //         if (!default_controller_.empty())
+    //         {
+    //             activate_controller(default_controller_);
+    //             default_controller_.clear();
+    //         }
+    //     } while (keep_running_ && !active_controller_);
+    //     if (!keep_running_)
+    //     {
+    //         running_ = false;
+    //         return;
+    //     }
+    //     // running_box_ = true;
+    //     running_box_.set(true);
+    //     running_ = true;
+    // }
     void ControlManager::prepare_loop()
     {
-        auto state = robot_->get_node_state();
-        while (keep_running_ && state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        using SteadyClock = std::chrono::steady_clock;
+
+        running_ = false;
+        running_box_.set(false);
+        active_controller_.reset();
+
+        /*
+        * 1. 等待 Robot 进入 INACTIVE 状态。
+        *
+        * 注意：必须在循环中重新读取状态。
+        * 原代码只在循环外读取一次，状态改变后这里无法感知。
+        */
+        while (keep_running_)
         {
-            RCLCPP_WARN(this->get_logger(), "robot is not configured!");
-            std::this_thread::sleep_for(1s);
-        }
-        if (!keep_running_)
-        {
-            running_ = false;
-            return;
-        }
-        robot_->get_node()->activate();
-        RCLCPP_INFO(get_logger(), "waiting for controller to be activated...");
-        std::stringstream ss;
-        for (auto &&controller : controllers_)
-        {
-            ss << controller->get_node()->get_name() << " ";
-        }
-        RCLCPP_INFO(get_logger(), "available controllers are: %s", ss.str().c_str());
-        // std::stringstream ss2;
-        // secondary_controllers_box_.get([this, &ss2](const auto &value)
-        //                                {
-        //     for (auto &&controller : value)
-        //     {
-        //         ss2 << controller->get_node()->get_name() << " ";
-        //     } });
-        std::stringstream ss2;
-        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
-        secondary_controllers_box_.get(sec_controllers);
-        for (auto &&controller : sec_controllers)
-        {
-            ss2 << controller->get_node()->get_name() << " ";
-        }
-        RCLCPP_INFO(get_logger(), "secondary controllers are: %s", ss2.str().c_str());
-        do
-        {
-            std::this_thread::sleep_for(1s);
-            read(this->now(), rclcpp::Duration::from_seconds(1.0));
-            // active_controller_box_.get([=](const auto &value)
-            //                            { active_controller_ = value; });
-            std::shared_ptr<controller_interface::ControllerInterface> value;
-            active_controller_box_.get(value);
-            active_controller_ = value;
-            if (!default_controller_.empty())
+            const auto robot_state = robot_->get_node_state();
+
+            if (robot_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
             {
-                activate_controller(default_controller_);
-                default_controller_.clear();
+                break;
             }
-        } while (keep_running_ && !active_controller_);
+
+            if (robot_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+            {
+                throw std::runtime_error(
+                    "Robot has been finalized and cannot be activated");
+            }
+
+            RCLCPP_WARN_THROTTLE(
+                get_logger(),
+                *get_clock(),
+                1000,
+                "Robot is not configured. Current lifecycle state: %s",
+                robot_state.label().c_str());
+
+            std::this_thread::sleep_for(100ms);
+        }
+
         if (!keep_running_)
         {
-            running_ = false;
             return;
         }
-        // running_box_ = true;
+
+        /*
+        * 2. 激活 Robot。
+        *
+        * 对 MujocoRobot 来说，这里将调用：
+        * MujocoRobot::on_activate()
+        *
+        * MuJoCo 物理线程应当在该生命周期回调中启动。
+        */
+        const auto activated_state = robot_->get_node()->activate();
+
+        if (activated_state.id() !=
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
+            throw std::runtime_error(
+                "Failed to activate robot. Lifecycle state is: " +
+                activated_state.label());
+        }
+
+        RCLCPP_INFO(
+            get_logger(),
+            "Robot '%s' activated",
+            robot_->get_node()->get_name());
+
+        /*
+        * 3. 打印可用控制器。
+        */
+        std::stringstream available_controller_names;
+
+        for (const auto & controller : controllers_)
+        {
+            if (controller)
+            {
+                available_controller_names
+                    << controller->get_node()->get_name() << " ";
+            }
+        }
+
+        RCLCPP_INFO(
+            get_logger(),
+            "Available controllers: %s",
+            available_controller_names.str().c_str());
+
+        /*
+        * 4. 打印辅助控制器。
+        */
+        std::vector<
+            std::shared_ptr<controller_interface::ControllerInterface>>
+            secondary_controllers;
+
+        secondary_controllers_box_.get(secondary_controllers);
+
+        std::stringstream secondary_controller_names;
+
+        for (const auto & controller : secondary_controllers)
+        {
+            if (controller)
+            {
+                secondary_controller_names
+                    << controller->get_node()->get_name() << " ";
+            }
+        }
+
+        RCLCPP_INFO(
+            get_logger(),
+            "Secondary controllers: %s",
+            secondary_controller_names.str().c_str());
+
+        /*
+        * 5. 如果配置了默认控制器，立即激活。
+        *
+        * 原代码先 sleep(1s)，再激活默认控制器，
+        * 会导致启动过程无意义地等待至少一秒。
+        */
+        if (!default_controller_.empty())
+        {
+            const std::string controller_name = default_controller_;
+
+            RCLCPP_INFO(
+                get_logger(),
+                "Activating default controller '%s'",
+                controller_name.c_str());
+
+            if (!activate_controller(controller_name))
+            {
+                // 激活失败时不要让 MuJoCo 继续无控制运行。
+                robot_->get_node()->deactivate();
+
+                throw std::runtime_error(
+                    "Failed to activate default controller: " +
+                    controller_name);
+            }
+
+            // 只有激活成功后才清除。
+            default_controller_.clear();
+        }
+
+        /*
+        * 6. 等待一个主控制器被激活。
+        *
+        * 等待期间低频读取机器人状态，避免界面和状态完全不更新。
+        */
+        RCLCPP_INFO(
+            get_logger(),
+            "Waiting for an active controller...");
+
+        auto previous_read_time = SteadyClock::now();
+
+        while (keep_running_)
+        {
+            std::shared_ptr<
+                controller_interface::ControllerInterface>
+                controller;
+
+            active_controller_box_.get(controller);
+
+            if (controller)
+            {
+                active_controller_ = controller;
+                break;
+            }
+
+            std::this_thread::sleep_for(100ms);
+
+            const auto current_read_time = SteadyClock::now();
+            const auto elapsed =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    current_read_time - previous_read_time);
+
+            previous_read_time = current_read_time;
+
+            read(
+                this->now(),
+                rclcpp::Duration(elapsed));
+        }
+
+        /*
+        * 7. 退出期间进行清理。
+        */
+        if (!keep_running_)
+        {
+            active_controller_.reset();
+            running_box_.set(false);
+            running_ = false;
+
+            const auto robot_state = robot_->get_node_state();
+
+            if (robot_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+                robot_->get_node()->deactivate();
+            }
+
+            return;
+        }
+
+        if (!active_controller_)
+        {
+            robot_->get_node()->deactivate();
+
+            throw std::runtime_error(
+                "Control loop cannot start without an active controller");
+        }
+
+        RCLCPP_INFO(
+            get_logger(),
+            "Controller '%s' is active",
+            active_controller_->get_node()->get_name());
+
+        /*
+        * 8. 允许 control_loop() 开始运行。
+        */
         running_box_.set(true);
         running_ = true;
     }
