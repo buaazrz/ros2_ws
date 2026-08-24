@@ -48,6 +48,18 @@ MujocoRobot:
     # 必须保证 XML 中存在该 keyframe。
     mujoco_initial_keyframe: "home"
 
+    # 将 MuJoCo 中的 tool_link 负载同步到控制器动力学模型
+    mujoco_sync_payload_to_controller: true
+
+    # MuJoCo 固定负载 body
+    mujoco_payload_body: "tool_link"
+
+    # 注意：根据你给出的 XML，它的直接父 body 是 fr3_link7
+    mujoco_payload_parent_body: "fr3_link7"
+
+    # robot_math 中应当合并到第 7 个活动刚体
+    controller_payload_target_joint: "fr3_joint7"
+
     # MuJoCo 模型中的传感器名称。
     mujoco_force_sensor: "tool_force"
     mujoco_torque_sensor: "tool_torque"
@@ -138,8 +150,8 @@ CartesianTrajImpPDController:
     cmd_name: "torque"
 
     # 前三个：旋转；后三个：平移
-    Kx: [10.0, 10.0, 10.0, 100.0, 100.0, 100.0]
-    Bx: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0]
+    Bx: [30.0, 30.0, 30.0, 90.0, 90.0, 90.0]
 
     Kn: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
     Bn: [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]

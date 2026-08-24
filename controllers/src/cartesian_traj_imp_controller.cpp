@@ -82,7 +82,7 @@ namespace controllers
             return CallbackReturn::SUCCESS;
         }
 
-        Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 0.8)
+        Eigen::VectorXd saturate_torque(const Eigen::VectorXd &tau_d_calculated, const Eigen::VectorXd &tau_J_d, double tol = 1.0)
         {
             Eigen::VectorXd tau_d_saturated(dof_);
             for (int i = 0; i < dof_; i++)
@@ -123,8 +123,8 @@ namespace controllers
             // const std::vector<double> &pose = state_->get<double>("pose");
             // Eigen::Matrix4d T = robot_math::pose_to_tform(pose);
             const std::vector<double> &T_vec = state_->get<double>("T");
-            Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
-            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T);
+            Eigen::Matrix4d T_state = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T_state);
             pose_ = Eigen::Map<const Eigen::Vector6d>(tmp_pose_act.data());
 
             Eigen::Matrix4d Tb_tmp;
@@ -139,13 +139,13 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.59702;
-            sensor_cog_vec_ = {0.0008, 0.0001, 0.0030};
-            sensor_offset_vec_ = {-4.8164, 5.5965, -9.3466, 0.4178, 0.2654, 0.2582};
+            sensor_weight_ = 0.0;
+            sensor_cog_vec_ = {0.0, 0.0, 0.0};
+            sensor_offset_vec_ = {0.0,0.0,0.0,0.0,0.0,0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
-                0, -1, 0, 0,
-                0, 0, -1, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
                 0, 0, 0, 1;
 
             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal)
@@ -236,8 +236,8 @@ namespace controllers
             const std::vector<double> &dq_vec = state_->get<double>("velocity");
             // const std::vector<double> &pose_vec = state_->get<double>("pose");
             const std::vector<double> &T_vec = state_->get<double>("T");
-            Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
-            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T);
+            Eigen::Matrix4d T_state = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+            std::vector<double> tmp_pose_act = robot_math::tform_to_pose(T_state);
             pose_ = Eigen::Map<const Eigen::Vector6d>(tmp_pose_act.data());
             auto &force_vec = com_state_->at("ft_sensor")->get<double>("force");
             command_->get<int>("mode")[0] = 3;
@@ -246,8 +246,9 @@ namespace controllers
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
             // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
-            // R_ = T.block(0, 0, 3, 3);
-            // p_ = T.block(0, 3, 3, 1);
+            
+            R_state_ = T_state.block(0, 0, 3, 3);
+            p_state_ = T_state.block(0, 3, 3, 1);
 
             Eigen::Map<const Eigen::VectorXd> q(q_vec.data(), dof_);
             Eigen::Map<const Eigen::VectorXd> dq(dq_vec.data(), dof_);
@@ -288,6 +289,7 @@ namespace controllers
             Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3, 3>(0, 0);
             force_.head(3) = R_tcp_to_sensor * force_.head(3);
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
+            // std::cerr << "force_: " << force_.transpose() << std::endl;
 
             f_filter_.filtering(force_.data(), force_.data());
 
@@ -366,6 +368,7 @@ namespace controllers
             tau_x_est_ = Jb_.transpose() * Lambda_inv * (Jb_ * Minv_taud);
 
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
+            // std::cerr<<"xe_: "<<xe_.transpose()<<std::endl;
             tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_ - dJb_ * dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
@@ -405,7 +408,22 @@ namespace controllers
             }
 
             tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_;
-            // std::cerr << "g_" << g_ << std::endl;
+
+            // std::cerr << "tau_task_: " << tau_task_.transpose() << std::endl;
+
+            RCLCPP_INFO_STREAM_THROTTLE(
+                node_->get_logger(),
+                *node_->get_clock(),
+                1000,
+                "\nq = [" << q.transpose() << "]"
+                "\npd = [" << pd_.transpose() << "]"
+                "\np_state = [" << p_state_.transpose() << "]"
+                "\np  = [" << p_.transpose() << "]"
+                "\npd - p = [" << (pd_ - p_).transpose() << "]"
+                "\nRd =\n" << Rd_
+                << "\nR =\n" << R_
+                << "\nR_state =\n" << R_state_
+                << "\nxe = [" << xe_.transpose() << "]");
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -454,8 +472,8 @@ namespace controllers
         Eigen::VectorXd tau_cmd_, tau_task_, tau_null_;
         Eigen::VectorXd qd_, dqd_, ddqd_, qe_, dqe_, dq_, q_;
         Eigen::Vector6d xe_, dxe_, ddxd_, ddxc_, dVd;
-        Eigen::Matrix3d Rd_, R_;
-        Eigen::Vector3d pd_, p_, wd_, vd_;
+        Eigen::Matrix3d Rd_, R_, R_state_;
+        Eigen::Vector3d pd_, p_, wd_, vd_, p_state_;
         Eigen::Vector7d tau_d;
         std::vector<double> sensor_cog_vec_;
         std::vector<double> sensor_offset_vec_;
