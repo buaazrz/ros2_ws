@@ -510,7 +510,7 @@ namespace robot_math
                                   const Eigen::Matrix4d &T_robot)
     {
         Eigen::Matrix3d R = (T_robot.block<3, 3>(0, 0) * T_sensor.block<3, 3>(0, 0)).transpose();
-        Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, -1) * mass;
+        Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, -9.81) * mass;
         Eigen::Vector3d M = Eigen::Vector3d(cog[0], cog[1], cog[2]).cross(g);
         return Eigen::Vector6d(force[3] - M(0) - offset[3],
                                force[4] - M(1) - offset[4],

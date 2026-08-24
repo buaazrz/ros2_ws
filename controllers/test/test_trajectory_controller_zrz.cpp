@@ -25,9 +25,12 @@ int main(int argc, char **argv)
   }
   auto goal_msg = ACTION::Goal();
   goal_msg.target_position.data = {
-    5,  0.4, 0.2 ,0.35, 3.14, 0.0, 0.0, 
-    10,  0.4, -0.2 ,0.35, 3.14, 0.0, 0.0, 
-    15,  0.4, 0.2 ,0.35, 3.14, 0.0, 0.0,
+    25,  0.5, -0.045 ,0.31, 3.14, 0.0, 0.0, 
+    35,  0.5, -0.045  ,0.244, 3.14, 0.0, 0.0, 
+    45,  0.5, 0.045  ,0.244, 3.14, 0.0, 0.0,
+    55,  0.5, -0.045  ,0.244, 3.14, 0.0, 0.0,
+    65,  0.5, -0.045  ,0.31, 3.14, 0.0, 0.0,
+
  };
   auto handle_future = client->async_send_goal(goal_msg);
   auto result = rclcpp::spin_until_future_complete(node, handle_future);

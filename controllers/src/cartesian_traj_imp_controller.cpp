@@ -139,13 +139,13 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.0;
+            sensor_weight_ = 0.2;
             sensor_cog_vec_ = {0.0, 0.0, 0.0};
             sensor_offset_vec_ = {0.0,0.0,0.0,0.0,0.0,0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
                 0, 1, 0, 0,
-                0, 0, 1, 0,
+                0, 0, -1, 0,
                 0, 0, 0, 1;
 
             auto handle_goal = [this](const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const ACTION::Goal> goal)
@@ -158,25 +158,85 @@ namespace controllers
                 return rclcpp_action::CancelResponse::ACCEPT;
             };
 
-            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
+            // auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
+            // {
+            //     auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
+            //     // const std::vector<double> &pose_current = state_->get<double>("pose");
+            //     const std::vector<double> &T_vec = state_->get<double>("T");
+            //     Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+            //     const std::vector<double> pose_current = robot_math::tform_to_pose(T);
+            //     std::vector<double> full_traj_data;
+            //     full_traj_data.push_back(0.0);
+            //     for (int i = 0; i < 6; ++i)
+            //     {
+            //         full_traj_data.push_back(pose_current[i]);
+            //     }
+            //     const auto &goal_data = goal_handle->get_goal()->target_position.data;
+            //     full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
+            //     trajectory->set_traj(full_traj_data);
+
+            //     traj_time_ = 0.0;
+            //     real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
+            // };
+            auto handle_accepted =
+                [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
-                auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                // const std::vector<double> &pose_current = state_->get<double>("pose");
-                const std::vector<double> &T_vec = state_->get<double>("T");
-                Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
-                const std::vector<double> pose_current = robot_math::tform_to_pose(T);
+                auto trajectory =
+                    std::make_shared<robot_math::CartesianTrajectory>();
+
+                const std::vector<double>& T_vec =
+                    state_->get<double>("T");
+
+                Eigen::Matrix4d T =
+                    Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+
+                const std::vector<double> pose_current =
+                    robot_math::tform_to_pose(T);
+
                 std::vector<double> full_traj_data;
+
+                // 添加当前位姿作为 t=0 的第一个轨迹点
                 full_traj_data.push_back(0.0);
+
                 for (int i = 0; i < 6; ++i)
                 {
                     full_traj_data.push_back(pose_current[i]);
                 }
-                const auto &goal_data = goal_handle->get_goal()->target_position.data;
-                full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
+
+                const auto& goal_data_raw =
+                    goal_handle->get_goal()->target_position.data;
+
+                std::vector<double> goal_data(
+                    goal_data_raw.begin(),
+                    goal_data_raw.end());
+
+                if (goal_data.size() % 7 != 0)
+                {
+                    RCLCPP_ERROR(
+                        node_->get_logger(),
+                        "Invalid trajectory data: size must be a multiple of 7");
+                    return;
+                }
+
+                // 固定全部路径点的姿态
+                for (std::size_t i = 0; i < goal_data.size(); i += 7)
+                {
+                    goal_data[i + 4] = pose_current[3];
+                    goal_data[i + 5] = pose_current[4];
+                    goal_data[i + 6] = pose_current[5];
+                }
+
+                full_traj_data.insert(
+                    full_traj_data.end(),
+                    goal_data.begin(),
+                    goal_data.end());
+
                 trajectory->set_traj(full_traj_data);
 
                 traj_time_ = 0.0;
-                real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
+
+                real_time_buffer_.writeFromNonRT(
+                    {goal_handle, trajectory});
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -411,19 +471,32 @@ namespace controllers
 
             // std::cerr << "tau_task_: " << tau_task_.transpose() << std::endl;
 
+            // RCLCPP_INFO_STREAM_THROTTLE(
+            //     node_->get_logger(),
+            //     *node_->get_clock(),
+            //     1000,
+            //     "\nq = [" << q.transpose() << "]"
+            //     "\npd = [" << pd_.transpose() << "]"
+            //     "\np_state = [" << p_state_.transpose() << "]"
+            //     "\np  = [" << p_.transpose() << "]"
+            //     "\npd - p = [" << (pd_ - p_).transpose() << "]"
+            //     "\nRd =\n" << Rd_
+            //     << "\nR =\n" << R_
+            //     << "\nR_state =\n" << R_state_
+            //     << "\nxe = [" << xe_.transpose() << "]");
             RCLCPP_INFO_STREAM_THROTTLE(
-                node_->get_logger(),
-                *node_->get_clock(),
-                1000,
-                "\nq = [" << q.transpose() << "]"
-                "\npd = [" << pd_.transpose() << "]"
-                "\np_state = [" << p_state_.transpose() << "]"
-                "\np  = [" << p_.transpose() << "]"
-                "\npd - p = [" << (pd_ - p_).transpose() << "]"
-                "\nRd =\n" << Rd_
-                << "\nR =\n" << R_
-                << "\nR_state =\n" << R_state_
-                << "\nxe = [" << xe_.transpose() << "]");
+            node_->get_logger(),
+            *node_->get_clock(),
+            100,
+            "\ntraj_time = " << traj_time_
+            << "\nperiod = " << period.seconds()
+            << "\npd = [" << pd_.transpose() << "]"
+            << "\np = [" << p_.transpose() << "]"
+            << "\nvd = [" << vd_.transpose() << "]"
+            << "\nad = [" << dVd.tail<3>().transpose() << "]"
+            << "\ndq = [" << dq.transpose() << "]"
+            << "\nforce = [" << force_.transpose() << "]"
+            << "\ntau_task = [" << tau_task_.transpose() << "]");
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 

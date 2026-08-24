@@ -180,12 +180,14 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.61583;
-            sensor_cog_vec_ = {0.0001, 0.000, 0.0029};
+            // sensor_weight_ = 0.61583;
+            // sensor_cog_vec_ = {0.0001, 0.000, 0.0029};
+            sensor_weight_ = 0.2;
+            sensor_cog_vec_ = {0.00, 0.00, 0.0};
             sensor_offset_vec_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
-                0, -1, 0, 0,
+                0, 1, 0, 0,
                 0, 0, -1, 0,
                 0, 0, 0, 1;
 
@@ -344,6 +346,8 @@ namespace controllers
             Eigen::Matrix3d R_tcp_to_sensor = T_sensor_.block<3, 3>(0, 0);
             force_.head(3) = R_tcp_to_sensor * force_.head(3);
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
+
+            std::cerr << "Force: " << force_.transpose() << std::endl;
 
             f_filter_.filtering(force_.data(), force_.data());
             RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
@@ -627,7 +631,7 @@ namespace controllers
 
             // 叠加指令并下发
             // tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_ ;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 

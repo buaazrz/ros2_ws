@@ -102,7 +102,7 @@ namespace robot_math
                 spl_[k].set_boundary(tk::spline::first_deriv, 0.0,
                                     tk::spline::first_deriv, 0.0);
                 spl_[k].set_points(time_, y_[k]);
-                spl_[k].make_monotonic();
+                // spl_[k].make_monotonic();
             }
             T_ = time_.back() - time_.front();
         }

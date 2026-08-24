@@ -20,20 +20,20 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    RCLCPP_INFO(node->get_logger(), "=== PHASE 1: Cartesian Motion ===");
+    // RCLCPP_INFO(node->get_logger(), "=== PHASE 1: Cartesian Motion ===");
 
-    if (!task_utils::activate_controller(node, controller_client, "CartesianMotionController"))
-    {
-        rclcpp::shutdown();
-        return 1;
-    }
+    // if (!task_utils::activate_controller(node, controller_client, "CartesianMotionController"))
+    // {
+    //     rclcpp::shutdown();
+    //     return 1;
+    // }
 
-    std::vector<double> pose_goal = {0.4, 0.2, 0.40, 3.14, 0.0, 0.0};
-    if (!task_utils::execute_motion(node, "CartesianMotionController/goal", pose_goal))
-    {
-        rclcpp::shutdown();
-        return 1;
-    }
+    // std::vector<double> pose_goal = {0.5, -0.045 ,0.31, 3.14, 0.0, 0.0};
+    // if (!task_utils::execute_motion(node, "CartesianMotionController/goal", pose_goal))
+    // {
+    //     rclcpp::shutdown();
+    //     return 1;
+    // }
 
     RCLCPP_INFO(node->get_logger(), "=== PHASE 2: Activate VIC for Contact & Hold  ===");
 
@@ -47,12 +47,12 @@ int main(int argc, char **argv)
     std::this_thread::sleep_for(5s);
 
     std::vector<double> traj_goal = {
-        0, 0.4, 0.2, 0.40, 3.14, 0.0, 0.0,
-        5, 0.4, 0.2, 0.35, 3.14, 0.0, 0.0,
-        15, 0.4, 0.2, 0.35, 3.14, 0.0, 0.0,
-        25, 0.4, -0.2, 0.35, 3.14, 0.0, 0.0,
-        35, 0.4, 0.2, 0.35, 3.14, 0.0, 0.0,
-        40, 0.4, 0.2, 0.40, 3.14, 0.0, 0.0};
+        0, 0.5, -0.045 ,0.31, 3.14, 0.0, 0.0,
+        10,  0.5, -0.045  ,0.244, 3.14, 0.0, 0.0, 
+        15,  0.5, -0.045  ,0.244, 3.14, 0.0, 0.0,
+        25,  0.5, 0.045  ,0.244, 3.14, 0.0, 0.0,
+        35,  0.5, -0.045  ,0.244, 3.14, 0.0, 0.0,
+        40,  0.5, -0.045  ,0.31, 3.14, 0.0, 0.0,};
 
     if (!task_utils::execute_motion(node, "VariableImpedanceController/goal", traj_goal))
     {
