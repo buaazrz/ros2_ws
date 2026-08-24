@@ -26,4 +26,7 @@
   <class type="hardwares::MujocoRobot" base_class_type="hardware_interface::RobotInterface">
     <description>Simulation interface for MuJoCo engine.</description>
   </class>
+  <class type="hardwares::MujocoFTSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>Force-torque sensor interface for MuJoCo engine.</description>
+  </class>
 </library>

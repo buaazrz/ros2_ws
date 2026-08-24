@@ -92,7 +92,6 @@ def generate_launch_description():
     control_node = Node(
         package="control_node",
         executable="control_node",
-        name="control_node",
         output="screen",
         emulate_tty=True,
         parameters=[params_file, common_parameters],

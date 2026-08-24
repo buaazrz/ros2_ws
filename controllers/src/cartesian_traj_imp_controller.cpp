@@ -404,7 +404,7 @@ namespace controllers
                 tau_fric_ff_(i) = fric_comp_ratio * tau_f_i;
             }
 
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_;
             // std::cerr << "g_" << g_ << std::endl;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;

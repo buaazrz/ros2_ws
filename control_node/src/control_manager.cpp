@@ -60,7 +60,12 @@ namespace control_node
             int pos = robot_class.rfind(":");
             auto robot_name = robot_class.substr(pos + 1);
             robot_->set_update_rate(update_rate_);
-            robot_->initialize(robot_name);
+            // robot_->initialize(robot_name);
+            if (!robot_->initialize(robot_name))
+            {
+                throw std::runtime_error(
+                    "Failed to initialize robot plugin: " + robot_class);
+            }
             auto nodes = robot_->get_all_nodes();
             for (auto &no : nodes)
                 executor_->add_node(no);
