@@ -4,7 +4,8 @@
 #include "realtime_tools/realtime_buffer.hpp"
 #include "robot_math/MovingFilter.h"
 #include "robot_math/robot_math.hpp"
-#include "robot_math/CartesianTrajectory.hpp"
+// #include "robot_math/CartesianTrajectory.hpp"
+#include "robot_math/PiecewiseCartesianTrajectory.hpp"
 #include "ros2_utility/data_logger.hpp"
 #include "ros2_utility/file_utils.hpp"
 #include "math.h"
@@ -66,7 +67,7 @@ namespace controllers
     public:
         using ACTION = robot_control_msgs::action::RobotMotion;
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
-        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
+        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::PiecewiseCartesianTrajectory>>;
 
         VariableImpedanceController() : f_filter_(6, 15), t_filter_(7, 15) {}
         ~VariableImpedanceController()
@@ -225,7 +226,7 @@ namespace controllers
                 [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
                 auto trajectory =
-                    std::make_shared<robot_math::CartesianTrajectory>();
+                    std::make_shared<robot_math::PiecewiseCartesianTrajectory>();
 
                 const std::vector<double>& T_vec =
                     state_->get<double>("T");
@@ -292,8 +293,20 @@ namespace controllers
                     goal_data.begin(),
                     goal_data.end());
 
-                trajectory->set_traj(
-                    full_traj_data);
+                // trajectory->set_traj(
+                //     full_traj_data);
+                if (!trajectory->set_traj(full_traj_data))
+                {
+                    RCLCPP_ERROR(
+                        node_->get_logger(),
+                        "Failed to construct piecewise Cartesian trajectory: "
+                        "timestamps must be finite, non-negative and strictly increasing");
+
+                    auto result = std::make_shared<ACTION::Result>();
+                    result->success = false;
+                    goal_handle->abort(result);
+                    return;
+                }
 
                 traj_time_ = 0.0;
                 is_contact_established_ = false;
@@ -427,8 +440,8 @@ namespace controllers
 
             f_filter_.filtering(force_.data(), force_.data());
             RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
-                                 "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f]",
-                                 force_[0], force_[1], force_[2], force_[3], force_[4], force_[5]);
+                                 "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f, Kx_(5): %.2f]",
+                                 force_[0], force_[1], force_[2], force_[3], force_[4], force_[5], Kx_(5));
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -460,6 +473,29 @@ namespace controllers
                     wd_ = Vd_curr.head(3);
                     vd_ = Vd_curr.tail(3);
                     dVd = dVd_curr;
+
+                    // Print the trajectory actually evaluated in this control cycle.
+                    // RCLCPP already prefixes each line with the ROS timestamp; ros_time
+                    // and traj_time are included explicitly to make CSV-style analysis easy.
+                    // The desired orientation is printed as a rotation vector [rx, ry, rz],
+                    // matching the six-dimensional pose convention used by the goal message.
+                    const std::vector<double> desired_pose =
+                        robot_math::tform_to_pose(Td_curr);
+
+                    // RCLCPP_INFO_THROTTLE(
+                    //     node_->get_logger(),
+                    //     *node_->get_clock(),
+                    //     100,
+                    //     "TRAJ_DESIRED ros_time=%.9f traj_time=%.6f "
+                    //     "pose=[%.9f %.9f %.9f %.9f %.9f %.9f] "
+                    //     "linear_velocity=[%.9f %.9f %.9f] "
+                    //     "linear_acceleration=[%.9f %.9f %.9f]",
+                    //     t.seconds(),
+                    //     traj_time_,
+                    //     desired_pose[0], desired_pose[1], desired_pose[2],
+                    //     desired_pose[3], desired_pose[4], desired_pose[5],
+                    //     Vd_curr[3], Vd_curr[4], Vd_curr[5],
+                    //     dVd_curr[3], dVd_curr[4], dVd_curr[5]);
 
                     Eigen::Vector3d pos_err = pd_ - p_;
                     Eigen::Vector3d rot_err = robot_math::logR(R_.transpose() * Rd_);
@@ -533,6 +569,7 @@ namespace controllers
                     }
                 }
                 double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_ + Kd_f_ * dF_err_z;
+                
                 force_err_z_prev_ = F_err_z;
 
                 double F_target = F_des_z_ + F_com_z;
@@ -541,12 +578,12 @@ namespace controllers
                     xe_z, dxe_z, Bx_(5), F_target, 
                     Q_weight_, R_weight_, Kz_min_, Kz_max_, F_max_z_);
 
-                double K_opt_raw = opt_result.first;
+                double K_opt = opt_result.first;
                 double B_opt = opt_result.second;
 
-                // 变化率限幅保护 (防止刚度跳变过快)
-                double max_step = 20.0;
-                double K_opt = std::clamp(K_opt_raw, Kx_(5) - max_step, Kx_(5) + max_step);
+                // // 变化率限幅保护 (防止刚度跳变过快)
+                // double max_step = 20.0;
+                // double K_opt = std::clamp(K_opt_raw, Kx_(5) - max_step, Kx_(5) + max_step);
 
                 // 更新刚度与阻尼
                 Kx_vec_[5] = K_opt;
@@ -800,7 +837,7 @@ namespace controllers
 
             // 叠加指令并下发
             // tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_ + tau_fric_ff_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
@@ -878,7 +915,7 @@ namespace controllers
         robot_math::MovingFilter<double> f_filter_, t_filter_;
         bool is_contact_established_{false};
         std::deque<double> force_err_window_;
-        int integral_window_size_ = {50};
+        int integral_window_size_ = {500};
         Eigen::VectorXd z_;
         Eigen::VectorXd Y_;
         Eigen::VectorXd tau_d_est_;
