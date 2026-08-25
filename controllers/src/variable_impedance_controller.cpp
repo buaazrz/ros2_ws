@@ -186,10 +186,10 @@ namespace controllers
             sensor_cog_vec_ = {0.00, 0.00, 0.0};
             sensor_offset_vec_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
-            T_sensor_ << 1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, -1, 0,
-                0, 0, 0, 1;
+            // T_sensor_ << 1, 0, 0, 0,
+            //     0, 1, 0, 0,
+            //     0, 0, 1, 0,
+            //     0, 0, 0, 1;
 
             x_opt_.setlength(1);
             bndl_.setlength(1);
@@ -221,18 +221,94 @@ namespace controllers
                 return rclcpp_action::CancelResponse::ACCEPT;
             };
 
-            auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
+            auto handle_accepted =
+                [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
-                auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
-                const auto &goal_data = goal_handle->get_goal()->target_position.data;
-                trajectory->set_traj(goal_data);
+                auto trajectory =
+                    std::make_shared<robot_math::CartesianTrajectory>();
+
+                const std::vector<double>& T_vec =
+                    state_->get<double>("T");
+
+                if (T_vec.size() != 16)
+                {
+                    RCLCPP_ERROR(
+                        node_->get_logger(),
+                        "Invalid T state size: %zu",
+                        T_vec.size());
+                    return;
+                }
+
+                const Eigen::Matrix4d T_current =
+                    Eigen::Map<const Eigen::Matrix4d>(
+                        T_vec.data());
+
+                const std::vector<double> pose_current =
+                    robot_math::tform_to_pose(T_current);
+
+                const auto& goal_data_raw =
+                    goal_handle->get_goal()->target_position.data;
+
+                std::vector<double> goal_data(
+                    goal_data_raw.begin(),
+                    goal_data_raw.end());
+
+                if (goal_data.empty() ||
+                    goal_data.size() % 7 != 0)
+                {
+                    RCLCPP_ERROR(
+                        node_->get_logger(),
+                        "Invalid trajectory data size: %zu; "
+                        "expected a non-empty multiple of 7",
+                        goal_data.size());
+                    return;
+                }
+
+                std::vector<double> full_traj_data;
+                full_traj_data.reserve(
+                    7 + goal_data.size());
+
+                // t=0 使用接收目标瞬间的实际 TCP
+                full_traj_data.push_back(0.0);
+
+                for (int i = 0; i < 6; ++i)
+                {
+                    full_traj_data.push_back(
+                        pose_current[i]);
+                }
+
+                // Z 平移测试期间，所有点保持当前实际姿态
+                for (std::size_t i = 0;
+                    i < goal_data.size();
+                    i += 7)
+                {
+                    goal_data[i + 4] = pose_current[3];
+                    goal_data[i + 5] = pose_current[4];
+                    goal_data[i + 6] = pose_current[5];
+                }
+
+                full_traj_data.insert(
+                    full_traj_data.end(),
+                    goal_data.begin(),
+                    goal_data.end());
+
+                trajectory->set_traj(
+                    full_traj_data);
 
                 traj_time_ = 0.0;
-                is_contact_established_ = false; // 接收新目标时重置接触状态
-                force_int_z_ = 0.0;              // 重置积分项
-                force_err_z_prev_ = 0.0;         // 重置微分项历史
+                is_contact_established_ = false;
+                force_int_z_ = 0.0;
+                force_err_z_prev_ = 0.0;
                 force_err_window_.clear();
-                real_time_buffer_.writeFromNonRT({goal_handle, trajectory});
+
+                real_time_buffer_.writeFromNonRT(
+                    {goal_handle, trajectory});
+
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "Trajectory accepted: current TCP inserted "
+                    "as t=0 point, %zu user waypoints",
+                    goal_data.size() / 7);
             };
 
             call_back_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -433,7 +509,7 @@ namespace controllers
             if (is_contact_established_ && std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
             {
                 double F_ext_z = force_(2);
-                double F_err_z = F_des_z_ - (-F_ext_z);
+                double F_err_z = F_des_z_ - (F_ext_z);
                 double current_integral_step = F_err_z * dt;
                 force_err_window_.push_back(current_integral_step);
                 force_int_z_ += current_integral_step;
@@ -490,9 +566,9 @@ namespace controllers
                     }
                     else
                     {
-                        RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
-                                             "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
-                        std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
+                        // RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
+                        //                      "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
+                        // std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
                         Kx_vec_[5] = Kz_min_;
                         Kx_(5) = Kz_min_;
                     }
@@ -545,72 +621,146 @@ namespace controllers
             double max_delta_tau = max_torque_rate * dt;
 
             // ★ Karnopp 模型参数
-            double DV = 0.01;      // 速度死区 (Deviation Velocity)，可根据底噪调整 0.002~0.005
-            double K_assist = 3.0; // 意图放大系数 (通常 1.0 ~ 3.0，决定起步时的"助力"有多快跟上)
+            // double DV = 0.01;      // 速度死区 (Deviation Velocity)，可根据底噪调整 0.002~0.005
+            // double K_assist = 3.0; // 意图放大系数 (通常 1.0 ~ 3.0，决定起步时的"助力"有多快跟上)
+
+            // for (int i = 0; i < dof_; i++)
+            // {
+            //     double v = dq(i);
+            //     double tau_f_i = 0.0;
+
+            //     // =========================================
+            //     // Karnopp 摩擦力模型逻辑分发
+            //     // =========================================
+            //     if (std::abs(v) > DV)
+            //     {
+            //         // -------------------------------------
+            //         // 状态 1: 滑移阶段 (Sliding)
+            //         // 对应公式：|v| >= DV, f = -Fc*sign(v) - Fv*v (此处我们用更高级的Stribeck替换)
+            //         // -------------------------------------
+            //         double sign_v = (v > 0) ? 1.0 : -1.0;
+            //         double term1 = F_c_[i];
+            //         // 注意：滑移时使用的是实测最大摩擦力 F_s_actual_ 作为峰值，保证过渡平滑
+            //         double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
+            //         double term3 = sigma2_[i] * v;
+
+            //         tau_f_i = (term1 + term2) * sign_v + term3;
+            //     }
+            //     else
+            //     {
+            //         // -------------------------------------
+            //         // 状态 2: 黏滞阶段 (Sticking) - Karnopp 的精髓
+            //         // 对应公式：|v| < DV, 摩擦力根据外力变化
+            //         // 前馈策略：提供按比例放大的辅助力矩，上限被最大静摩擦力截断
+            //         // -------------------------------------
+            //         double base_deadband = 0.3;
+            //         double valid_tau_base = 0.0;
+            //         if (tau_base(i) > base_deadband)
+            //         {
+            //             valid_tau_base = tau_base(i);
+            //         }
+            //         else if (tau_base(i) < -base_deadband)
+            //         {
+            //             valid_tau_base = tau_base(i);
+            //         }
+
+            //         double assist_torque = K_assist * valid_tau_base;
+
+            //         // 打个安全折扣，防止过补偿
+            //         double current_Fs_limit = F_s_actual_[i];
+
+            //         // 截断逻辑（等同于图中公式的分段判断）
+            //         if (assist_torque > current_Fs_limit)
+            //         {
+            //             tau_f_i = current_Fs_limit;
+            //         }
+            //         else if (assist_torque < -current_Fs_limit)
+            //         {
+            //             tau_f_i = -current_Fs_limit;
+            //         }
+            //         else
+            //         {
+            //             tau_f_i = assist_torque;
+            //         }
+            //     }
+
+            //     // =========================================
+            //     // 终极硬件保护：力矩变化率限制 (Rate Limiter)
+            //     // 解决 "力矩插值失败" 报错的核心！
+            //     // =========================================
+            //     double delta_tau = tau_f_i - tau_fric_ff_prev_(i);
+            //     if (delta_tau > max_delta_tau)
+            //     {
+            //         tau_f_i = tau_fric_ff_prev_(i) + max_delta_tau;
+            //     }
+            //     else if (delta_tau < -max_delta_tau)
+            //     {
+            //         tau_f_i = tau_fric_ff_prev_(i) - max_delta_tau;
+            //     }
+
+            //     // 更新记忆状态
+            //     tau_fric_ff_prev_(i) = tau_f_i;
+
+            //     // 输出最终前馈
+            //     tau_fric_ff_(i) = tau_f_i * fric_comp_ratio;
+            // }
+
+            // =====================================================================
+            // ★ 基于 MuJoCo 验证的摩擦力补偿策略 (期望速度死区 + 意图力矩判断)
+            // =====================================================================
+            
+            // 1. 计算期望关节速度 qd_des (将末端期望空间速度 vd_, wd_ 映射到关节空间)
+            Eigen::Vector6d V_d_local;
+            V_d_local.head(3) = R_.transpose() * wd_;
+            V_d_local.tail(3) = R_.transpose() * vd_;
+            Eigen::VectorXd qd_des = robot_math::J_sharp(Jb_, M_) * V_d_local;
+
+            // 2. 定义参数
+            const std::vector<double> friction_loss_vec = {1.137, 1.137, 1.137, 1.137, 0.763, 0.440, 0.248};
+            double vel_des_deadzone = 1e-8;     // 期望速度死区
+            double vel_actual_deadzone = 1e-4;  // 实际滤波速度死区
+            double tau_deadzone = 0.05;         // 力矩死区
 
             for (int i = 0; i < dof_; i++)
             {
-                double v = dq(i);
+                double qd_des_i = qd_des(i);
+                double qd_act_i = dq(i);            // 实际速度
+                double tau_intent_i = tau_base(i);  // 已经过 t_filter_ 滤波的意图力矩
+                
                 double tau_f_i = 0.0;
+                double current_friction_loss = (i < friction_loss_vec.size()) ? friction_loss_vec[i] : 0.0;
 
-                // =========================================
-                // Karnopp 摩擦力模型逻辑分发
-                // =========================================
-                if (std::abs(v) > DV)
+                // 情况 A：期望轨迹处于运动状态
+                if (std::abs(qd_des_i) > vel_des_deadzone)
                 {
-                    // -------------------------------------
-                    // 状态 1: 滑移阶段 (Sliding)
-                    // 对应公式：|v| >= DV, f = -Fc*sign(v) - Fv*v (此处我们用更高级的Stribeck替换)
-                    // -------------------------------------
-                    double sign_v = (v > 0) ? 1.0 : -1.0;
-                    double term1 = F_c_[i];
-                    // 注意：滑移时使用的是实测最大摩擦力 F_s_actual_ 作为峰值，保证过渡平滑
-                    double term2 = (F_s_[i] - F_c_[i]) * std::exp(-std::pow(std::abs(v) / v_s_[i], alpha_[i]));
-                    double term3 = sigma2_[i] * v;
-
-                    tau_f_i = (term1 + term2) * sign_v + term3;
+                    // 检查实际速度是否与期望速度显著相反 (受阻或被推)
+                    bool is_opposite = (qd_des_i * qd_act_i < 0.0) && (std::abs(qd_act_i) > vel_actual_deadzone);
+                    
+                    if (is_opposite) {
+                        // 策略二：方向相反，切断补偿，防止对抗
+                        tau_f_i = 0.0;
+                    } else {
+                        // 策略一：正常跟踪，按期望速度方向无脑补偿
+                        double sign_qd_des = (qd_des_i > 0.0) ? 1.0 : -1.0;
+                        tau_f_i = current_friction_loss * sign_qd_des;
+                    }
                 }
+                // 情况 B：期望轨迹已停止 (qd_des_i 接近 0)，但可能存在滞后位置误差
                 else
                 {
-                    // -------------------------------------
-                    // 状态 2: 黏滞阶段 (Sticking) - Karnopp 的精髓
-                    // 对应公式：|v| < DV, 摩擦力根据外力变化
-                    // 前馈策略：提供按比例放大的辅助力矩，上限被最大静摩擦力截断
-                    // -------------------------------------
-                    double base_deadband = 0.3;
-                    double valid_tau_base = 0.0;
-                    if (tau_base(i) > base_deadband)
+                    if (std::abs(tau_intent_i) > tau_deadzone)
                     {
-                        valid_tau_base = tau_base(i);
-                    }
-                    else if (tau_base(i) < -base_deadband)
-                    {
-                        valid_tau_base = tau_base(i);
-                    }
-
-                    double assist_torque = K_assist * valid_tau_base;
-
-                    // 打个安全折扣，防止过补偿
-                    double current_Fs_limit = F_s_actual_[i];
-
-                    // 截断逻辑（等同于图中公式的分段判断）
-                    if (assist_torque > current_Fs_limit)
-                    {
-                        tau_f_i = current_Fs_limit;
-                    }
-                    else if (assist_torque < -current_Fs_limit)
-                    {
-                        tau_f_i = -current_Fs_limit;
+                        double sign_tau = (tau_intent_i > 0.0) ? 1.0 : -1.0;
+                        tau_f_i = current_friction_loss * sign_tau;
                     }
                     else
                     {
-                        tau_f_i = assist_torque;
+                        tau_f_i = 0.0;
                     }
                 }
 
                 // =========================================
                 // 终极硬件保护：力矩变化率限制 (Rate Limiter)
-                // 解决 "力矩插值失败" 报错的核心！
                 // =========================================
                 double delta_tau = tau_f_i - tau_fric_ff_prev_(i);
                 if (delta_tau > max_delta_tau)
@@ -631,7 +781,7 @@ namespace controllers
 
             // 叠加指令并下发
             // tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_ ;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
