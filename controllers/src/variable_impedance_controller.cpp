@@ -84,11 +84,11 @@ namespace controllers
             node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
             node_->get_parameter_or<double>("Q_weight", Q_weight_, 100000.0);
-            node_->get_parameter_or<double>("R_weight", R_weight_, 0.1);
-            node_->get_parameter_or<double>("F_des_z", F_des_z_, -2.0);
+            node_->get_parameter_or<double>("R_weight", R_weight_, 0.001);
+            node_->get_parameter_or<double>("F_des_z", F_des_z_, 2.0);
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
-            node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
-            node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
+            node_->get_parameter_or<double>("Kp_f", Kp_f_, 1.5);
+            node_->get_parameter_or<double>("Ki_f", Ki_f_, 2.0);
             node_->get_parameter_or<double>("Kd_f", Kd_f_, 0.0);
             node_->get_parameter_or<double>("Kz_min", Kz_min_, 100.0);
             node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0);
@@ -506,7 +506,7 @@ namespace controllers
                 }
             }
 
-            if (is_contact_established_ && std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
+            if (is_contact_established_) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
             {
                 double F_ext_z = force_(2);
                 double F_err_z = F_des_z_ - (F_ext_z);
@@ -535,48 +535,67 @@ namespace controllers
                 double F_com_z = Kp_f_ * F_err_z + Ki_f_ * force_int_z_ + Kd_f_ * dF_err_z;
                 force_err_z_prev_ = F_err_z;
 
-                params_.Q_weight = Q_weight_;
-                params_.R_weight = R_weight_;
-                params_.xe = xe_z;
-                params_.dx_B = -B_z * dxe_z;
-                params_.F_target = F_des_z_ + F_com_z;
-                params_.K_min = Kz_min_;
+                double F_target = F_des_z_ + F_com_z;
+                
+                std::pair<double, double> opt_result = closed_form_impedance_z(
+                    xe_z, dxe_z, Bx_(5), F_target, 
+                    Q_weight_, R_weight_, Kz_min_, Kz_max_, F_max_z_);
 
-                try
-                {
-                    x_opt_[0] = Kx_(5);
+                double K_opt_raw = opt_result.first;
+                double B_opt = opt_result.second;
 
-                    c_[0][0] = xe_z;
-                    c_[0][1] = -F_max_z_ + params_.dx_B;
-                    c_[1][0] = xe_z;
-                    c_[1][1] = F_max_z_ + params_.dx_B;
+                // 变化率限幅保护 (防止刚度跳变过快)
+                double max_step = 20.0;
+                double K_opt = std::clamp(K_opt_raw, Kx_(5) - max_step, Kx_(5) + max_step);
 
-                    alglib::minbleicsetlc(alglib_state_, c_, ct_);
-                    alglib::minbleicrestartfrom(alglib_state_, x_opt_);
-                    alglib::minbleicoptimize(alglib_state_, alglib_grad_callback, NULL, &params_);
-                    alglib::minbleicresultsbuf(alglib_state_, x_opt_, rep_);
+                // 更新刚度与阻尼
+                Kx_vec_[5] = K_opt;
+                Kx_(5) = K_opt;
+                Bx_vec_[5] = B_opt; // 建议同时更新 vector，以防其他地方读取
+                Bx_(5) = B_opt;
 
-                    if (int(rep_.terminationtype) > 0)
-                    {
-                        double max_step = 20.0;
-                        x_opt_[0] = std::clamp(x_opt_[0], Kx_(5) - max_step, Kx_(5) + max_step);
-                        Kx_vec_[5] = x_opt_[0];
-                        Kx_(5) = x_opt_[0];
-                        Bx_(5) = 1.42 * sqrt(Kx_(5));
-                    }
-                    else
-                    {
-                        // RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
-                        //                      "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
-                        // std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
-                        Kx_vec_[5] = Kz_min_;
-                        Kx_(5) = Kz_min_;
-                    }
-                }
-                catch (alglib::ap_error alglib_exception)
-                {
-                    RCLCPP_WARN(node_->get_logger(), "ALGLIB exception: %s", alglib_exception.msg.c_str());
-                }
+                // params_.Q_weight = Q_weight_;
+                // params_.R_weight = R_weight_;
+                // params_.xe = xe_z;
+                // params_.dx_B = -B_z * dxe_z;
+                // params_.F_target = F_des_z_ + F_com_z;
+                // params_.K_min = Kz_min_;
+
+                // try
+                // {
+                //     x_opt_[0] = Kx_(5);
+
+                //     c_[0][0] = xe_z;
+                //     c_[0][1] = -F_max_z_ + params_.dx_B;
+                //     c_[1][0] = xe_z;
+                //     c_[1][1] = F_max_z_ + params_.dx_B;
+
+                //     alglib::minbleicsetlc(alglib_state_, c_, ct_);
+                //     alglib::minbleicrestartfrom(alglib_state_, x_opt_);
+                //     alglib::minbleicoptimize(alglib_state_, alglib_grad_callback, NULL, &params_);
+                //     alglib::minbleicresultsbuf(alglib_state_, x_opt_, rep_);
+
+                //     if (int(rep_.terminationtype) > 0)
+                //     {
+                //         double max_step = 20.0;
+                //         x_opt_[0] = std::clamp(x_opt_[0], Kx_(5) - max_step, Kx_(5) + max_step);
+                //         Kx_vec_[5] = x_opt_[0];
+                //         Kx_(5) = x_opt_[0];
+                //         Bx_(5) = 1.42 * sqrt(Kx_(5));
+                //     }
+                //     else
+                //     {
+                //         // RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 500,
+                //         //                      "ALGLIB failed (Code: %d). Fallback to K_min.", int(rep_.terminationtype));
+                //         // std::cerr << "ALGLIB optimization failed with termination type: " << int(rep_.terminationtype) << std::endl;
+                //         Kx_vec_[5] = Kz_min_;
+                //         Kx_(5) = Kz_min_;
+                //     }
+                // }
+                // catch (alglib::ap_error alglib_exception)
+                // {
+                //     RCLCPP_WARN(node_->get_logger(), "ALGLIB exception: %s", alglib_exception.msg.c_str());
+                // }
             }
             else
             {
@@ -873,6 +892,35 @@ namespace controllers
         const std::vector<double> F_s_actual_ = {4.1, 3.0, 2.6, 3.0, 0.9, 1.1, 1.3};
         Eigen::VectorXd tau_fric_ff_;
         Eigen::VectorXd tau_fric_ff_prev_;
+
+        std::pair<double, double> closed_form_impedance_z(
+            double xe, double dx, double B_curr, double F_target,
+            double Q, double R, double K_min, double K_max, double F_max)
+        {
+            if (std::abs(xe) <= 1e-4) {
+                return {K_max, 1.42 * std::sqrt(K_max)};
+            }
+
+            // 修复的阻尼力符号，对齐正确的物理意义
+            double dx_B = -B_curr * dx; 
+
+            double denom = Q * (xe * xe) + R;
+            double numer = Q * xe * (dx_B + F_target) + R * K_min;
+            double K_star = numer / denom;
+
+            double k1 = (dx_B - F_max) / xe;
+            double k2 = (dx_B + F_max) / xe;
+            double force_lb = std::min(k1, k2);
+            double force_ub = std::max(k1, k2);
+
+            double lb = std::max(K_min, force_lb);
+            double ub = std::min(K_max, force_ub);
+
+            double K_opt = (lb > ub) ? K_min : std::max(lb, std::min(K_star, ub));
+            double B_opt = 1.42 * std::sqrt(K_opt);
+
+            return {K_opt, B_opt};
+        }
     };
 } // namespace controllers
 
