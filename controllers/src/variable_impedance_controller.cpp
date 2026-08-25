@@ -347,7 +347,7 @@ namespace controllers
             force_.head(3) = R_tcp_to_sensor * force_.head(3);
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
 
-            std::cerr << "Force: " << force_.transpose() << std::endl;
+            // std::cerr << "Force: " << force_.transpose() << std::endl;
 
             f_filter_.filtering(force_.data(), force_.data());
             RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,

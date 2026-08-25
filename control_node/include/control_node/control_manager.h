@@ -67,6 +67,10 @@ namespace control_node
         bool is_simulation_;
         bool is_sim_real_time_;
         bool is_publish_joint_state_;
+
+        std::string simulation_backend_;
+        bool use_mujoco_hold_{false};
+
         bool running_;
         realtime_tools::RealtimeBox<bool> running_box_;
         realtime_tools::RealtimeBox<std::vector<controller_interface::ControllerInterface::SharedPtr>> secondary_controllers_box_;

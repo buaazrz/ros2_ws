@@ -10,6 +10,7 @@
 #include <string>
 #include <thread>
 #include <cmath>
+#include <limits>
 
 using namespace std::chrono_literals;
 
@@ -195,6 +196,37 @@ namespace hardwares
                 qpos_addrs_.push_back(m->jnt_qposadr[joint_id]);
                 qvel_addrs_.push_back(m->jnt_dofadr[joint_id]);
             }
+
+            // FR3 力矩限制以及 MuJoCo 无控制器期间的安全保持增益。
+            torque_limits_ = {87.0, 87.0, 87.0, 87.0, 12.0, 12.0, 12.0};
+            hold_kp_ = {80.0, 80.0, 80.0, 80.0, 20.0, 20.0, 10.0};
+            hold_kd_ = {12.0, 12.0, 12.0, 12.0, 4.0, 4.0, 2.0};
+
+            node_->get_parameter_or<std::vector<double>>(
+                "mujoco_hold_kp",
+                hold_kp_,
+                hold_kp_);
+
+            node_->get_parameter_or<std::vector<double>>(
+                "mujoco_hold_kd",
+                hold_kd_,
+                hold_kd_);
+
+            if (torque_limits_.size() != static_cast<std::size_t>(dof_) ||
+                hold_kp_.size() != static_cast<std::size_t>(dof_) ||
+                hold_kd_.size() != static_cast<std::size_t>(dof_))
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(),
+                    "MujocoRobot: torque limits and hold gains must have %d entries",
+                    dof_);
+                return CallbackReturn::FAILURE;
+            }
+
+            pre_dq_.assign(dof_, 0.0);
+            last_tau_cmd_.assign(dof_, 0.0);
+            hold_q_.assign(dof_, 0.0);
+
             // 4. 配置并同步初始关键帧
             if (!initial_keyframe.empty())
             {
@@ -231,17 +263,38 @@ namespace hardwares
                 auto& ddq_state = state_.get<double>("acceleration");
                 auto& tau_state = state_.get<double>("torque");
 
+                std::fill(
+                    control_data_->qfrc_applied,
+                    control_data_->qfrc_applied + m->nv,
+                    0.0);
+
                 for (int i = 0; i < dof_; ++i)
                 {
+                    const int dof_adr = qvel_addrs_[i];
+
                     q_state[i] =
                         control_data_->qpos[qpos_addrs_[i]];
 
                     dq_state[i] =
-                        control_data_->qvel[qvel_addrs_[i]];
+                        control_data_->qvel[dof_adr];
 
                     ddq_state[i] = 0.0;
-                    tau_state[i] = 0.0;
+                    pre_dq_[i] = dq_state[i];
+                    hold_q_[i] = q_state[i];
+
+                    // 静止平衡：
+                    // qfrc_applied + qfrc_passive = qfrc_bias
+                    const double tau_hold =
+                        control_data_->qfrc_bias[dof_adr] -
+                        control_data_->qfrc_passive[dof_adr];
+
+                    control_data_->qfrc_applied[dof_adr] = tau_hold;
+                    last_tau_cmd_[i] = tau_hold;
+                    tau_state[i] = tau_hold;
                 }
+
+                // 物理线程尚未启动也可以预先提交，staging 会保留
+                stage_control_data();
 
                 Eigen::Matrix4d T_init;
                 robot_math::forward_kinematics(
@@ -263,11 +316,8 @@ namespace hardwares
                     "MujocoRobot: configured startup keyframe '%s'",
                     initial_keyframe.c_str());
             }
-            
-            // 初始化状态与限幅 (针对 FR3)
-            pre_dq_.assign(dof_, 0.0);
-            last_tau_cmd_.assign(dof_, 0.0);
-            torque_limits_ = {87.0, 87.0, 87.0, 87.0, 12.0, 12.0, 12.0};
+
+            last_mode_ = 0;
 
             // 启动 executor 线程
             sim_executor_ = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
@@ -283,12 +333,34 @@ namespace hardwares
         {
             if (RobotInterface::on_activate(prev) == CallbackReturn::SUCCESS)
             {
-                if (!physics_started_) {
+                /*
+                 * 在启动物理线程以前就提交安全保持力矩。
+                 * 这样第一次 mj_step() 不会经历零力矩自由下坠。
+                 */
+                auto& modes = command_.get<int>("mode");
+                if (!modes.empty())
+                {
+                    modes[0] = 0;
+                }
+
+                capture_hold_reference();
+                stage_hold_command();
+
+                if (!physics_started_)
+                {
                     sim_->start_physics_thread();
                     physics_started_ = true;
                 }
-                std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);
-                std::fill(last_tau_cmd_.begin(), last_tau_cmd_.end(), 0.0);
+
+                const auto& dq_state = state_.get<double>("velocity");
+                if (dq_state.size() == static_cast<std::size_t>(dof_))
+                {
+                    pre_dq_.assign(dq_state.begin(), dq_state.end());
+                }
+                else
+                {
+                    std::fill(pre_dq_.begin(), pre_dq_.end(), 0.0);
+                }
                 previous_sim_time_ = -1.0;
                 RCLCPP_INFO(node_->get_logger(), "MujocoRobot: Activated!");
                 return CallbackReturn::SUCCESS;
@@ -298,12 +370,23 @@ namespace hardwares
 
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State& prev) override
         {
-            RobotInterface::on_deactivate(prev);
-            if(control_data_) {
-                std::fill(control_data_->qfrc_applied, control_data_->qfrc_applied + sim_->model()->nv, 0.0);
-                sim_->apply_control_data(control_data_);
+            /*
+             * MujocoRobot 停用时也不能向仍在运行的物理线程提交零力矩。
+             * 最终 shutdown 会直接停止仿真线程；普通 deactivate 只进入保持。
+             */
+            if (sim_ && control_data_)
+            {
+                auto& modes = command_.get<int>("mode");
+                if (!modes.empty())
+                {
+                    modes[0] = 0;
+                }
+
+                capture_hold_reference();
+                stage_hold_command();
             }
-            return CallbackReturn::SUCCESS;
+
+            return RobotInterface::on_deactivate(prev);
         }
 
         CallbackReturn on_shutdown(const rclcpp_lifecycle::State& prev) override
@@ -325,6 +408,22 @@ namespace hardwares
             auto& tau_state = state_.get<double>("torque");
 
             auto ft_component_it = components_.find(ft_component_name_);
+
+            Eigen::VectorXd tau_actuator(dof_);
+
+            for (int i = 0; i < dof_; ++i)
+            {
+                tau_actuator[i] =
+                    control_state_.qfrc_actuator[qvel_addrs_[i]];
+            }
+
+            // RCLCPP_INFO_STREAM_THROTTLE(
+            //     node_->get_logger(),
+            //     *node_->get_clock(),
+            //     100,
+            //     "qfrc_actuator = ["
+            //         << tau_actuator.transpose()
+            //         << "]");
 
             if (ft_component_it == components_.end())
             {
@@ -417,35 +516,199 @@ namespace hardwares
 
             const auto& int_commands = command_.get<int>();
             auto mode_it = int_commands.find("mode");
-            if (mode_it == int_commands.end() || mode_it->second.empty()) return;
+            int mode = 0;
 
-            const int mode = mode_it->second[0];
-            mjModel* model = sim_->model();
-            std::fill(control_data_->qfrc_applied, control_data_->qfrc_applied + model->nv, 0.0);
+            if (mode_it != int_commands.end() && !mode_it->second.empty())
+            {
+                mode = mode_it->second[0];
+            }
+            else
+            {
+                RCLCPP_WARN_THROTTLE(
+                    node_->get_logger(),
+                    *node_->get_clock(),
+                    2000,
+                    "MujocoRobot: missing mode command; using safe hold");
+            }
 
             if (mode == 3) 
             {
                 const auto& double_commands = command_.get<double>();
                 auto tau_it = double_commands.find("torque");
-                if (tau_it != double_commands.end() && tau_it->second.size() == static_cast<size_t>(dof_)) 
+
+                bool valid_torque_command =
+                    tau_it != double_commands.end() &&
+                    tau_it->second.size() == static_cast<std::size_t>(dof_);
+
+                if (valid_torque_command)
                 {
                     const auto& tau_cmd = tau_it->second;
-                    for (int i = 0; i < dof_; ++i) 
+
+                    valid_torque_command = std::all_of(
+                        tau_cmd.begin(),
+                        tau_cmd.end(),
+                        [](double value)
+                        {
+                            return std::isfinite(value);
+                        });
+                }
+
+                if (valid_torque_command)
+                {
+                    mjModel* model = sim_->model();
+                    std::fill(
+                        control_data_->qfrc_applied,
+                        control_data_->qfrc_applied + model->nv,
+                        0.0);
+
+                    const auto& tau_cmd = tau_it->second;
+
+                    for (int i = 0; i < dof_; ++i)
                     {
-                        double tau = std::isfinite(tau_cmd[i]) ? tau_cmd[i] : 0.0;
-                        // 安全限幅
-                        tau = std::clamp(tau, -torque_limits_[i], torque_limits_[i]);
+                        const double tau = std::clamp(
+                            tau_cmd[i],
+                            -torque_limits_[i],
+                            torque_limits_[i]);
+
                         control_data_->qfrc_applied[qvel_addrs_[i]] = tau;
                         last_tau_cmd_[i] = tau;
                     }
+
+                    last_mode_ = 3;
+                    stage_control_data();
+                    return;
                 }
-            } 
-            sim_->apply_control_data(control_data_);
+
+                RCLCPP_ERROR_THROTTLE(
+                    node_->get_logger(),
+                    *node_->get_clock(),
+                    2000,
+                    "MujocoRobot: invalid torque command; falling back to safe hold");
+            }
+            else if (mode != 0)
+            {
+                RCLCPP_WARN_THROTTLE(
+                    node_->get_logger(),
+                    *node_->get_clock(),
+                    2000,
+                    "MujocoRobot: unsupported mode %d; using safe hold",
+                    mode);
+            }
+
+            // 从控制器模式进入保持模式时，锁定切换瞬间的关节位置。
+            if (last_mode_ != 0)
+            {
+                capture_hold_reference();
+            }
+
+            stage_hold_command();
         }
 
         bool is_stop() override { return false; }
 
+        void stage_control_data()
+        {
+            mjModel* model = sim_->model();
+
+            // 当前硬件只进行力矩控制，不请求直接覆盖物理速度。
+            std::fill(
+                control_data_->qvel,
+                control_data_->qvel + model->nv,
+                std::numeric_limits<mjtNum>::quiet_NaN());
+
+            sim_->apply_control_data(control_data_);
+        }
+
     private:
+        void capture_hold_reference()
+        {
+            const auto& q = state_.get<double>("position");
+
+            if (q.size() != static_cast<std::size_t>(dof_))
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(),
+                    "MujocoRobot: cannot capture hold reference; "
+                    "position state has %zu entries, expected %d",
+                    q.size(),
+                    dof_);
+                return;
+            }
+
+            hold_q_.assign(q.begin(), q.end());
+        }
+
+        void stage_hold_command()
+        {
+            if (!sim_ || !control_data_)
+            {
+                return;
+            }
+
+            const auto& q = state_.get<double>("position");
+            const auto& dq = state_.get<double>("velocity");
+
+            if (q.size() != static_cast<std::size_t>(dof_) ||
+                dq.size() != static_cast<std::size_t>(dof_) ||
+                hold_q_.size() != static_cast<std::size_t>(dof_))
+            {
+                RCLCPP_ERROR_THROTTLE(
+                    node_->get_logger(),
+                    *node_->get_clock(),
+                    2000,
+                    "MujocoRobot: invalid state size for safe hold");
+                return;
+            }
+
+            mjModel* model = sim_->model();
+
+            /*
+             * 用最新物理状态更新专用 control_data_，仅用于计算
+             * qfrc_bias 和 qfrc_passive。apply_control_data() 不会提交 qpos；
+             * stage_control_data() 还会把 qvel 改成 NaN，避免速度硬覆盖。
+             */
+            for (int i = 0; i < dof_; ++i)
+            {
+                control_data_->qpos[qpos_addrs_[i]] = q[i];
+                control_data_->qvel[qvel_addrs_[i]] =
+                    std::isfinite(dq[i]) ? dq[i] : 0.0;
+            }
+
+            mj_forward(model, control_data_);
+
+            std::fill(
+                control_data_->qfrc_applied,
+                control_data_->qfrc_applied + model->nv,
+                0.0);
+
+            for (int i = 0; i < dof_; ++i)
+            {
+                const int dof_adr = qvel_addrs_[i];
+                const double velocity =
+                    std::isfinite(dq[i]) ? dq[i] : 0.0;
+
+                // 静态平衡 + 小幅关节位置/速度反馈。
+                const double tau_gravity =
+                    control_data_->qfrc_bias[dof_adr] -
+                    control_data_->qfrc_passive[dof_adr];
+
+                const double tau_feedback =
+                    hold_kp_[i] * (hold_q_[i] - q[i]) -
+                    hold_kd_[i] * velocity;
+
+                const double tau_hold = std::clamp(
+                    tau_gravity + tau_feedback,
+                    -torque_limits_[i],
+                    torque_limits_[i]);
+
+                control_data_->qfrc_applied[dof_adr] = tau_hold;
+                last_tau_cmd_[i] = tau_hold;
+            }
+
+            last_mode_ = 0;
+            stage_control_data();
+        }
+
         void cleanup_simulation()
         {
             if (sim_executor_) sim_executor_->cancel();
@@ -740,6 +1003,10 @@ namespace hardwares
         double previous_sim_time_{-1.0};
         std::vector<double> last_tau_cmd_;
         std::vector<double> torque_limits_;
+        std::vector<double> hold_q_;
+        std::vector<double> hold_kp_;
+        std::vector<double> hold_kd_;
+        int last_mode_{0};
 
         std::string ft_component_name_{"ft_sensor"};
 

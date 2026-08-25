@@ -3,6 +3,12 @@
 #include <boost/numeric/odeint.hpp>
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
+
+#include <algorithm>
+#include <sstream>
+#include <stdexcept>
+#include <thread>
+
 using namespace std::chrono_literals;
 using namespace boost::numeric::odeint;
 namespace control_node
@@ -35,6 +41,17 @@ namespace control_node
         }
         update_rate_ = this->get_parameter_or<int>("update_rate", 500);
         is_simulation_ = this->get_parameter_or<bool>("simulation", true);
+        simulation_backend_ =
+            this->get_parameter_or<std::string>(
+                "simulation_backend", "");
+        use_mujoco_hold_ =
+            is_simulation_ &&
+            simulation_backend_ == "mujoco";
+        RCLCPP_INFO(
+            get_logger(),
+            "Simulation backend: '%s', MuJoCo hold: %s",
+            simulation_backend_.c_str(),
+            use_mujoco_hold_ ? "enabled" : "disabled");
         is_sim_real_time_ = this->get_parameter_or<bool>("sim_real_time", true);
         is_publish_joint_state_ = this->get_parameter_or<bool>("publish_joint_state", true);
         if (is_publish_joint_state_ || is_simulation_)
@@ -678,22 +695,32 @@ namespace control_node
     {
         using SteadyClock = std::chrono::steady_clock;
 
+        const auto nominal_period =
+            std::chrono::nanoseconds(
+                1'000'000'000LL / update_rate_);
+
         running_ = false;
         running_box_.set(false);
         active_controller_.reset();
 
         /*
-        * 1. 等待 Robot 进入 INACTIVE 状态。
-        *
-        * 注意：必须在循环中重新读取状态。
-        * 原代码只在循环外读取一次，状态改变后这里无法感知。
-        */
+         * 真机沿用原有生命周期：只有 INACTIVE 才能进入后续激活流程。
+         * MuJoCo 在控制器切换期间保持 Robot ACTIVE，避免物理线程失去力矩。
+         */
         while (keep_running_)
         {
             const auto robot_state = robot_->get_node_state();
 
-            if (robot_state.id() ==
-                lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+            const bool robot_is_inactive =
+                robot_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+
+            const bool active_mujoco_robot =
+                use_mujoco_hold_ &&
+                robot_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+
+            if (robot_is_inactive || active_mujoco_robot)
             {
                 break;
             }
@@ -709,7 +736,7 @@ namespace control_node
                 get_logger(),
                 *get_clock(),
                 1000,
-                "Robot is not configured. Current lifecycle state: %s",
+                "Waiting for robot lifecycle state. Current state: %s",
                 robot_state.label().c_str());
 
             std::this_thread::sleep_for(100ms);
@@ -720,28 +747,93 @@ namespace control_node
             return;
         }
 
-        /*
-        * 2. 激活 Robot。
-        *
-        * 对 MujocoRobot 来说，这里将调用：
-        * MujocoRobot::on_activate()
-        *
-        * MuJoCo 物理线程应当在该生命周期回调中启动。
-        */
-        const auto activated_state = robot_->get_node()->activate();
+        const auto robot_state = robot_->get_node_state();
 
-        if (activated_state.id() !=
-            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        if (robot_state.id() ==
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        {
+            const auto activated_state =
+                robot_->get_node()->activate();
+
+            if (activated_state.id() !=
+                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+                throw std::runtime_error(
+                    "Failed to activate robot. Lifecycle state is: " +
+                    activated_state.label());
+            }
+
+            RCLCPP_INFO(
+                get_logger(),
+                "Robot '%s' activated",
+                robot_->get_node()->get_name());
+        }
+        else if (use_mujoco_hold_ &&
+                 robot_state.id() ==
+                     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
+            RCLCPP_INFO(
+                get_logger(),
+                "MuJoCo robot '%s' remains active during controller switch",
+                robot_->get_node()->get_name());
+        }
+        else
         {
             throw std::runtime_error(
-                "Failed to activate robot. Lifecycle state is: " +
-                activated_state.label());
+                "Real robot must be INACTIVE before activation");
         }
 
-        RCLCPP_INFO(
-            get_logger(),
-            "Robot '%s' activated",
-            robot_->get_node()->get_name());
+        /*
+         * 仅供 MuJoCo 使用的硬件保持周期。
+         * mode=0 必须在 MujocoRobot::write() 中实现为重力补偿 + 位置保持，
+         * 不能解释为零力矩。
+         */
+        auto run_mujoco_hold_cycle =
+            [this](const rclcpp::Duration &period)
+            {
+                if (!use_mujoco_hold_)
+                {
+                    return;
+                }
+
+                if (robot_->get_node_state().id() !=
+                    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                {
+                    return;
+                }
+
+                std::shared_ptr<
+                    controller_interface::ControllerInterface>
+                    controller;
+
+                active_controller_box_.get(controller);
+
+                // 已经存在活动控制器时，不覆盖控制器命令。
+                if (controller)
+                {
+                    return;
+                }
+
+                const rclcpp::Time stamp = this->now();
+
+                // 先读取最新状态，MujocoRobot 再以该状态更新保持力矩。
+                read(stamp, period);
+
+                auto &mode =
+                    robot_->get_command_interface().get<int>("mode");
+
+                if (mode.empty())
+                {
+                    RCLCPP_ERROR(
+                        get_logger(),
+                        "Cannot enter MuJoCo hold mode: "
+                        "command interface 'mode' is empty");
+                    return;
+                }
+
+                mode[0] = 0;
+                write(stamp, period);
+            };
 
         /*
         * 3. 打印可用控制器。
@@ -787,6 +879,20 @@ namespace control_node
             "Secondary controllers: %s",
             secondary_controller_names.str().c_str());
 
+        if (use_mujoco_hold_)
+        {
+            // 物理线程启动后、默认控制器激活前立即提交一次保持力矩。
+            run_mujoco_hold_cycle(
+                rclcpp::Duration(nominal_period));
+        }
+        else
+        {
+            // 真机完整保留原来的启动行为。
+            read(
+                this->now(),
+                rclcpp::Duration::from_seconds(0.0));
+        }
+
         /*
         * 5. 如果配置了默认控制器，立即激活。
         *
@@ -804,8 +910,16 @@ namespace control_node
 
             if (!activate_controller(controller_name))
             {
-                // 激活失败时不要让 MuJoCo 继续无控制运行。
-                robot_->get_node()->deactivate();
+                if (use_mujoco_hold_)
+                {
+                    run_mujoco_hold_cycle(
+                        rclcpp::Duration(nominal_period));
+                }
+                else
+                {
+                    // 真机保留原有失败清理行为。
+                    robot_->get_node()->deactivate();
+                }
 
                 throw std::runtime_error(
                     "Failed to activate default controller: " +
@@ -816,16 +930,13 @@ namespace control_node
             default_controller_.clear();
         }
 
-        /*
-        * 6. 等待一个主控制器被激活。
-        *
-        * 等待期间低频读取机器人状态，避免界面和状态完全不更新。
-        */
         RCLCPP_INFO(
             get_logger(),
             "Waiting for an active controller...");
 
-        auto previous_read_time = SteadyClock::now();
+        auto next_wait_time = SteadyClock::now();
+        auto previous_wait_time =
+            next_wait_time - nominal_period;
 
         while (keep_running_)
         {
@@ -841,18 +952,46 @@ namespace control_node
                 break;
             }
 
-            std::this_thread::sleep_for(100ms);
+            if (use_mujoco_hold_)
+            {
+                const auto current_wait_time = SteadyClock::now();
+                const auto elapsed =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        current_wait_time - previous_wait_time);
 
-            const auto current_read_time = SteadyClock::now();
-            const auto elapsed =
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    current_read_time - previous_read_time);
+                previous_wait_time = current_wait_time;
 
-            previous_read_time = current_read_time;
+                // 没有活动控制器时，以控制频率持续刷新安全保持力矩。
+                run_mujoco_hold_cycle(
+                    rclcpp::Duration(elapsed));
 
-            read(
-                this->now(),
-                rclcpp::Duration(elapsed));
+                next_wait_time += nominal_period;
+
+                const auto work_finished_time = SteadyClock::now();
+                if (work_finished_time >
+                    next_wait_time + nominal_period)
+                {
+                    next_wait_time = work_finished_time;
+                }
+
+                std::this_thread::sleep_until(next_wait_time);
+            }
+            else
+            {
+                // 真机沿用原来的先等待、再读取状态的行为。
+                std::this_thread::sleep_for(100ms);
+
+                const auto current_read_time = SteadyClock::now();
+                const auto elapsed =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        current_read_time - previous_wait_time);
+
+                previous_wait_time = current_read_time;
+
+                read(
+                    this->now(),
+                    rclcpp::Duration(elapsed));
+            }
         }
 
         /*
@@ -864,9 +1003,9 @@ namespace control_node
             running_box_.set(false);
             running_ = false;
 
-            const auto robot_state = robot_->get_node_state();
+            const auto exit_robot_state = robot_->get_node_state();
 
-            if (robot_state.id() ==
+            if (exit_robot_state.id() ==
                 lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
             {
                 robot_->get_node()->deactivate();
@@ -877,7 +1016,10 @@ namespace control_node
 
         if (!active_controller_)
         {
-            robot_->get_node()->deactivate();
+            if (!use_mujoco_hold_)
+            {
+                robot_->get_node()->deactivate();
+            }
 
             throw std::runtime_error(
                 "Control loop cannot start without an active controller");
@@ -897,30 +1039,79 @@ namespace control_node
 
     void ControlManager::end_loop()
     {
-        // active_controller_box_.set([=](auto &value)
-        //                            {
-        //         if (value)
-        //         {
-        //             auto state = value->get_node_state();
-        //             if(state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        //                 value->get_node()->deactivate();
+        running_ = false;
+        running_box_.set(false);
 
-        //             value = nullptr;
-        //         } });
-        std::shared_ptr<controller_interface::ControllerInterface> value;
-        active_controller_box_.get(value);
-        if (value)
+        std::shared_ptr<controller_interface::ControllerInterface> controller;
+        active_controller_box_.get(controller);
+
+        // 旧控制器停止后，MuJoCo 仍保留最后一拍力矩，直到下面提交保持力矩。
+        if (controller)
         {
-            auto state = value->get_node_state();
-            if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                value->get_node()->deactivate();
+            const auto controller_state = controller->get_node_state();
 
-            value = nullptr;
+            if (controller_state.id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+                controller->get_node()->deactivate();
+            }
         }
-        active_controller_box_.set(value);
-        auto state = robot_->get_node_state();
-        if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+
+        if (use_mujoco_hold_)
+        {
+            /*
+             * 先提交保持力矩，再清空 active_controller_box_。
+             * activate_controller() 只有看到 box 为空后才会激活新控制器，
+             * 因而切换顺序是：旧控制器 -> 保持模式 -> 新控制器。
+             */
+            if (robot_->get_node_state().id() ==
+                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+                const auto nominal_period =
+                    std::chrono::nanoseconds(
+                        1'000'000'000LL / update_rate_);
+
+                const rclcpp::Time stamp = this->now();
+                const rclcpp::Duration period(nominal_period);
+
+                read(stamp, period);
+
+                auto &mode =
+                    robot_->get_command_interface().get<int>("mode");
+
+                if (!mode.empty())
+                {
+                    mode[0] = 0;
+                    write(stamp, period);
+                }
+                else
+                {
+                    RCLCPP_ERROR(
+                        get_logger(),
+                        "Cannot enter MuJoCo hold mode: "
+                        "command interface 'mode' is empty");
+                }
+            }
+
+            controller.reset();
+            active_controller_box_.set(controller);
+            active_controller_.reset();
+
+            // MuJoCo Robot 保持 ACTIVE，物理线程和保持力矩持续运行。
+            return;
+        }
+
+        // 真机完整保留原来的控制器和 Robot 生命周期行为。
+        controller.reset();
+        active_controller_box_.set(controller);
+        active_controller_.reset();
+
+        const auto robot_state = robot_->get_node_state();
+        if (robot_state.id() ==
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
             robot_->get_node()->deactivate();
+        }
     }
 
 }

@@ -34,7 +34,7 @@ namespace controllers
         ~CartesianTrajImpPDController()
         {
             if (data_logger_)
-                data_logger_->save("/home/luo/experiment_logs/cartesian_traj_imp_pd_controller/", "cartesian_traj_imp_pd_controller");
+                data_logger_->save("/home/buaazrz/experiment_logs/cartesian_impedance_pd_controller/", "cartesian_traj_imp_pd_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -484,19 +484,19 @@ namespace controllers
             //     << "\nR =\n" << R_
             //     << "\nR_state =\n" << R_state_
             //     << "\nxe = [" << xe_.transpose() << "]");
-            RCLCPP_INFO_STREAM_THROTTLE(
-            node_->get_logger(),
-            *node_->get_clock(),
-            100,
-            "\ntraj_time = " << traj_time_
-            << "\nperiod = " << period.seconds()
-            << "\npd = [" << pd_.transpose() << "]"
-            << "\np = [" << p_.transpose() << "]"
-            << "\nvd = [" << vd_.transpose() << "]"
-            << "\nad = [" << dVd.tail<3>().transpose() << "]"
-            << "\ndq = [" << dq.transpose() << "]"
-            << "\nforce = [" << force_.transpose() << "]"
-            << "\ntau_task = [" << tau_task_.transpose() << "]");
+            // RCLCPP_INFO_STREAM_THROTTLE(
+            // node_->get_logger(),
+            // *node_->get_clock(),
+            // 100,
+            // "\ntraj_time = " << traj_time_
+            // << "\nperiod = " << period.seconds()
+            // << "\npd = [" << pd_.transpose() << "]"
+            // << "\np = [" << p_.transpose() << "]"
+            // << "\nvd = [" << vd_.transpose() << "]"
+            // << "\nad = [" << dVd.tail<3>().transpose() << "]"
+            // << "\ndq = [" << dq.transpose() << "]"
+            // << "\nforce = [" << force_.transpose() << "]"
+            // << "\ntau_task = [" << tau_task_.transpose() << "]");
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
