@@ -59,7 +59,7 @@ namespace hardwares
                     auto &cmd_pose = command_.get<double>("pose");
                     double pose_cmd[6];
                     std::copy(cmd_pose.begin(), cmd_pose.begin() + 6, pose_cmd);
-                    servoL(pose_cmd, dt, 0.05, 500.0, 1.0, nullptr, robot_ip_.c_str());
+                    servoL_ex(pose_cmd, dt, 0.05, 500.0, 1.0, false, nullptr, robot_ip_.c_str());
                     break;
                 }
                 case 1: 
@@ -87,7 +87,7 @@ namespace hardwares
                     {
                         torque_cmd[i] = cmd_tau[i];
                     }
-                    sendTorque_rt(torque_cmd, 0.002, robot_ip_.c_str());
+                    sendTorque_rt(torque_cmd, 0.001, robot_ip_.c_str());
                     break;   
                 }    
                 case 4:
@@ -104,8 +104,12 @@ namespace hardwares
             } 
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            // std::cerr << "read_duration: " << duration_us << " us" << std::endl;
             // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
-            //                       "Diana write() execution time: %ld us", duration_us);    
+            //                       "Diana write() execution time: %ld us", duration_us);
+            if (duration_us > 200) { // write 通常应该很快
+                RCLCPP_WARN(node_->get_logger(), "Diana write() took too long: %ld us", duration_us);
+            } 
         }
 
         bool is_stop() override { return false; }
@@ -148,10 +152,16 @@ namespace hardwares
             }
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            // std::cerr << "read_duration: " << duration_us << " us" << std::endl;
             // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
             //                       "torque: %f", torque.data());
             // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
             //                       "o_torque: %f", origin_torque.data());
+            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000, 
+            //                       "Diana read() execution time: %ld us", duration_us);
+            if (duration_us > 200) {
+                RCLCPP_WARN(node_->get_logger(), "Diana read() took too long: %ld us", duration_us);
+            }
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State& prev) override

@@ -58,13 +58,12 @@ namespace controllers
             dof_ = robot_->dof;
 
             // ===== 核心测试参数配置 =====
-            node_->get_parameter_or<int>("test_joint_idx", test_joint_idx_, 6);       // 默认测试1关节(索引0)
+            node_->get_parameter_or<int>("test_joint_idx", test_joint_idx_, 0);       // 默认测试1关节(索引0)
             node_->get_parameter_or<double>("ramp_rate", ramp_rate_, 0.5);            // 斜坡上升速率 0.5 Nm/s
             node_->get_parameter_or<double>("cooldown_rate", cooldown_rate_, 3.0);    // 刹车时的下降速率 3.0 Nm/s
             node_->get_parameter_or<double>("max_torque", max_torque_, 15.0);          // 最大安全力矩 Nm
-            // node_->get_parameter_or<double>("vel_thresh", vel_thresh_, 0.001);         // 判定的速度阈值 rad/s
-            node_->get_parameter_or<double>("disp_thresh", disp_thresh_, 5e-4);       // 判定的位移阈值 rad
-            node_->get_parameter_or<int>("iterations", total_iterations_, 5);         // 循环测试次数，默认 5 次
+            node_->get_parameter_or<double>("disp_thresh", disp_thresh_, 1e-4);       // 判定的位移阈值 rad
+            node_->get_parameter_or<int>("iterations", total_iterations_, 10);         // 循环测试次数，默认 5 次
 
             RCLCPP_INFO(node_->get_logger(), "配置摩擦力测试控制器: 测试关节 [%d], 循环次数 [%d]", test_joint_idx_, total_iterations_);
             return CallbackReturn::SUCCESS;

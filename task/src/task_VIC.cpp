@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         rclcpp::shutdown(); return 1;
     }
 
-    std::vector<double> pose_goal = {0.536320, -0.163060, 0.350, 0.0, 0.0, -0.0}; 
+    std::vector<double> pose_goal = {0.5, -0.18, 0.500, 0.0, 0.0, -0.0}; 
     if (!task_utils::execute_motion(node, "CartesianMotionController/goal", pose_goal)) {
         rclcpp::shutdown(); return 1;
     }
@@ -37,15 +37,15 @@ int main(int argc, char **argv)
         rclcpp::shutdown(); return 1;
     }
 
-    std::this_thread::sleep_for(5s);
+    std::this_thread::sleep_for(20s);
      
     std::vector<double> traj_goal = {
-        0,  0.536320, -0.163060, 0.350, 0.0, 0.0, -0.0,
-        5, 0.536320, -0.163060, 0.310, 0.0, 0.0, -0.0,
-        15, 0.536320, -0.163060, 0.310, 0.0, 0.0, -0.0, 
-        25, 0.536320, -0.050000, 0.310, 0.0, 0.0, -0.0,  
-        35, 0.536320, -0.163060, 0.310, 0.0, 0.0, -0.0,  
-        40,  0.536320, -0.163060, 0.350, 0.0, 0.0, -0.0,
+        0, 0.5, -0.18, 0.500, 0.0, 0.0, -0.0,
+        5, 0.5, -0.18, 0.460, 0.0, 0.0, -0.0,
+        15, 0.5, -0.18, 0.460, 0.0, 0.0, -0.0, 
+        25, 0.5, -0.05, 0.460, 0.0, 0.0, -0.0,  
+        35, 0.5, -0.18, 0.460, 0.0, 0.0, -0.0,  
+        40,  0.5, -0.18, 0.500, 0.0, 0.0, -0.0,
     };
  
     

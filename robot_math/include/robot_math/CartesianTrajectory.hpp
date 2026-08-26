@@ -49,8 +49,8 @@ namespace robot_math
             if(idx == num_of_point_ - 1)
             {
                 Td.block(0, 0, 3, 3) = orientation_waypoint_[idx].toRotationMatrix();
-                V.head(3) = Eigen::Vector3d(0, 0, 0);
-                dV.head(3) = Eigen::Vector3d(0, 0, 0);
+                // V.head(3) = Eigen::Vector3d(0, 0, 0);
+                // dV.head(3) = Eigen::Vector3d(0, 0, 0);
             }
             else
             {
@@ -64,18 +64,18 @@ namespace robot_math
                 double alpha = (t - t1) / dt;
                 Eigen::Quaterniond q = q1.slerp(alpha, q2);
                 Td.block(0, 0, 3, 3) = q.toRotationMatrix();
-                V.head(3) = Eigen::Vector3d(0, 0, 0);
-                dV.head(3) = Eigen::Vector3d(0, 0, 0);
+                // V.head(3) = Eigen::Vector3d(0, 0, 0);
+                // dV.head(3) = Eigen::Vector3d(0, 0, 0);
             }
-            // Eigen::Matrix3d R = Td.block(0, 0, 3, 3);
-            // Eigen::Vector3d r(p[3], p[4], p[5]);
-            // Eigen::Vector3d dr(v[3], v[4], v[5]);
-            // Eigen::Vector3d ddr(a[3], a[4], a[5]);
-            // Eigen::Matrix3d Ar = A_r(r);
-            // Eigen::Vector3d wb = Ar * dr;
-            // Eigen::Matrix3d dR = R * so_w(wb);
-            // V.head(3) = R * Ar * dr;
-            // dV.head(3) = dR * wb + R * dA_r(r, dr) * dr + R * Ar * ddr;
+            Eigen::Matrix3d R = Td.block(0, 0, 3, 3);
+            Eigen::Vector3d r(p[3], p[4], p[5]);
+            Eigen::Vector3d dr(v[3], v[4], v[5]);
+            Eigen::Vector3d ddr(a[3], a[4], a[5]);
+            Eigen::Matrix3d Ar = A_r(r);
+            Eigen::Vector3d wb = Ar * dr;
+            Eigen::Matrix3d dR = R * so_w(wb);
+            V.head(3) = R * Ar * dr;
+            dV.head(3) = dR * wb + R * dA_r(r, dr) * dr + R * Ar * ddr;
         }
         void set_traj(const std::vector<double> &traj)
         {
