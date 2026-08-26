@@ -7,7 +7,8 @@
 #include "realtime_tools/realtime_buffer.hpp"
 #include "robot_math/MovingFilter.h"
 #include "robot_math/robot_math.hpp"
-#include "robot_math/CartesianTrajectory.hpp"
+// #include "robot_math/CartesianTrajectory.hpp"
+#include "robot_math/PiecewiseCartesianTrajectory.hpp"
 #include "ros2_utility/data_logger.hpp"
 #include "ros2_utility/file_utils.hpp"
 #include "math.h"
@@ -32,7 +33,7 @@ namespace controllers
     public:
         using ACTION = robot_control_msgs::action::RobotMotion;
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
-        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
+        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::PiecewiseCartesianTrajectory>>;
 
         VariableImpedanceController() : f_filter_(6, 15) , t_filter_(7, 15) {}
         ~VariableImpedanceController()
@@ -53,8 +54,8 @@ namespace controllers
             node_->get_parameter_or<double>("R_weight", R_weight_, 0.1);
             node_->get_parameter_or<double>("F_des_z", F_des_z_, -2.0);
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
-            node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
-            node_->get_parameter_or<double>("Ki_f", Ki_f_, 0.0);
+            node_->get_parameter_or<double>("Kp_f", Kp_f_, 1.5);
+            node_->get_parameter_or<double>("Ki_f", Ki_f_, 2.0);
             node_->get_parameter_or<double>("Kd_f", Kd_f_, 0.0);
             node_->get_parameter_or<double>("Kz_min", Kz_min_, 100.0);
             node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0);
@@ -193,7 +194,7 @@ namespace controllers
 
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
-                auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
+                auto trajectory = std::make_shared<robot_math::PiecewiseCartesianTrajectory>();
                 const auto &goal_data = goal_handle->get_goal()->target_position.data;
                 trajectory->set_traj(goal_data);
 
@@ -318,9 +319,9 @@ namespace controllers
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
 
             f_filter_.filtering(force_.data(), force_.data());
-            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
-            //                      "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f]",
-            //                      force_[0], force_[1], force_[2], force_[3], force_[4], force_[5]);
+            RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
+                                 "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f]",
+                                 force_[0], force_[1], force_[2], force_[3], force_[4], force_[5]);
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -516,7 +517,7 @@ namespace controllers
                 tau_fric_ff_(i) = target_tau_f;
             }
             
-            tau_cmd = tau_task_ + tau_null_ + tau_fric_ff_; 
+            tau_cmd = tau_task_ + tau_null_ + tau_fric_ff_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
