@@ -319,9 +319,9 @@ namespace controllers
             force_.tail(3) = R_tcp_to_sensor * force_.tail(3);
 
             f_filter_.filtering(force_.data(), force_.data());
-            RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
-                                 "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f]",
-                                 force_[0], force_[1], force_[2], force_[3], force_[4], force_[5]);
+            // RCLCPP_INFO_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
+            //                      "Filtered Force/Torque: [Fx: %.3f, Fy: %.3f, Fz: %.3f, Mx: %.3f, My: %.3f, Mz: %.3f]",
+            //                      force_[0], force_[1], force_[2], force_[3], force_[4], force_[5]);
 
             auto handle_pair = *real_time_buffer_.readFromRT();
             auto goal_handle = handle_pair.first;
@@ -517,7 +517,7 @@ namespace controllers
                 tau_fric_ff_(i) = target_tau_f;
             }
             
-            tau_cmd = tau_task_ + tau_null_ + tau_fric_ff_;
+            tau_cmd = tau_task_ + tau_null_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 
