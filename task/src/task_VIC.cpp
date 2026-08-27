@@ -37,8 +37,8 @@ int main(int argc, char **argv)
         rclcpp::shutdown(); return 1;
     }
 
-    std::this_thread::sleep_for(20s);
-     
+    // 控制器激活服务返回后 action server 已创建；VIC 接收目标时还会用当前 FK
+    // 自动覆盖 t=0 位姿，因此这里不需要固定等待 20 s。
     std::vector<double> traj_goal = {
         0, 0.5, -0.18, 0.500, 0.0, 0.0, -0.0,
         5, 0.5, -0.18, 0.460, 0.0, 0.0, -0.0,

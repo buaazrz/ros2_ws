@@ -31,9 +31,9 @@ namespace controllers
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
         using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::PiecewiseCartesianTrajectory>>;
 
-        // [修改1] 增加 50 点关节速度滤波器；15 点力/意图力矩滤波保持原控制器设置。
+        // 50 点关节速度滤波只用于摩擦补偿的反向保护；力传感器保留 15 点滤波。
         VariableImpedanceController()
-            : f_filter_(6, 15), t_filter_(7, 15), dq_filter_(7, 50)
+            : f_filter_(6, 15), dq_filter_(7, 50)
         {
         }
         ~VariableImpedanceController()
@@ -76,34 +76,49 @@ namespace controllers
             node_->get_parameter_or<double>("Kz_min", Kz_min_, 100.0);
             node_->get_parameter_or<double>("Kz_max", Kz_max_, 2500.0);
 
-            // [修改4] 真机摩擦补偿参数。默认关闭且比例为 0，必须在 YAML 中显式开启。
+            // 真机摩擦补偿：恢复原 Stribeck 模型，但模型速度和方向均使用期望关节速度。
             node_->get_parameter_or<bool>("friction_comp_enabled", friction_comp_enabled_, false);
             node_->get_parameter_or<double>("friction_comp_ratio", friction_comp_ratio_, 0.0);
-            node_->get_parameter_or<double>("hold_friction_ratio", hold_friction_ratio_, 0.0);
             node_->get_parameter_or<double>("friction_start_delay", friction_start_delay_, 1.0);
             node_->get_parameter_or<double>("friction_fade_time", friction_fade_time_, 1.0);
             node_->get_parameter_or<double>("friction_torque_rate", friction_torque_rate_, 40.0);
-            node_->get_parameter_or<double>("vel_des_deadzone", vel_des_deadzone_, 1e-5);
-            node_->get_parameter_or<double>("vel_actual_deadzone", vel_actual_deadzone_, 1e-4);
-            node_->get_parameter_or<double>("tau_intent_deadzone", tau_intent_deadzone_, 0.05);
+            node_->get_parameter_or<double>("vel_des_deadzone", vel_des_deadzone_, 5e-4);
+            node_->get_parameter_or<double>("vel_actual_deadzone", vel_actual_deadzone_, 1e-3);
+            node_->get_parameter_or<double>("friction_boost_velocity", friction_boost_velocity_, 0.005);
             node_->get_parameter_or<double>("max_stiffness_rate", max_stiffness_rate_, 20000.0);
             node_->get_parameter_or<int>("integral_window_size", integral_window_size_, 50);
             node_->get_parameter_or<std::vector<double>>(
-                "friction_pos", friction_pos_, {4.5, 2.8, 3.3, 4.0, 1.14, 1.37, 1.60});
+                "F_c", F_c_, {0.000, 0.976, 0.000, 0.453, 0.254, 0.468, 0.000});
             node_->get_parameter_or<std::vector<double>>(
-                "friction_neg", friction_neg_, {3.5, 5.2, 3.3, 3.9, 1.41, 1.67, 1.55});
+                "F_s", F_s_, {11.872, 11.722, 1.155, 1.256, 0.539, 0.573, 1.038});
+            node_->get_parameter_or<std::vector<double>>(
+                "v_s", v_s_, {0.010, 0.001, 0.103, 0.181, 1.000, 0.397, 0.469});
+            node_->get_parameter_or<std::vector<double>>(
+                "sigma2", sigma2_, {0.086, 0.134, 0.000, 0.000, 0.000, 0.000, 0.000});
+            node_->get_parameter_or<std::vector<double>>(
+                "alpha", alpha_, {0.167, 0.199, 0.493, 0.654, 0.362, 1.276, 0.164});
+            node_->get_parameter_or<std::vector<double>>(
+                "F_s_actual", F_s_actual_, {3.0, 1.5, 2.6, 3.0, 0.9, 1.1, 1.3});
+            node_->get_parameter_or<std::vector<double>>(
+                "friction_sign_gain", friction_sign_gain_,
+                {400.0, 400.0, 1500.0, 1500.0, 1500.0, 1500.0, 1500.0});
 
             // [修改5] 配置期就阻止尺寸错误、NaN、负阻尼等参数进入 1 kHz 实时循环。
             if (!is_finite_nonnegative_vector(Kx_vec_, 6) ||
                 !is_finite_nonnegative_vector(Bx_vec_, 6) ||
                 !is_finite_nonnegative_vector(Kn_vec_, static_cast<std::size_t>(dof_)) ||
                 !is_finite_nonnegative_vector(Bn_vec_, static_cast<std::size_t>(dof_)) ||
-                !is_finite_nonnegative_vector(friction_pos_, static_cast<std::size_t>(dof_)) ||
-                !is_finite_nonnegative_vector(friction_neg_, static_cast<std::size_t>(dof_)))
+                !is_finite_nonnegative_vector(F_c_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_nonnegative_vector(F_s_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_positive_vector(v_s_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_nonnegative_vector(sigma2_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_positive_vector(alpha_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_nonnegative_vector(F_s_actual_, static_cast<std::size_t>(dof_)) ||
+                !is_finite_positive_vector(friction_sign_gain_, static_cast<std::size_t>(dof_)))
             {
                 RCLCPP_ERROR(node_->get_logger(),
                              "Kx/Bx must contain 6 finite non-negative values; "
-                             "Kn/Bn/friction_pos/friction_neg must contain %d", dof_);
+                             "Kn/Bn and all Stribeck vectors must contain %d valid values", dof_);
                 return CallbackReturn::FAILURE;
             }
 
@@ -118,13 +133,12 @@ namespace controllers
                 std::isfinite(Kz_max_) && Kz_max_ >= Kz_min_ &&
                 Kx_vec_[5] >= Kz_min_ && Kx_vec_[5] <= Kz_max_ &&
                 std::isfinite(friction_comp_ratio_) &&
-                std::isfinite(hold_friction_ratio_) &&
                 std::isfinite(friction_start_delay_) && friction_start_delay_ >= 0.0 &&
                 std::isfinite(friction_fade_time_) && friction_fade_time_ > 0.0 &&
                 std::isfinite(friction_torque_rate_) && friction_torque_rate_ > 0.0 &&
                 std::isfinite(vel_des_deadzone_) && vel_des_deadzone_ >= 0.0 &&
                 std::isfinite(vel_actual_deadzone_) && vel_actual_deadzone_ >= 0.0 &&
-                std::isfinite(tau_intent_deadzone_) && tau_intent_deadzone_ >= 0.0 &&
+                std::isfinite(friction_boost_velocity_) && friction_boost_velocity_ > 0.0 &&
                 std::isfinite(max_stiffness_rate_) && max_stiffness_rate_ > 0.0 &&
                 integral_window_size_ > 0;
 
@@ -136,14 +150,12 @@ namespace controllers
                 return CallbackReturn::FAILURE;
             }
 
-            if (friction_comp_ratio_ < 0.0 || friction_comp_ratio_ > 1.0 ||
-                hold_friction_ratio_ < 0.0 || hold_friction_ratio_ > 1.0)
+            if (friction_comp_ratio_ < 0.0 || friction_comp_ratio_ > 1.0)
             {
                 RCLCPP_WARN(node_->get_logger(),
-                            "Friction ratios are clamped to [0, 1]");
+                            "friction_comp_ratio is clamped to [0, 1]");
             }
             friction_comp_ratio_ = std::clamp(friction_comp_ratio_, 0.0, 1.0);
-            hold_friction_ratio_ = std::clamp(hold_friction_ratio_, 0.0, 1.0);
 
             Kx_in_box_.set(Kx_vec_);
             Bx_in_box_.set(Bx_vec_);
@@ -231,9 +243,9 @@ namespace controllers
                 });
 
             RCLCPP_INFO(node_->get_logger(),
-                        "VIC configured: friction=%s, ratio=%.3f, hold_ratio=%.3f",
+                        "VIC configured: desired-velocity Stribeck friction=%s, ratio=%.3f",
                         friction_comp_enabled_ ? "enabled" : "disabled",
-                        friction_comp_ratio_, hold_friction_ratio_);
+                        friction_comp_ratio_);
 
             return CallbackReturn::SUCCESS;
         }
@@ -294,24 +306,27 @@ namespace controllers
             Kx_vec_[5] = Kz_max_;
             Bx_vec_[5] = 1.42 * std::sqrt(Kz_max_);
             F_ext_z_log_ = 0.0;
+            F_control_z_log_ = 0.0;
+            F_des_z_log_ = F_des_z_;
             F_err_z_log_ = 0.0;
             F_target_z_log_ = F_des_z_;
             K_opt_log_ = Kx_vec_[5];
             B_opt_log_ = Bx_vec_[5];
+            period_ms_log_ = 0.0;
+            contact_state_log_ = 0.0;
 
             real_time_buffer_.reset();
             active_goal_handle_.reset();
             tau_d.setZero();
             f_filter_.reset();
-            t_filter_.reset();
             dq_filter_.reset();
             F_imp_.setZero();
 
             // [修改6] 初始化摩擦方向判定和日志所需的全部向量，避免首次实时周期尺寸不匹配。
             tau_fric_ff_ = Eigen::VectorXd::Zero(dof_);
             tau_fric_ff_prev_ = Eigen::VectorXd::Zero(dof_);
-            tau_intent_ = Eigen::VectorXd::Zero(dof_);
-            tau_intent_filtered_ = Eigen::VectorXd::Zero(dof_);
+            tau_fric_model_ = Eigen::VectorXd::Zero(dof_);
+            friction_guard_state_ = Eigen::VectorXd::Zero(dof_);
             qd_des_ = Eigen::VectorXd::Zero(dof_);
             dq_filtered_ = Eigen::VectorXd::Zero(dof_);
 
@@ -372,6 +387,12 @@ namespace controllers
             robot_math::forward_kinematics(robot_, q_vec, Tb_tmp);
             Rd_ = Tb_tmp.block(0, 0, 3, 3);
             pd_ = Tb_tmp.block(0, 3, 3, 1);
+
+            desired_pose_log_.head<3>() = pd_;
+            desired_pose_log_.tail<3>() = robot_math::logR(Rd_);
+            actual_pose_model_log_ = desired_pose_log_;
+            desired_twist_log_.setZero();
+            desired_acceleration_log_.setZero();
 
             wd_ = Eigen::Vector3d::Zero();
             vd_ = Eigen::Vector3d::Zero();
@@ -492,34 +513,65 @@ namespace controllers
             data_logger_ = std::make_unique<DataLogger>(
                 std::initializer_list<DataInfo>{
                     DATA_WRAPPER(time_),
+                    DATA_WRAPPER(traj_time_),
+                    DATA_WRAPPER(period_ms_log_),
                     DATA_WRAPPER(cal_time_),
-                    // [修改9] 补齐变阻抗和摩擦补偿的关键诊断量，便于真机离线核验。
+                    // 轨迹日志可直接核验分段五次规划是否在保持段发生期望位置漂移。
+                    EIGEN_DATA_WRAPPER(desired_pose_log_),
+                    EIGEN_DATA_WRAPPER(actual_pose_model_log_),
+                    EIGEN_DATA_WRAPPER(desired_twist_log_),
+                    EIGEN_DATA_WRAPPER(desired_acceleration_log_),
+                    EIGEN_DATA_WRAPPER(xe_),
+                    EIGEN_DATA_WRAPPER(dxe_),
                     DATA_WRAPPER(F_ext_z_log_),
+                    DATA_WRAPPER(F_control_z_log_),
+                    DATA_WRAPPER(F_des_z_log_),
                     DATA_WRAPPER(F_err_z_log_),
                     DATA_WRAPPER(F_target_z_log_),
+                    DATA_WRAPPER(contact_state_log_),
                     DATA_WRAPPER(K_opt_log_),
                     DATA_WRAPPER(B_opt_log_),
                     DATA_WRAPPER(friction_active_ratio_),
-                    DATA_WRAPPER(tau_d),
-                    DATA_WRAPPER(tau_fric_ff_),
-                    DATA_WRAPPER(qd_des_),
-                    DATA_WRAPPER(dq_),
-                    DATA_WRAPPER(dq_filtered_),
-                    DATA_WRAPPER(tau_intent_filtered_),
-                    DATA_WRAPPER(tau_task_),
-                    DATA_WRAPPER(tau_null_),
+                    EIGEN_DATA_WRAPPER(F_imp_),
+                    EIGEN_DATA_WRAPPER(tau_d),
+                    EIGEN_DATA_WRAPPER(tau_fric_model_),
+                    EIGEN_DATA_WRAPPER(tau_fric_ff_),
+                    EIGEN_DATA_WRAPPER(friction_guard_state_),
+                    EIGEN_DATA_WRAPPER(qd_des_),
+                    EIGEN_DATA_WRAPPER(dq_),
+                    EIGEN_DATA_WRAPPER(dq_filtered_),
+                    EIGEN_DATA_WRAPPER(tau_task_),
+                    EIGEN_DATA_WRAPPER(tau_null_),
                 },
                 std::initializer_list<ExperimentContext>{
                     CONFIG_WRAPPER(Kx_vec_),
                     CONFIG_WRAPPER(Bx_vec_),
                     CONFIG_WRAPPER(Kn_vec_),
                     CONFIG_WRAPPER(Bn_vec_),
-                    CONFIG_WRAPPER(friction_pos_),
-                    CONFIG_WRAPPER(friction_neg_),
+                    CONFIG_WRAPPER(F_des_z_),
+                    CONFIG_WRAPPER(F_max_z_),
+                    CONFIG_WRAPPER(Kp_f_),
+                    CONFIG_WRAPPER(Ki_f_),
+                    CONFIG_WRAPPER(Kd_f_),
+                    CONFIG_WRAPPER(Kz_min_),
+                    CONFIG_WRAPPER(Kz_max_),
+                    CONFIG_WRAPPER(max_stiffness_rate_),
+                    CONFIG_WRAPPER(F_c_),
+                    CONFIG_WRAPPER(F_s_),
+                    CONFIG_WRAPPER(v_s_),
+                    CONFIG_WRAPPER(sigma2_),
+                    CONFIG_WRAPPER(alpha_),
+                    CONFIG_WRAPPER(F_s_actual_),
+                    CONFIG_WRAPPER(friction_sign_gain_),
                     CONFIG_WRAPPER(friction_comp_ratio_),
-                    CONFIG_WRAPPER(hold_friction_ratio_),
+                    CONFIG_WRAPPER(friction_start_delay_),
+                    CONFIG_WRAPPER(friction_fade_time_),
+                    CONFIG_WRAPPER(friction_torque_rate_),
+                    CONFIG_WRAPPER(vel_des_deadzone_),
+                    CONFIG_WRAPPER(vel_actual_deadzone_),
+                    CONFIG_WRAPPER(friction_boost_velocity_),
                 },
-                // main 的测试流程包含激活后等待和约 60 s 轨迹，预留 120 s 避免实时循环中扩容。
+                // 约 60 s 轨迹，预留 120 s，避免实时循环中扩容。
                 120000);
 
             return CallbackReturn::SUCCESS;
@@ -534,6 +586,8 @@ namespace controllers
             {
                 tau_fric_ff_.setZero();
                 tau_fric_ff_prev_.setZero();
+                tau_fric_model_.setZero();
+                friction_guard_state_.setZero();
             }
             friction_active_ratio_ = 0.0;
             action_server_ = nullptr;
@@ -552,6 +606,7 @@ namespace controllers
             // 只给积分和变化率限制使用；调度暂停后不允许单周期大跳变。
             const double safety_dt = std::min(dt, 0.01);
             time_ += dt;
+            period_ms_log_ = 1000.0 * dt;
 
             if (dt > 0.01)
             {
@@ -586,8 +641,8 @@ namespace controllers
                 tau_null_.setZero();
                 tau_fric_ff_.setZero();
                 tau_fric_ff_prev_.setZero();
-                tau_intent_.setZero();
-                tau_intent_filtered_.setZero();
+                tau_fric_model_.setZero();
+                friction_guard_state_.setZero();
                 qd_des_.setZero();
                 dq_filtered_.setZero();
                 friction_active_ratio_ = 0.0;
@@ -715,6 +770,14 @@ namespace controllers
                 ddxd_.setZero();
             }
 
+            desired_pose_log_.head<3>() = pd_;
+            desired_pose_log_.tail<3>() = robot_math::logR(Rd_);
+            actual_pose_model_log_.head<3>() = p_;
+            actual_pose_model_log_.tail<3>() = robot_math::logR(R_);
+            desired_twist_log_.head<3>() = wd_;
+            desired_twist_log_.tail<3>() = vd_;
+            desired_acceleration_log_ = dVd;
+
             Eigen::Vector3d w = (Jb_ * dq).head(3);
             Eigen::Vector3d v = (Jb_ * dq).tail(3);
 
@@ -730,6 +793,7 @@ namespace controllers
             const double B_z = Bx_(5);
 
             F_ext_z_log_ = force_(2);
+            F_control_z_log_ = -force_(2);
             F_err_z_log_ = 0.0;
             F_target_z_log_ = F_des_z_;
 
@@ -774,7 +838,8 @@ namespace controllers
 
                 const double F_com_z =
                     Kp_f_ * F_err_z + Ki_f_ * force_int_z_ + Kd_f_ * dF_err_z;
-                const double F_target = F_des_z_ + F_com_z;
+                const double F_target = std::clamp(
+                    F_des_z_ + F_com_z, -F_max_z_, F_max_z_);
 
                 double K_opt = solve_closed_form_stiffness(xe_z, dxe_z, B_z, F_target);
                 if (!std::isfinite(K_opt))
@@ -796,6 +861,7 @@ namespace controllers
 
             K_opt_log_ = Kx_(5);
             B_opt_log_ = Bx_(5);
+            contact_state_log_ = is_contact_established_ ? 1.0 : 0.0;
 
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) *
                                  (Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
@@ -806,17 +872,12 @@ namespace controllers
             Eigen::MatrixXd Lambda_inv = robot_math::A_x_inv(Jb_, M_);
             F_imp_ = Lambda_inv.ldlt().solve(ddxc_ - dJb_ * dq);
 
-            // =====================================================================
-            // [修改16] 移植 MuJoCo 中有效的“期望速度方向”策略，但替换为 Diana 实测的
-            //          正/负向不对称候选值，并增加默认关闭、滤波、反向切断、淡入和斜率保护。
-            // =====================================================================
+            // 五次轨迹给出的是笛卡尔 twist；摩擦模型需要逐关节速度，因此用动力学加权
+            // 广义逆得到一组与该 twist 一致的期望关节速度。它只用于前馈，不是速度闭环命令。
             Eigen::Vector6d desired_body_twist;
             desired_body_twist.head(3) = R_.transpose() * wd_;
             desired_body_twist.tail(3) = R_.transpose() * vd_;
             qd_des_ = robot_math::J_sharp(Jb_, M_) * desired_body_twist;
-
-            tau_intent_ = tau_task_ + tau_null_;
-            t_filter_.filtering(tau_intent_.data(), tau_intent_filtered_.data());
 
             friction_active_ratio_ = 0.0;
             const bool trajectory_goal_active =
@@ -829,12 +890,17 @@ namespace controllers
                 friction_active_ratio_ = friction_comp_ratio_ * fade;
             }
 
+            // 恢复原控制器的完整 Stribeck + 粘性模型。按需求，平滑符号、Stribeck
+            // 衰减和粘性项全部使用 qd_des；滤波后的实际速度只做反向运动保护。
+            constexpr double kTwoOverPi = 0.63661977236758134308;
             const double max_delta_tau = friction_torque_rate_ * safety_dt;
             for (int i = 0; i < dof_; i++)
             {
                 const double desired_velocity = qd_des_(i);
                 const double actual_velocity = dq_filtered_(i);
+                double raw_friction = 0.0;
                 double target_tau_f = 0.0;
+                friction_guard_state_(i) = 0.0;
 
                 if (std::abs(desired_velocity) > vel_des_deadzone_)
                 {
@@ -844,21 +910,35 @@ namespace controllers
 
                     if (!moving_opposite)
                     {
-                        const double identified_friction = desired_velocity > 0.0
-                                                               ? friction_pos_[i]
-                                                               : -friction_neg_[i];
-                        target_tau_f = friction_active_ratio_ * identified_friction;
+                        // 平移死区，保证在阈值处从 0 连续起步，避免重新引入符号跳变。
+                        const double model_velocity = std::copysign(
+                            std::abs(desired_velocity) - vel_des_deadzone_, desired_velocity);
+                        const double smooth_sign =
+                            kTwoOverPi * std::atan(friction_sign_gain_[i] * model_velocity);
+                        const double stribeck_decay = std::exp(
+                            -std::pow(std::abs(model_velocity) / v_s_[i], alpha_[i]));
+                        const double base_friction =
+                            F_c_[i] + (F_s_[i] - F_c_[i]) * stribeck_decay;
+                        const double breakaway_boost =
+                            std::max(0.0, F_s_actual_[i] - F_s_[i]) *
+                            std::exp(-std::abs(model_velocity) / friction_boost_velocity_);
+
+                        raw_friction =
+                            (base_friction + breakaway_boost) * smooth_sign +
+                            sigma2_[i] * model_velocity;
+                        raw_friction = std::clamp(
+                            raw_friction, -F_s_actual_[i], F_s_actual_[i]);
+                        target_tau_f = friction_active_ratio_ * raw_friction;
+                        friction_guard_state_(i) = 1.0;
+                    }
+                    else
+                    {
+                        // -1 表示期望/实际速度反向：补偿目标立即置零，输出仍受斜率保护。
+                        friction_guard_state_(i) = -1.0;
                     }
                 }
-                else if (hold_friction_ratio_ > 0.0 &&
-                         std::abs(tau_intent_filtered_(i)) > tau_intent_deadzone_)
-                {
-                    // 停止段默认不补偿；只有显式设置 hold_friction_ratio 才按意图力矩辅助保持。
-                    const double identified_friction = tau_intent_filtered_(i) > 0.0
-                                                           ? friction_pos_[i]
-                                                           : -friction_neg_[i];
-                    target_tau_f = friction_active_ratio_ * hold_friction_ratio_ * identified_friction;
-                }
+
+                tau_fric_model_(i) = raw_friction;
 
                 const double delta_tau = std::clamp(
                     target_tau_f - tau_fric_ff_prev_(i), -max_delta_tau, max_delta_tau);
@@ -894,6 +974,14 @@ namespace controllers
             return values.size() == expected_size &&
                    std::all_of(values.begin(), values.end(), [](double value)
                                { return std::isfinite(value) && value >= 0.0; });
+        }
+
+        static bool is_finite_positive_vector(const std::vector<double> &values,
+                                              std::size_t expected_size)
+        {
+            return values.size() == expected_size &&
+                   std::all_of(values.begin(), values.end(), [](double value)
+                               { return std::isfinite(value) && value > 0.0; });
         }
 
         static bool validate_trajectory_data(const std::vector<double> &data,
@@ -1014,7 +1102,7 @@ namespace controllers
         std::unique_ptr<DataLogger> data_logger_;
         realtime_tools::RealtimeBox<std::vector<double>> Kx_in_box_, Bx_in_box_, Kn_in_box_, Bn_in_box_;
         std::vector<double> Kx_vec_, Bx_vec_, Kn_vec_, Bn_vec_;
-        robot_math::MovingFilter<double> f_filter_, t_filter_, dq_filter_;
+        robot_math::MovingFilter<double> f_filter_, dq_filter_;
         bool is_contact_established_{false};
         bool force_error_initialized_{false};
         std::vector<double> force_err_window_;
@@ -1022,29 +1110,36 @@ namespace controllers
         std::size_t force_err_window_count_{0};
         int integral_window_size_{50};
 
-        // [修改18] 用 Diana 正/负方向候选补偿值替代 MuJoCo 对称 frictionloss。
+        // 原控制器的 Stribeck 参数；期望速度驱动模型，实际速度仅参与反向保护。
         bool friction_comp_enabled_{false};
         double friction_comp_ratio_{0.0};
-        double hold_friction_ratio_{0.0};
         double friction_start_delay_{1.0};
         double friction_fade_time_{1.0};
         double friction_torque_rate_{40.0};
-        double vel_des_deadzone_{1e-5};
-        double vel_actual_deadzone_{1e-4};
-        double tau_intent_deadzone_{0.05};
+        double vel_des_deadzone_{5e-4};
+        double vel_actual_deadzone_{1e-3};
+        double friction_boost_velocity_{0.005};
         double max_stiffness_rate_{20000.0};
-        std::vector<double> friction_pos_;
-        std::vector<double> friction_neg_;
-        Eigen::VectorXd tau_fric_ff_, tau_fric_ff_prev_;
-        Eigen::VectorXd tau_intent_, tau_intent_filtered_;
+        std::vector<double> F_c_, F_s_, v_s_, sigma2_, alpha_, F_s_actual_;
+        std::vector<double> friction_sign_gain_;
+        Eigen::VectorXd tau_fric_ff_, tau_fric_ff_prev_, tau_fric_model_;
+        Eigen::VectorXd friction_guard_state_;
         Eigen::VectorXd qd_des_, dq_filtered_;
 
         double friction_active_ratio_{0.0};
+        double period_ms_log_{0.0};
         double F_ext_z_log_{0.0};
+        double F_control_z_log_{0.0};
+        double F_des_z_log_{0.0};
         double F_err_z_log_{0.0};
         double F_target_z_log_{0.0};
+        double contact_state_log_{0.0};
         double K_opt_log_{0.0};
         double B_opt_log_{0.0};
+        Eigen::Vector6d desired_pose_log_{Eigen::Vector6d::Zero()};
+        Eigen::Vector6d actual_pose_model_log_{Eigen::Vector6d::Zero()};
+        Eigen::Vector6d desired_twist_log_{Eigen::Vector6d::Zero()};
+        Eigen::Vector6d desired_acceleration_log_{Eigen::Vector6d::Zero()};
     };
 } // namespace controllers
 
