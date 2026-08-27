@@ -21,6 +21,12 @@
     {                                              \
         NAME(var), [&, this] { return var; }, size \
     }
+#define EIGEN_DATA_WRAPPER(var)                                                \
+    DataInfo                                                                  \
+    {                                                                         \
+        NAME(var), [&, this]() -> const double * { return var.data(); },       \
+            static_cast<size_t>(var.size())                                   \
+    }
 #define CONFIG_WRAPPER(var) {NAME(var), var}
 #define CONFIG_WRAPPER_SIZE(var, size) {NAME(var), var, size}
 
@@ -255,7 +261,9 @@ public:
         }
         file << std::endl;
 
-        // file << setprecision(10); // 设置输出精度(暂时不需要)
+        // 默认流精度只有 6 位有效数字：time 从 9.x s 跨到 10.x s 后会把几十微秒
+        // 的周期抖动舍入掉，造成“10 s 后突然稳定在 1 ms”的假象。
+        file << std::setprecision(17);
 
         // 写入标题栏
         for (const auto &dataInfo : allDataInfo)

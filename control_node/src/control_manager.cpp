@@ -443,25 +443,23 @@ namespace control_node
     }
     void ControlManager::control_loop()
     {
-        // for calculating sleep time
-        // double dt = 1.0 / update_rate_;
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
-        auto const cm_now = std::chrono::nanoseconds(this->now().nanoseconds());
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
-            next_iteration_time{cm_now};
+        // 调度和周期测量必须使用单调时钟，不能受 ROS/system clock 校时影响。
+        // 超期后从“当前时刻”重新排程，避免出现 1.1 ms 后紧跟 0.9 ms 的追赶周期。
+        using SteadyClock = std::chrono::steady_clock;
+        const auto nominal_period =
+            std::chrono::nanoseconds(1'000'000'000 / update_rate_);
+        auto next_iteration_time = SteadyClock::now();
+        auto previous_iteration_time = next_iteration_time - nominal_period;
 
-        rclcpp::Time previous_time = this->now();
-        rclcpp::Duration measured_period(0, 0);
-        bool flag = false;
+        rclcpp::Duration measured_period(nominal_period);
         while (running_ && !robot_->is_stop()) // give robot a change to stop running
         {
-            // calculate measured period
-            auto current_time = this->now();
-            if (flag)
-                measured_period = current_time - previous_time;
-            else
-                flag = true;
-            previous_time = current_time;
+            const auto iteration_time = SteadyClock::now();
+            measured_period = rclcpp::Duration(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    iteration_time - previous_iteration_time));
+            previous_iteration_time = iteration_time;
+            const auto current_time = this->now();
 
             // execute update loop
             read(current_time, measured_period);
@@ -471,8 +469,12 @@ namespace control_node
             running_box_.try_get([this](const auto &value)
                                  { running_ = value; });
 
-            // wait until we hit the end of the period
-            next_iteration_time += period;
+            next_iteration_time += nominal_period;
+            const auto work_finished_time = SteadyClock::now();
+            if (work_finished_time > next_iteration_time)
+            {
+                next_iteration_time = work_finished_time;
+            }
             std::this_thread::sleep_until(next_iteration_time);
         }
     }
