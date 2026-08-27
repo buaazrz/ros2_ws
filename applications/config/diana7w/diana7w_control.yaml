@@ -125,3 +125,20 @@ VariableImpedanceController:
     Kz_max: 2500.0    # 最大刚度 (硬接触)
 
     dob_gain_val: 0.0
+
+    friction_comp_enabled: true
+    friction_comp_ratio: 1.0
+    hold_friction_ratio: 0.0
+
+    friction_start_delay: 1.0
+    friction_fade_time: 2.0
+    friction_torque_rate: 40.0
+
+    vel_des_deadzone: 0.00001
+    vel_actual_deadzone: 0.0001
+    tau_intent_deadzone: 0.05
+    max_stiffness_rate: 20000.0
+    integral_window_size: 50
+
+    friction_pos: [4.5, 2.8, 3.3, 4.0, 1.14, 1.37, 1.60]
+    friction_neg: [3.5, 5.2, 3.3, 3.9, 1.41, 1.67, 1.55]
