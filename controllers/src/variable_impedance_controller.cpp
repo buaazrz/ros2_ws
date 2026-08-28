@@ -4,7 +4,7 @@
 #include "realtime_tools/realtime_buffer.hpp"
 #include "robot_math/MovingFilter.h"
 #include "robot_math/robot_math.hpp"
-#include "robot_math/CartesianTrajectory.hpp"
+#include "robot_math/PiecewiseCartesianTrajectory.hpp"
 #include "ros2_utility/data_logger.hpp"
 #include "ros2_utility/file_utils.hpp"
 #include "math.h"
@@ -66,7 +66,7 @@ namespace controllers
     public:
         using ACTION = robot_control_msgs::action::RobotMotion;
         using GoalHandle = rclcpp_action::ServerGoalHandle<ACTION>;
-        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::CartesianTrajectory>>;
+        using BufferType = std::pair<std::shared_ptr<GoalHandle>, std::shared_ptr<robot_math::PiecewiseCartesianTrajectory>>;
 
         VariableImpedanceController() : f_filter_(6, 15), t_filter_(7, 15) {}
         ~VariableImpedanceController()
@@ -221,7 +221,7 @@ namespace controllers
 
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
-                auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
+                auto trajectory = std::make_shared<robot_math::PiecewiseCartesianTrajectory>();
                 const std::vector<double> &T_vec = state_->get<double>("T");
                 Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
                 const std::vector<double> pose_current = robot_math::tform_to_pose(T);

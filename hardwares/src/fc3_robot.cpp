@@ -116,7 +116,7 @@ namespace hardwares
             }
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-            RCLCPP_INFO(node_->get_logger(), "Write time: %ld us", duration_us);
+            // RCLCPP_INFO(node_->get_logger(), "Write time: %ld us", duration_us);
         }
 
         bool is_stop() override
@@ -160,7 +160,7 @@ namespace hardwares
             }
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-            RCLCPP_INFO(node_->get_logger(), "Read Time: %ld us", duration_us);
+            // RCLCPP_INFO(node_->get_logger(), "Read Time: %ld us", duration_us);
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override
