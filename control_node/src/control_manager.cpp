@@ -33,7 +33,7 @@ namespace control_node
                 // }
             }
         }
-        update_rate_ = this->get_parameter_or<int>("update_rate", 500);
+        update_rate_ = this->get_parameter_or<int>("update_rate", 1000);
         is_simulation_ = this->get_parameter_or<bool>("simulation", true);
         is_sim_real_time_ = this->get_parameter_or<bool>("sim_real_time", true);
         is_publish_joint_state_ = this->get_parameter_or<bool>("publish_joint_state", true);

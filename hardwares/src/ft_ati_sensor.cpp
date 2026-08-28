@@ -113,11 +113,11 @@ namespace hardwares
                     {
                         socklen_t len = sizeof(addr_);
                         char readdata[36];
-                        
+
                         RESPONSE resp;
                         while (is_running_)
                         {
-                            
+
                             int resv_num = recvfrom(handle_, readdata, 36, 0, (struct sockaddr *)&addr_, &len);
                             if (resv_num > 0)
                             {
@@ -134,16 +134,16 @@ namespace hardwares
                             }
                         }
                     });
-                if(!wait_data_comming())
+                if (!wait_data_comming())
                     return CallbackReturn::FAILURE;
-                
+
                 return CallbackReturn::SUCCESS;
             }
             else
                 return CallbackReturn::FAILURE;
         }
 
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+        CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override
         {
             SensorInterface::on_deactivate(previous_state);
             stop_sensing();

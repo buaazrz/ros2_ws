@@ -180,8 +180,8 @@ namespace controllers
             tau_null_ = Eigen::VectorXd::Zero(dof_);
             tau_cmd_ = Eigen::VectorXd::Zero(dof_);
 
-            sensor_weight_ = 0.61583;
-            sensor_cog_vec_ = {0.0001, 0.000, 0.0029};
+            sensor_weight_ = 0.0;
+            sensor_cog_vec_ = {0.000, 0.000, 0.0029};
             sensor_offset_vec_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
             T_sensor_ = Eigen::Matrix4d::Identity();
             T_sensor_ << 1, 0, 0, 0,
@@ -222,8 +222,23 @@ namespace controllers
             auto handle_accepted = [this](const std::shared_ptr<GoalHandle> goal_handle)
             {
                 auto trajectory = std::make_shared<robot_math::CartesianTrajectory>();
+                const std::vector<double> &T_vec = state_->get<double>("T");
+                Eigen::Matrix4d T = Eigen::Map<const Eigen::Matrix4d>(T_vec.data());
+                const std::vector<double> pose_current = robot_math::tform_to_pose(T);
+
+                std::vector<double> full_traj_data;
+                full_traj_data.push_back(0.0); // t = 0
+                for (int i = 0; i < 6; ++i)
+                {
+                    full_traj_data.push_back(pose_current[i]);
+                }
+
+                // 拼接客户端发来的轨迹目标
                 const auto &goal_data = goal_handle->get_goal()->target_position.data;
-                trajectory->set_traj(goal_data);
+                full_traj_data.insert(full_traj_data.end(), goal_data.begin(), goal_data.end());
+
+                // 设入包含起点的完整轨迹
+                trajectory->set_traj(full_traj_data);
 
                 traj_time_ = 0.0;
                 is_contact_established_ = false; // 接收新目标时重置接触状态
@@ -250,13 +265,13 @@ namespace controllers
                     DATA_WRAPPER(F_imp_(5)),
                     DATA_WRAPPER(force_(2)),
                     // DATA_WRAPPER(pose_),
-                    DATA_WRAPPER(tau_d),
+                    // DATA_WRAPPER(tau_d),
                     DATA_WRAPPER(Kx_(5)),
                     DATA_WRAPPER(Bx_(5)),
-                    DATA_WRAPPER(tau_fric_ff_),
-                    DATA_WRAPPER(dq_),
+                    // DATA_WRAPPER(tau_fric_ff_),
+                    // DATA_WRAPPER(dq_),
                     // DATA_WRAPPER(tau_base_),
-                    // DATA_WRAPPER(xe_),
+                    DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(tau_d_est_),
                     // DATA_WRAPPER(tau_x_est_),
                     // DATA_WRAPPER(tau_null_),
@@ -303,6 +318,7 @@ namespace controllers
             command_->get<int>("mode")[0] = 3;
             // pose_ = Eigen::Map<const Eigen::Vector6d>(pose_vec.data());
             force_ = Eigen::Map<const Eigen::Vector6d>(force_vec.data());
+
             dq_ = Eigen::Map<const Eigen::Vector7d>(dq_vec.data());
             q_ = Eigen::Map<const Eigen::Vector7d>(q_vec.data());
             // Eigen::Matrix4d T = robot_math::pose_to_tform(pose_vec);
@@ -429,7 +445,7 @@ namespace controllers
             if (is_contact_established_ && std::abs(xe_z) > 1e-3 && xe_z * F_des_z_ > 0) // 只有当位置误差不小且力误差与位置误差同号时才优化刚度
             {
                 double F_ext_z = force_(2);
-                double F_err_z = F_des_z_ - (-F_ext_z);
+                double F_err_z = F_des_z_ - F_ext_z;
                 double current_integral_step = F_err_z * dt;
                 force_err_window_.push_back(current_integral_step);
                 force_int_z_ += current_integral_step;

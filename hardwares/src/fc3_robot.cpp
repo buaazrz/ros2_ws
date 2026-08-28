@@ -26,6 +26,7 @@ namespace hardwares
         }
         void write(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
+            auto start_time = std::chrono::high_resolution_clock::now();
             hardware_interface::RobotInterface::write(t, period);
 
             // 安全获取 mode，默认为上一周期的模式
@@ -113,6 +114,9 @@ namespace hardwares
                 RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
                                       "Franka Write Error: %s", e.what());
             }
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            RCLCPP_INFO(node_->get_logger(), "Write time: %ld us", duration_us);
         }
 
         bool is_stop() override
@@ -120,37 +124,43 @@ namespace hardwares
             return false;
         }
 
-        void read(const rclcpp::Time & /*t*/, const rclcpp::Duration & /*period*/) override
+        void read(const rclcpp::Time &t, const rclcpp::Duration &period) override
         {
+            auto start_time = std::chrono::high_resolution_clock::now();
+            hardware_interface::RobotInterface::read(t, period);
             if (!control_)
                 return;
 
             try
             {
                 auto &&state = control_->readOnce().first;
-                auto success_rate = state.control_command_success_rate;
-                auto &&mass = franka_model_->mass(state);
-                auto &&coriolis = franka_model_->coriolis(state);
-                auto &&gravity = franka_model_->gravity(state);
+                // auto success_rate = state.control_command_success_rate;
+                // auto &&mass = franka_model_->mass(state);
+                // auto &&coriolis = franka_model_->coriolis(state);
+                // auto &&gravity = franka_model_->gravity(state);
                 auto &&T = state.O_T_EE;
-                auto &&tau_d = state.tau_J_d;
-                auto &&ext_tau = state.tau_ext_hat_filtered;
+                // auto &&tau_d = state.tau_J_d;
+                // auto &&ext_tau = state.tau_ext_hat_filtered;
+                // auto &force = com_state_["ft_sensor"]->get<double>("force");
 
-                state_.get<double>("success")[0] = success_rate;
-                std::copy(mass.begin(), mass.end(), state_.get<double>("m").begin());
-                std::copy(ext_tau.begin(), ext_tau.end(), state_.get<double>("external_torque").begin());
-                std::copy(tau_d.begin(), tau_d.end(), state_.get<double>("torque").begin());
+                // state_.get<double>("success")[0] = success_rate;
+                // std::copy(mass.begin(), mass.end(), state_.get<double>("m").begin());
+                // std::copy(ext_tau.begin(), ext_tau.end(), state_.get<double>("external_torque").begin());
+                // std::copy(tau_d.begin(), tau_d.end(), state_.get<double>("torque").begin());
                 std::copy(T.begin(), T.end(), state_.get<double>("T").begin());
                 std::copy(state.q.begin(), state.q.end(), state_.get<double>("position").begin());
                 std::copy(state.dq.begin(), state.dq.end(), state_.get<double>("velocity").begin());
-                std::copy(coriolis.begin(), coriolis.end(), state_.get<double>("c").begin());
-                std::copy(gravity.begin(), gravity.end(), state_.get<double>("g").begin());
+                // std::copy(coriolis.begin(), coriolis.end(), state_.get<double>("c").begin());
+                // std::copy(gravity.begin(), gravity.end(), state_.get<double>("g").begin());
             }
             catch (const franka::Exception &e)
             {
                 RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
                                       "Franka Read Error: %s", e.what());
             }
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            RCLCPP_INFO(node_->get_logger(), "Read Time: %ld us", duration_us);
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override
@@ -197,7 +207,7 @@ namespace hardwares
                         {{200.0, 200.0, 200.0, 200.0, 200.0, 200.0}}, {{200.0, 200.0, 200.0, 200.0, 200.0, 200.0}},
                         {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}}, {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}});
 
-                    franka_robot_->setLoad(0.61583, {0, 0, 0.0029}, {1e-6, 0, 0, 0, 1e-6, 0, 0, 0, 1e-6});
+                    // franka_robot_->setLoad(0.2067, {0, 0, 0.029}, {1e-6, 0, 0, 0, 1e-6, 0, 0, 0, 1e-6});
                     franka_robot_->setJointImpedance({{3000, 3000, 3000, 2500, 2500, 200, 200}});
                     franka_robot_->setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 
