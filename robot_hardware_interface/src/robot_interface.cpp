@@ -12,17 +12,43 @@ namespace hardware_interface
         sensor_loader_ = std::make_unique<pluginlib::ClassLoader<hardware_interface::SensorInterface>>("robot_hardware_interface", "hardware_interface::SensorInterface");
     }
 
+    rclcpp::Duration RobotInterface::get_last_read_period() const
+    {
+        // HUMBLE-FIX 02: Software-paced hardware uses the configured nominal period.
+        // Hardware-paced plugins override this with the duration returned by the SDK.
+        if (update_rate_ <= 0)
+            return rclcpp::Duration(0, 0);
+        return rclcpp::Duration::from_nanoseconds(1'000'000'000LL / update_rate_);
+    }
+
     int RobotInterface::configure_urdf(const std::string &robot_description)
     {
         if (!robot_description.empty() && robot_model_.initString(robot_description))
         {
             std::vector<std::string> joint_state_names, joint_command_names;
             node_->get_parameter_or<std::string>("end_effector", end_effector_, "");
+            if (end_effector_.empty() || robot_model_.links_.find(end_effector_) == robot_model_.links_.end())
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(), "end_effector must name an existing URDF link (got '%s')",
+                    end_effector_.c_str());
+                return 0;
+            }
             node_->get_parameter_or<std::vector<std::string>>("joint_state_interface", joint_state_names, std::vector<std::string>());
             node_->get_parameter_or<std::vector<std::string>>("joint_command_interface", joint_command_names, std::vector<std::string>());
             robot_ = robot_math::urdf_to_robot(robot_description, joint_names_, end_effector_, base_link_);
-            kdl_parser::treeFromString(robot_description, tree_);
-            tree_.getChain(base_link_, end_effector_, chain_);
+            if (!kdl_parser::treeFromString(robot_description, tree_))
+            {
+                RCLCPP_ERROR(node_->get_logger(), "failed to parse the KDL tree");
+                return 0;
+            }
+            if (!tree_.getChain(base_link_, end_effector_, chain_))
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(), "failed to build KDL chain from %s to %s",
+                    base_link_.c_str(), end_effector_.c_str());
+                return 0;
+            }
             solver_ = std::make_unique<KDL::ChainIkSolverPos_LMA>(chain_, 1e-6, 1000);
             RCLCPP_INFO(node_->get_logger(), "the robot chain is from %s to %s", base_link_.c_str(), end_effector_.c_str());
             dof_ = joint_names_.size();
@@ -47,11 +73,14 @@ namespace hardware_interface
             std::vector<double> init_pose(dof_, 0);
             if (node_->get_parameter_or<std::vector<double>>("init_joint_pose", init_pose, init_pose))
             {
-                if(init_pose.size() != dof_)
+                if (init_pose.size() != static_cast<std::size_t>(dof_))
                 {
-                    RCLCPP_ERROR(node_->get_logger(), "init_pose size %d is not equal to dof %d", init_pose.size(), dof_);
+                    RCLCPP_ERROR(
+                        node_->get_logger(), "init_pose size %zu is not equal to dof %d",
+                        init_pose.size(), dof_);
+                    return 0;
                 }
-                else 
+                else
                     state_.get<double>("position") = init_pose;
                 // std::vector<double> j0(dof_, 0);
                 // if (inverse_kinematics(state_.get<double>("position"), robot_math::pose_to_tform(init_pose), j0))
@@ -128,9 +157,20 @@ namespace hardware_interface
 
     CallbackReturn RobotInterface::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
     {
+        std::vector<hardware_interface::HardwareInterface::SharedPtr> activated_components;
         for (auto &c : components_)
+        {
             if (c.second->get_node()->activate().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+                // HUMBLE-FIX 36: Roll back sensors already activated earlier in
+                // the sequence; otherwise a failed ATI/secondary sensor leaves
+                // receive threads running while the robot itself is inactive.
+                for (auto it = activated_components.rbegin(); it != activated_components.rend(); ++it)
+                    (*it)->get_node()->deactivate();
                 return CallbackReturn::FAILURE;
+            }
+            activated_components.push_back(c.second);
+        }
         return CallbackReturn::SUCCESS;
     }
 

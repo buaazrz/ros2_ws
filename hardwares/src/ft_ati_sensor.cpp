@@ -1,163 +1,233 @@
 #include "robot_hardware_interface/sensor_interface.hpp"
-#include <iostream>
-#include <vector>
+
 #include "lifecycle_msgs/msg/state.hpp"
-#include "geometry_msgs/msg/wrench.hpp"
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-using namespace std::chrono_literals;
-#define PORT 49152    /* Port the Net F/T always uses */
-#define COMMAND 2     /* Command code 2 starts streaming */
-#define NUM_SAMPLES 0 /* Will send 1 sample before stopping */
+
+#include <array>
+#include <atomic>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <thread>
+#include <vector>
 
 namespace hardwares
 {
-    typedef unsigned int uint32;
-    typedef int int32;
-    typedef unsigned short uint16;
-    typedef short int16;
-    typedef unsigned char byte;
-
-    typedef struct response_struct
+    namespace
     {
-        uint32 rdt_sequence;
-        uint32 ft_sequence;
-        uint32 status;
-        int32 FTData[6];
-    } RESPONSE;
+        constexpr std::uint16_t kAtiHeader = 0x1234;
+        constexpr std::uint16_t kStartCommand = 2;
+        constexpr std::uint16_t kStopCommand = 0;
+        constexpr std::uint32_t kContinuousSamples = 0;
+        constexpr std::uint16_t kAtiPort = 49152;
+        constexpr std::size_t kResponseBytes = 36;
+
+        template <typename T>
+        T read_network_value(const std::uint8_t *source)
+        {
+            T value{};
+            std::memcpy(&value, source, sizeof(T));
+            return value;
+        }
+    }
 
     class FTATISensor : public hardware_interface::SensorInterface
     {
     public:
-        FTATISensor() : handle_(-1)
+        FTATISensor()
+            : handle_(-1), force_counts_per_unit_(1.0e6), torque_counts_per_unit_(1.0e6),
+              last_sequence_(0), dropped_packets_(0), bad_status_packets_(0) {}
+
+        ~FTATISensor() override
         {
+            shutdown_socket();
         }
-        ~FTATISensor()
-        {
-            if (handle_ >= 0)
-            {
-                stop_sensing();
-                close(handle_);
-            }
-        }
-        int start_sensing()
-        {
-            char request[8];                             /* The request data sent to the Net F/T. */
-            *(uint16 *)&request[0] = htons(0x1234);      /* standard header. */
-            *(uint16 *)&request[2] = htons(COMMAND);     /* per table 9.1 in Net F/T user manual. */
-            *(uint32 *)&request[4] = htonl(NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
-            return sendto(handle_, request, 8, 0, (struct sockaddr *)&addr_, sizeof(addr_));
-        }
-        int stop_sensing()
-        {
-            char stoprequest[8] = {0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; /* The request data sent to the Net F/T. */
-            return sendto(handle_, stoprequest, 8, 0, (struct sockaddr *)&addr_, sizeof(addr_));
-        }
+
         CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override
         {
-            if (hardware_interface::SensorInterface::on_configure(previous_state) == CallbackReturn::SUCCESS)
+            if (SensorInterface::on_configure(previous_state) != CallbackReturn::SUCCESS)
+                return CallbackReturn::FAILURE;
+
+            std::string sensor_ip;
+            node_->get_parameter_or<std::string>("sensor_ip", sensor_ip, "");
+            node_->get_parameter_or<double>(
+                "force_counts_per_unit", force_counts_per_unit_, 1.0e6);
+            node_->get_parameter_or<double>(
+                "torque_counts_per_unit", torque_counts_per_unit_, 1.0e6);
+            if (sensor_ip.empty() || !std::isfinite(force_counts_per_unit_) ||
+                !std::isfinite(torque_counts_per_unit_) || force_counts_per_unit_ <= 0.0 ||
+                torque_counts_per_unit_ <= 0.0)
             {
-                std::string sensor_ip;
-                node_->get_parameter_or<std::string>("sensor_ip", sensor_ip, "");
-                if (!sensor_ip.empty())
-                {
-                    handle_ = socket(AF_INET, SOCK_DGRAM, 0); /* Handle to UDP socket used to communicate with Net F/T. */
-                    if (handle_ == -1)
-                    {
-                        RCLCPP_WARN(node_->get_logger(), "Open socket failed!");
-                        return CallbackReturn::FAILURE;
-                    }
-                    struct timeval read_timeout;
-                    read_timeout.tv_sec = 0;
-                    read_timeout.tv_usec = 10;
-                    // non-blocking
-                    if (setsockopt(handle_, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof(read_timeout)))
-                    {
-                        RCLCPP_WARN(node_->get_logger(), "set socket time out in service failed!");
-                        return CallbackReturn::FAILURE;
-                    }
-                    memset(&addr_, 0, sizeof(addr_));
-                    addr_.sin_family = AF_INET;
-                    addr_.sin_port = htons(PORT);
-                    addr_.sin_addr.s_addr = inet_addr(sensor_ip.c_str()); // const char *ip = "192.168.124.12";
-                    return CallbackReturn::SUCCESS;
-                }
-                RCLCPP_WARN(node_->get_logger(), "IP empty! ATI sensor unconfiged!");
+                RCLCPP_ERROR(node_->get_logger(), "invalid ATI IP or counts-per-unit parameters");
                 return CallbackReturn::FAILURE;
             }
-            return CallbackReturn::FAILURE;
-        }
 
-        CallbackReturn on_shutdown(const rclcpp_lifecycle::State &previous_state) override
-        {
-            if (previous_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            handle_ = ::socket(AF_INET, SOCK_DGRAM, 0);
+            if (handle_ < 0)
             {
-                stop_thread();
-                stop_sensing();
+                RCLCPP_ERROR(node_->get_logger(), "failed to create ATI UDP socket");
+                return CallbackReturn::FAILURE;
             }
-            if (handle_ >= 0)
-                close(handle_);
 
+            // HUMBLE-FIX 14: 100 ms bounds shutdown latency without the old 10 us
+            // near-busy-poll loop.
+            timeval read_timeout{};
+            read_timeout.tv_usec = 100'000;
+            if (::setsockopt(handle_, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof(read_timeout)) != 0)
+            {
+                RCLCPP_ERROR(node_->get_logger(), "failed to configure ATI socket timeout");
+                shutdown_socket();
+                return CallbackReturn::FAILURE;
+            }
+
+            std::memset(&addr_, 0, sizeof(addr_));
+            addr_.sin_family = AF_INET;
+            addr_.sin_port = htons(kAtiPort);
+            if (::inet_pton(AF_INET, sensor_ip.c_str(), &addr_.sin_addr) != 1)
+            {
+                RCLCPP_ERROR(node_->get_logger(), "invalid ATI sensor_ip: %s", sensor_ip.c_str());
+                shutdown_socket();
+                return CallbackReturn::FAILURE;
+            }
             return CallbackReturn::SUCCESS;
         }
 
-        CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+        CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override
         {
-            if (start_sensing() > 0)
-            {
-                is_running_ = true;
-                thread_ = std::make_unique<std::thread>(
-                    [this]() -> void
-                    {
-                        socklen_t len = sizeof(addr_);
-                        char readdata[36];
-
-                        RESPONSE resp;
-                        while (is_running_)
-                        {
-
-                            int resv_num = recvfrom(handle_, readdata, 36, 0, (struct sockaddr *)&addr_, &len);
-                            if (resv_num > 0)
-                            {
-                                auto force = std::make_shared<std::vector<double>>(6);
-                                resp.rdt_sequence = ntohl(*(uint32 *)&readdata[0]);
-                                resp.ft_sequence = ntohl(*(uint32 *)&readdata[4]);
-                                resp.status = ntohl(*(uint32 *)&readdata[8]);
-                                for (int i = 0; i < 6; i++)
-                                {
-                                    resp.FTData[i] = ntohl(*(int32 *)&readdata[12 + i * 4]);
-                                    force->at(i) = resp.FTData[i] / 1000000.0f;
-                                }
-                                get<double>("force").writeFromNonRT(force);
-                            }
-                        }
-                    });
-                if (!wait_data_comming())
-                    return CallbackReturn::FAILURE;
-
-                return CallbackReturn::SUCCESS;
-            }
-            else
+            if (SensorInterface::on_activate(previous_state) != CallbackReturn::SUCCESS ||
+                send_command(kStartCommand) != 8)
                 return CallbackReturn::FAILURE;
+
+            last_sequence_ = 0;
+            dropped_packets_.store(0, std::memory_order_relaxed);
+            bad_status_packets_.store(0, std::memory_order_relaxed);
+            is_running_.store(true, std::memory_order_release);
+            thread_ = std::make_unique<std::thread>(&FTATISensor::receive_loop, this);
+            if (!wait_data_comming())
+            {
+                is_running_.store(false, std::memory_order_release);
+                send_command(kStopCommand);
+                stop_thread();
+                return CallbackReturn::FAILURE;
+            }
+            return CallbackReturn::SUCCESS;
         }
 
         CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override
         {
+            is_running_.store(false, std::memory_order_release);
+            send_command(kStopCommand);
             SensorInterface::on_deactivate(previous_state);
-            stop_sensing();
+            RCLCPP_INFO(
+                node_->get_logger(), "ATI stopped: dropped=%lu bad_status=%lu",
+                static_cast<unsigned long>(dropped_packets_.load(std::memory_order_relaxed)),
+                static_cast<unsigned long>(bad_status_packets_.load(std::memory_order_relaxed)));
             return CallbackReturn::SUCCESS;
         }
 
-    protected:
+        CallbackReturn on_shutdown(const rclcpp_lifecycle::State &previous_state) override
+        {
+            is_running_.store(false, std::memory_order_release);
+            send_command(kStopCommand);
+            stop_thread();
+            shutdown_socket();
+            return SensorInterface::on_shutdown(previous_state);
+        }
+
+    private:
+        int send_command(std::uint16_t command)
+        {
+            if (handle_ < 0)
+                return -1;
+            std::array<std::uint8_t, 8> request{};
+            const std::uint16_t header = htons(kAtiHeader);
+            const std::uint16_t network_command = htons(command);
+            const std::uint32_t samples = htonl(kContinuousSamples);
+            std::memcpy(request.data(), &header, sizeof(header));
+            std::memcpy(request.data() + 2, &network_command, sizeof(network_command));
+            std::memcpy(request.data() + 4, &samples, sizeof(samples));
+            return static_cast<int>(::sendto(
+                handle_, request.data(), request.size(), 0,
+                reinterpret_cast<const sockaddr *>(&addr_), sizeof(addr_)));
+        }
+
+        void receive_loop()
+        {
+            std::array<std::uint8_t, kResponseBytes> packet{};
+            std::vector<double> force(6, 0.0);
+            while (is_running_.load(std::memory_order_acquire))
+            {
+                sockaddr_in source_addr{};
+                socklen_t source_len = sizeof(source_addr);
+                const auto received = ::recvfrom(
+                    handle_, packet.data(), packet.size(), MSG_TRUNC,
+                    reinterpret_cast<sockaddr *>(&source_addr), &source_len);
+                if (received != static_cast<ssize_t>(packet.size()) ||
+                    source_addr.sin_addr.s_addr != addr_.sin_addr.s_addr)
+                    continue;
+
+                const auto rdt_sequence = ntohl(read_network_value<std::uint32_t>(packet.data()));
+                const auto status = ntohl(read_network_value<std::uint32_t>(packet.data() + 8));
+                if (status != 0)
+                {
+                    bad_status_packets_.fetch_add(1, std::memory_order_relaxed);
+                    continue;
+                }
+                if (last_sequence_ != 0)
+                {
+                    const std::uint32_t expected = last_sequence_ + 1;
+                    if (rdt_sequence != expected)
+                    {
+                        const std::uint32_t missed = rdt_sequence > expected
+                                                         ? rdt_sequence - expected
+                                                         : 1U;
+                        dropped_packets_.fetch_add(missed, std::memory_order_relaxed);
+                    }
+                }
+                last_sequence_ = rdt_sequence;
+
+                for (std::size_t i = 0; i < force.size(); ++i)
+                {
+                    const auto raw_network = read_network_value<std::uint32_t>(
+                        packet.data() + 12 + i * sizeof(std::uint32_t));
+                    const auto raw = static_cast<std::int32_t>(ntohl(raw_network));
+                    const double counts_per_unit =
+                        i < 3 ? force_counts_per_unit_ : torque_counts_per_unit_;
+                    force[i] = static_cast<double>(raw) / counts_per_unit;
+                }
+                write_sample<double>("force", force);
+            }
+        }
+
+        void shutdown_socket()
+        {
+            is_running_.store(false, std::memory_order_release);
+            if (handle_ >= 0)
+            {
+                send_command(kStopCommand);
+                ::shutdown(handle_, SHUT_RDWR);
+            }
+            stop_thread();
+            if (handle_ >= 0)
+            {
+                ::close(handle_);
+                handle_ = -1;
+            }
+        }
+
         int handle_;
-        sockaddr_in addr_;
-        // rclcpp::Publisher<geometry_msgs::msg::Wrench>::SharedPtr publisher_;
+        sockaddr_in addr_{};
+        double force_counts_per_unit_;
+        double torque_counts_per_unit_;
+        std::uint32_t last_sequence_;
+        std::atomic<std::uint64_t> dropped_packets_;
+        std::atomic<std::uint64_t> bad_status_packets_;
     };
 
 } // namespace hardwares
 
 #include <pluginlib/class_list_macros.hpp>
-
 PLUGINLIB_EXPORT_CLASS(hardwares::FTATISensor, hardware_interface::SensorInterface)

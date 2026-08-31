@@ -10,6 +10,13 @@
 #include "kdl/tree.hpp"
 #include "kdl/chain.hpp"
 #include "kdl/chainiksolverpos_lma.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 namespace hardware_interface
 {
 
@@ -17,22 +24,23 @@ namespace hardware_interface
     {
     public:
         using SuperClass = HardwareInterface;
-        ~RobotInterface() {}
+        virtual ~RobotInterface() = default;
         RobotInterface();
         int configure_urdf(const std::string &robot_description);
         const std::vector<std::string> &get_joint_names() const { return joint_names_; }
         int get_dof() const { return dof_; }
         const urdf::Model &get_urdf_model() const { return robot_model_; }
         virtual int inverse_kinematics(const std::vector<double> &q, const Eigen::Matrix4d &Td, std::vector<double> &qd);
-        virtual bool is_stop() { return false; };
-
-        virtual bool is_hardware_paced() const { return false; }
-
-        virtual rclcpp::Duration get_last_control_period() const
-        {
-            return rclcpp::Duration(std::chrono::duration<double>(0.001));
-        }
-
+        // HUMBLE-FIX 01: Make the control-loop pacing and lifecycle contract explicit.
+        // Network/SDK driven robots such as Franka override is_hardware_paced() and
+        // expose the period returned by their hardware read call. Other backends use
+        // the ControlManager steady-clock timer through these safe defaults.
+        virtual bool is_hardware_paced() const noexcept { return false; }
+        virtual rclcpp::Duration get_last_read_period() const;
+        virtual bool begin_control() { return true; }
+        virtual void end_control() {}
+        virtual void request_stop() {}
+        virtual bool is_stop() { return false; }
         void set_update_rate(int rate) { update_rate_ = rate; }
         std::vector<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr> get_all_nodes();
         void robot_dynamics(const std::vector<double> &x, std::vector<double> &dx, double t,

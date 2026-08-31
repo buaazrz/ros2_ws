@@ -7,6 +7,9 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -148,6 +151,21 @@ public:
             dataLog.insert(dataLog.end(), d.data(), d.data() + d.size());
         };
     }
+    // HUMBLE-FIX 15: Preserve fixed-size Eigen references. Without this overload,
+    // DATA_WRAPPER(Vector6d) converts to a temporary MatrixXd on every sample.
+    template <typename Getter,
+              typename Result = typename std::remove_cv<typename std::remove_reference<
+                  typename std::invoke_result<Getter>::type>::type>::type,
+              typename = decltype(std::declval<const Result &>().data()),
+              typename = decltype(std::declval<const Result &>().size())>
+    DataInfo(std::string name, Getter getData) : name(std::move(name)), size(getData().size())
+    {
+        recordData = [getData](std::vector<double> &dataLog)
+        {
+            const auto &d = getData();
+            dataLog.insert(dataLog.end(), d.data(), d.data() + d.size());
+        };
+    }
     friend class DataLogger;
 };
 
@@ -184,20 +202,23 @@ private:
     std::vector<DataInfo> allDataInfo;
     std::vector<ExperimentContext> allConfig;
     size_t length;
+    size_t max_values;
+    size_t dropped_rows;
 
 public:
     DataLogger(std::initializer_list<DataInfo> allDataInfo_initializer, std::initializer_list<ExperimentContext> allConfig, size_t rows)
+        : length(0), max_values(0), dropped_rows(0)
     {
         allDataInfo = allDataInfo_initializer;
 
-        length = 0;
         for (const auto &dataInfo : allDataInfo)
         {
             length += dataInfo.size;
         }
         this->allConfig = allConfig;
 
-        dataLog.reserve(length * rows); // 提前分配内存，减少内存重新分配开销
+        max_values = length * rows;
+        dataLog.reserve(max_values); // fixed capacity: record() never grows this vector
     };
     ~DataLogger() {};
     /**
@@ -206,10 +227,20 @@ public:
      */
     void record()
     {
+        // HUMBLE-FIX 16: Never let a 1 kHz logger trigger vector growth at
+        // 1000/2000/4000/8000/... samples. Once full, retain the recorded window.
+        if (length == 0 || dataLog.size() + length > max_values)
+        {
+            ++dropped_rows;
+            return;
+        }
+        const auto row_start = dataLog.size();
         for (const auto &dataInfo : allDataInfo)
         {
             dataInfo.recordData(dataLog);
         }
+        if (dataLog.size() != row_start + length)
+            dataLog.resize(row_start);
     };
     /**
      * @brief 打印数据，用于调试
@@ -255,7 +286,9 @@ public:
         }
         file << std::endl;
 
-        // file << setprecision(10); // 设置输出精度(暂时不需要)
+        // HUMBLE-FIX 17: Preserve enough digits to distinguish sub-millisecond
+        // samples after the accumulated timestamp passes 10 seconds.
+        file << std::setprecision(std::numeric_limits<double>::max_digits10);
 
         // 写入标题栏
         for (const auto &dataInfo : allDataInfo)

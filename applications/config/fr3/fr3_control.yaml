@@ -19,7 +19,22 @@ control_node:
 FC3Robot:
   ros__parameters:
     robot_ip: 192.168.1.101
-    end_effector: ""
+    # HUMBLE-FIX 22: Never let URDF container iteration guess the control TCP.
+    # Replace this with your explicit calibrated tool/TCP link if it is added to URDF.
+    end_effector: "fr3_link8"
+    compute_model_state: false
+    # Enable only after mass, CoG and inertia describe the COMPLETE payload and
+    # Desk is not already applying the same payload.
+    set_payload: false
+    payload_mass_kg: 0.0
+    payload_cog: [0.0, 0.0, 0.0]
+    payload_inertia: [0.0, 0.0, 0.0,
+                      0.0, 0.0, 0.0,
+                      0.0, 0.0, 0.0]
+    # FCI collision behavior thresholds. These preserve the old values only as
+    # migration defaults; calibrate and lower them before contact experiments.
+    collision_joint_torque_thresholds: [200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0]
+    collision_cartesian_force_thresholds: [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
     # joint interface:
     joint_command_interface:
       - torque 
@@ -45,6 +60,10 @@ ft_sensor:
     state_interface: [force]
     state_length: [6]   
 
+RCMController:
+  ros__parameters:
+    max_torque_rate: 1000.0
+
 CartesianTrajImpPDController:
   ros__parameters:
     cmd_name: "torque"
@@ -52,6 +71,7 @@ CartesianTrajImpPDController:
     Bx: [7.0, 7.0,  7.0,  80.0,  80.0, 80.0] 
     Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
     Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 
+    max_torque_rate: 800.0
 
 CartesianImpedancePDController:
   ros__parameters:
@@ -60,6 +80,8 @@ CartesianImpedancePDController:
     Bx: [7.0, 7.0,  7.0,  80.0,  80.0, 80.0] 
     Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
     Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 
+    max_torque_rate: 1000.0
+    enable_udp_monitor: false
 
 
 
@@ -68,8 +90,8 @@ VariableImpedanceController:
     cmd_name: "torque"
     
     # 基础阻抗参数 (XY方向及旋转方向保持固定)
-    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 500.0] 
-    Bx: [7.0, 7.0,  7.0,  71.0,  71.0, 31.0] 
+    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0] 
+    Bx: [7.0, 7.0,  7.0,  71.0,  71.0, 71.0] 
     Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
     Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 
 
@@ -82,12 +104,17 @@ VariableImpedanceController:
     # --- 2. 力控参数 (Z方向) ---
     F_des_z: 3.0            # 期望接触力 (N)，根据实际需求设置正负
     F_max_z: 10.0            # 最大安全力限制 (N)
-    Kp_f: 1.5               # 力外环 P (建议先设为0，只用优化器调整)
-    Ki_f: 2.0              # 力外环 I (建议先设为0)  
+    F_stop_z: 12.0           # 实测 Z 向接触力连续超限后停止
+    F_stop_norm: 20.0        # 实测三维合力连续超限后停止
+    force_stop_samples: 5
+    Kp_f: 1.2               # 力外环 P (建议先设为0，只用优化器调整)
+    Ki_f: 0.0              # 力外环 I (建议先设为0)  
     kd_f: 0.0             # 力外环 D (建议先设为0)
+    integral_window_size: 50
     
     # --- 3. 刚度边界 (Z方向) ---
     Kz_min: 100.0             # 最小刚度 (自由空间/软接触)
     Kz_max: 2500.0    # 最大刚度 (硬接触)
-
-    dob_gain_val: 0.0
+    max_stiffness_rate: 20000.0  # N/m/s; 等价于 1 kHz 下每周期最多 20 N/m
+    max_torque_rate: 1000.0      # Nm/s; 等价于 1 kHz 下每周期最多 1 Nm
+    sensor_mass_kg: 0.0          # ATI 下方工具质量；标定完成后填写

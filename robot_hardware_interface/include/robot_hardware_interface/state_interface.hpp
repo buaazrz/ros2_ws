@@ -14,23 +14,23 @@ namespace hardware_interface
     struct StateInterface
     {
         template <typename T>
-        std::vector<T> & get(const std::string &name)
+        std::vector<T> &get(const std::string &name)
         {
             return std::get<std::unordered_map<std::string, std::vector<T>>>(state_)[name];
         }
         template <typename T>
-        const std::vector<T> & get (const std::string &name) const
+        const std::vector<T> &get(const std::string &name) const
         {
             return std::get<std::unordered_map<std::string, std::vector<T>>>(state_).at(name);
         }
 
         template <typename T>
-        std::unordered_map<std::string, std::vector<T>> & get()
+        std::unordered_map<std::string, std::vector<T>> &get()
         {
             return std::get<std::unordered_map<std::string, std::vector<T>>>(state_);
         }
         template <typename T>
-        const std::unordered_map<std::string, std::vector<T>> & get() const
+        const std::unordered_map<std::string, std::vector<T>> &get() const
         {
             return std::get<std::unordered_map<std::string, std::vector<T>>>(state_);
         }

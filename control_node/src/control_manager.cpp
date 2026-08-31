@@ -4,8 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include <algorithm>
-#include <sstream>
-#include <stdexcept>
+#include <cmath>
 #include <thread>
 using namespace std::chrono_literals;
 using namespace boost::numeric::odeint;
@@ -16,11 +15,11 @@ namespace control_node
         : rclcpp::Node(node_name, name_space, option),
           executor_(executor),
           running_(false),
-          running_request_(false),
+          control_loop_active_(false),
+          joint_state_publish_divider_(1),
+          joint_state_publish_count_(0),
           keep_running_(true)
     {
-        secondary_controllers_buffer_.writeFromNonRT(
-            std::make_shared<const ControllerList>(secondary_controllers_));
         auto parameter_file = this->get_parameter_or<std::string>("parameters", "");
         if (!parameter_file.empty())
         {
@@ -46,7 +45,7 @@ namespace control_node
         is_sim_real_time_ = this->get_parameter_or<bool>("sim_real_time", true);
         is_publish_joint_state_ = this->get_parameter_or<bool>("publish_joint_state", true);
         const int joint_state_publish_rate =
-            this->get_parameter_or<int>("joint_state_publish_rate", 100);
+            this->get_parameter_or<int>("joint_state_publish_rate", std::min(update_rate_, 100));
         joint_state_publish_divider_ = static_cast<std::size_t>(
             std::max(1, update_rate_ / std::max(1, joint_state_publish_rate)));
         if (is_publish_joint_state_ || is_simulation_)
@@ -72,16 +71,8 @@ namespace control_node
             int pos = robot_class.rfind(":");
             auto robot_name = robot_class.substr(pos + 1);
             robot_->set_update_rate(update_rate_);
-            robot_->initialize(robot_name);
-            if (real_time_publisher_)
-            {
-                auto &msg = real_time_publisher_->msg_;
-                msg.name = robot_->get_joint_names();
-                const auto dof = static_cast<std::size_t>(robot_->get_dof());
-                msg.position.resize(dof);
-                msg.velocity.resize(dof);
-                msg.effort.resize(dof);
-            }
+            if (!robot_->initialize(robot_name))
+                throw std::runtime_error("failed to initialize robot plugin " + robot_class);
             auto nodes = robot_->get_all_nodes();
             for (auto &no : nodes)
                 executor_->add_node(no);
@@ -101,6 +92,17 @@ namespace control_node
                 controllers_.push_back(controller);
                 executor_->add_node(controller->get_node()->get_node_base_interface());
             }
+
+            // HUMBLE-FIX 04: Allocate JointState storage once, before the RT loop.
+            if (real_time_publisher_)
+            {
+                auto &msg = real_time_publisher_->msg_;
+                msg.name = robot_->get_joint_names();
+                const auto dof = static_cast<std::size_t>(robot_->get_dof());
+                msg.position.resize(dof);
+                msg.velocity.resize(dof);
+                msg.effort.resize(dof);
+            }
         }
         catch (pluginlib::PluginlibException &ex)
         {
@@ -110,6 +112,10 @@ namespace control_node
         service_ = create_service<robot_control_msgs::srv::ControlCommand>("~/control_command",
                                                                            std::bind(&ControlManager::command_callback, this, std::placeholders::_1, std::placeholders::_2));
 
+        active_controller_buffer_.writeFromNonRT(ControllerPtr{});
+        secondary_controllers_buffer_.writeFromNonRT(
+            std::make_shared<const ControllerList>(ControllerList{}));
+
         executor_->add_node(this->get_node_base_interface());
     }
 
@@ -118,65 +124,47 @@ namespace control_node
     }
     bool ControlManager::remove_secondary_controller(const std::string &controller_name)
     {
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
         auto name = controller_name;
         int pos = name.rfind(":");
         name = name.substr(pos + 1);
-        // secondary_controllers_box_.set([=, &name](auto &value)
-        //                                {
-        //                                    auto it = std::find_if(value.begin(), value.end(), [=](auto &&v)
-        //                                                           { return v->get_node()->get_name() == name; });
-        //                                    if (it != value.end())
-        //                                    {
-        //                                        (*it)->get_node()->deactivate();
-        //                                        value.erase(it);
-        //                                    } });
-        auto it = std::find_if(secondary_controllers_.begin(), secondary_controllers_.end(), [=](auto &&v)
-                               { return v->get_node()->get_name() == name; });
-        if (it != secondary_controllers_.end())
+        auto it = std::find_if(
+            secondary_controllers_non_rt_.begin(), secondary_controllers_non_rt_.end(), [=](auto &&v)
+            { return v->get_node()->get_name() == name; });
+        if (it == secondary_controllers_non_rt_.end())
+            return false;
+        if ((*it)->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
-            (*it)->get_node()->deactivate();
-            secondary_controllers_.erase(it);
+            const auto state = (*it)->get_node()->deactivate();
+            if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+                return false;
         }
+        secondary_controllers_non_rt_.erase(it);
         secondary_controllers_buffer_.writeFromNonRT(
-            std::make_shared<const ControllerList>(secondary_controllers_));
-
+            std::make_shared<const ControllerList>(secondary_controllers_non_rt_));
         return true;
     }
     bool ControlManager::clear_secondary_controllers()
     {
-        // secondary_controllers_box_.set([this](auto &value)
-        //                                {
-        //                                    std::for_each(value.begin(), value.end(), [=](auto &&v)
-        //                                                  { v->get_node()->deactivate(); });
-        //                                    value.clear(); });
-        std::for_each(secondary_controllers_.begin(), secondary_controllers_.end(), [=](auto &&v)
-                      { v->get_node()->deactivate(); });
-        secondary_controllers_.clear();
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
+        for (auto &controller : secondary_controllers_non_rt_)
+        {
+            if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                controller->get_node()->deactivate();
+        }
+        secondary_controllers_non_rt_.clear();
         secondary_controllers_buffer_.writeFromNonRT(
-            std::make_shared<const ControllerList>(secondary_controllers_));
+            std::make_shared<const ControllerList>(ControllerList{}));
         return true;
     }
     bool ControlManager::add_secondary_controller(const std::string &controller_name)
     {
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
         auto name = controller_name;
         int pos = name.rfind(":");
         name = name.substr(pos + 1);
-        bool ret;
-        // active_controller_box_.get([=, &ret, &name](const auto &value)
-        //                            {
-        //                                if (value != nullptr && value->get_node()->get_name() == name)
-        //                                    ret = false;
-        //                                else
-        //                                    ret = true; });
-
-        std::shared_ptr<controller_interface::ControllerInterface> value;
-        active_controller_box_.get(value);
-        if (value != nullptr && value->get_node()->get_name() == name)
-            ret = false;
-        else
-            ret = true;
-
-        if (!ret)
+        const auto active_ptr = active_controller_buffer_.readFromNonRT();
+        if (active_ptr && *active_ptr && (*active_ptr)->get_node()->get_name() == name)
             return false;
 
         for (auto &controller : controllers_)
@@ -184,19 +172,17 @@ namespace control_node
 
             if (controller->get_node()->get_name() == name)
             {
-                // secondary_controllers_box_.set([=](auto &value)
-                //                                {
-                //                             if(std::find(value.begin(), value.end(), controller) == value.end())
-                //                                 value.push_back(controller);
-                //                             controller->get_node()->activate(); });
-                if (std::find(secondary_controllers_.begin(), secondary_controllers_.end(), controller) ==
-                    secondary_controllers_.end())
-                {
-                    secondary_controllers_.push_back(controller);
-                }
-                controller->get_node()->activate();
+                if (std::find(
+                        secondary_controllers_non_rt_.begin(),
+                        secondary_controllers_non_rt_.end(), controller) !=
+                    secondary_controllers_non_rt_.end())
+                    return true;
+                const auto state = controller->get_node()->activate();
+                if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                    return false;
+                secondary_controllers_non_rt_.push_back(controller);
                 secondary_controllers_buffer_.writeFromNonRT(
-                    std::make_shared<const ControllerList>(secondary_controllers_));
+                    std::make_shared<const ControllerList>(secondary_controllers_non_rt_));
                 return true;
             }
         }
@@ -205,6 +191,7 @@ namespace control_node
     }
     bool ControlManager::load_controller(const std::string &controller_name)
     {
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
         auto name = controller_name;
         int pos = name.rfind(":");
         name = name.substr(pos + 1);
@@ -239,95 +226,76 @@ namespace control_node
     }
     void ControlManager::interrupt()
     {
-        keep_running_ = false;
-        running_request_.store(false, std::memory_order_release);
+        // HUMBLE-FIX 05: Atomics avoid the blocking RealtimeBox mutex in the loop.
+        keep_running_.store(false, std::memory_order_release);
+        running_.store(false, std::memory_order_release);
+        if (robot_)
+            robot_->request_stop();
     }
-    bool ControlManager::is_keep_running()
+    bool ControlManager::is_keep_running() const
     {
-        return keep_running_;
+        return keep_running_.load(std::memory_order_acquire);
     }
+
+    bool ControlManager::deactivate_controller()
+    {
+        running_.store(false, std::memory_order_release);
+
+        // The control thread performs the normal stop/deactivate sequence. Bound the
+        // wait so a failed SDK call cannot hang the service callback forever.
+        const auto deadline = std::chrono::steady_clock::now() + 2s;
+        while (control_loop_active_.load(std::memory_order_acquire) &&
+               std::chrono::steady_clock::now() < deadline)
+            std::this_thread::sleep_for(2ms);
+
+        if (control_loop_active_.load(std::memory_order_acquire))
+        {
+            RCLCPP_ERROR(get_logger(), "timed out while stopping the active control loop");
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
+        auto active_ptr = active_controller_buffer_.readFromNonRT();
+        ControllerPtr controller = active_ptr ? *active_ptr : ControllerPtr{};
+        if (controller &&
+            controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
+            const auto state = controller->get_node()->deactivate();
+            if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+                return false;
+        }
+        active_controller_buffer_.writeFromNonRT(ControllerPtr{});
+        active_controller_.reset();
+        return true;
+    }
+
     bool ControlManager::activate_controller(const std::string &controller_name)
     {
-        bool running = false;
-        // active_controller_box_.get([=, &running](const auto &value)
-        //                            {
-        //     if (value)
-        //         running = true; });
-        std::shared_ptr<controller_interface::ControllerInterface> value;
-        active_controller_box_.get(value);
-        if (value)
-            running = true;
+        if (!deactivate_controller())
+            return false;
 
-        if (running)
-        {
-
-            do
-            {
-                running_request_.store(false, std::memory_order_release);
-                std::this_thread::sleep_for(5ms);
-                //     active_controller_box_.get([=, &running](const auto &value)
-                //                                {
-                // if (!value)
-                //     running = false; });
-                std::shared_ptr<controller_interface::ControllerInterface> value;
-                active_controller_box_.get(value);
-                if (!value)
-                    running = false;
-
-            } while (running);
-        }
-
+        std::lock_guard<std::mutex> lock(controller_management_mutex_);
+        auto name = controller_name;
+        const auto pos = name.rfind(":");
+        if (pos != std::string::npos)
+            name = name.substr(pos + 1);
         for (auto &controller : controllers_)
         {
-            if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE && controller->get_node()->get_name() == controller_name)
+            if (controller->get_node()->get_name() != name)
+                continue;
+            if (controller->get_node_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
             {
-                bool ret = true;
-                // active_controller_box_.set([=, &ret, &controller](auto &value)
-                //                            {
-                //     if (value)
-                //     {
-                //         auto state = value->get_node()->deactivate();
-                //         if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-                //         {
-                //             ret = false;
-                //             return;
-                //         }
-                //     }
-                //     value = controller;
-                //     auto state = value->get_node()->activate();
-                //     if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                //     {
-                //         value = nullptr;
-                //         ret = false;
-                //     }
-                //     else
-                //         RCLCPP_INFO(get_logger(), "controller %s is activated!", controller->get_node()->get_name()); });
-                // bool ret = true;
-                std::shared_ptr<controller_interface::ControllerInterface> value;
-                active_controller_box_.get(value);
-                if (value)
-                {
-                    auto state = value->get_node()->deactivate();
-                    if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-                    {
-                        return false;
-                    }
-                }
-                value = controller;
-                auto state = value->get_node()->activate();
-                if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                {
-                    value = nullptr;
-                    ret = false;
-                }
-                else
-                {
-                    RCLCPP_INFO(get_logger(), "controller %s is activated!", controller->get_node()->get_name());
-                }
-                active_controller_box_.set(value);
-                return ret;
+                RCLCPP_ERROR(get_logger(), "controller %s is not inactive", name.c_str());
+                return false;
             }
+            const auto state = controller->get_node()->activate();
+            if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                return false;
+            active_controller_buffer_.writeFromNonRT(controller);
+            RCLCPP_INFO(get_logger(), "controller %s is activated", name.c_str());
+            return true;
         }
+        RCLCPP_ERROR(get_logger(), "controller %s is not loaded", name.c_str());
         return false;
     }
 
@@ -346,11 +314,12 @@ namespace control_node
             response->result = remove_secondary_controller(request->cmd_params);
         else if (cmd == "clear")
             response->result = clear_secondary_controllers();
-        else if (cmd == "stop" || cmd == "deactivate")
+        else if (cmd == "deactivate" || cmd == "stop")
         {
-            running_request_.store(false, std::memory_order_release);
-            response->result = true;
+            response->result = deactivate_controller();
         }
+        else
+            RCLCPP_WARN(get_logger(), "unknown control command: %s", cmd.c_str());
     }
 
     int ControlManager::get_update_rate()
@@ -361,7 +330,12 @@ namespace control_node
     void ControlManager::shutdown_robot()
     {
         RCLCPP_INFO(this->get_logger(), "shutting down controllers and robot and all attached hardwares");
-        for (auto &controller : controllers_)
+        ControllerList controller_snapshot;
+        {
+            std::lock_guard<std::mutex> lock(controller_management_mutex_);
+            controller_snapshot = controllers_;
+        }
+        for (auto &controller : controller_snapshot)
         {
             controller->finalize();
         }
@@ -371,66 +345,51 @@ namespace control_node
     void control_node::ControlManager::read(const rclcpp::Time &t, const rclcpp::Duration &period)
     {
         robot_->read(t, period);
-        if (is_publish_joint_state_ &&
-            ++joint_state_publish_counter_ >= joint_state_publish_divider_)
+        if (!is_publish_joint_state_ || !real_time_publisher_)
+            return;
+
+        ++joint_state_publish_count_;
+        if (joint_state_publish_count_ < joint_state_publish_divider_)
+            return;
+        joint_state_publish_count_ = 0;
+
+        // HUMBLE-FIX 06: No make_shared/vector assignment in the RT path. The
+        // message vectors were sized in the constructor and are filled in place.
+        if (real_time_publisher_->trylock())
         {
-            joint_state_publish_counter_ = 0;
-            // [HUMBLE-FIX 06] No make_shared/vector assignment at 1 kHz.  Data
-            // are copied only after trylock succeeds and publication is decimated.
-            if (real_time_publisher_->trylock())
+            auto &msg = real_time_publisher_->msg_;
+            const auto &state = robot_->get_state_interface().get<double>();
+            const auto copy_state = [&state](const char *name, auto &destination)
             {
-                auto &msg = real_time_publisher_->msg_;
-                const auto &state = robot_->get_state_interface().get<double>();
-                const auto position = state.find("position");
-                const auto velocity = state.find("velocity");
-                const auto torque = state.find("torque");
-                if (position != state.end())
-                    std::copy_n(position->second.begin(),
-                                std::min(position->second.size(), msg.position.size()),
-                                msg.position.begin());
-                if (velocity != state.end())
-                    std::copy_n(velocity->second.begin(),
-                                std::min(velocity->second.size(), msg.velocity.size()),
-                                msg.velocity.begin());
-                if (torque != state.end())
-                    std::copy_n(torque->second.begin(),
-                                std::min(torque->second.size(), msg.effort.size()),
-                                msg.effort.begin());
-                msg.header.stamp = t;
-                real_time_publisher_->unlockAndPublish();
-            }
+                const auto it = state.find(name);
+                if (it == state.end())
+                    return;
+                const auto count = std::min(destination.size(), it->second.size());
+                std::copy_n(it->second.begin(), count, destination.begin());
+            };
+            copy_state("position", msg.position);
+            copy_state("velocity", msg.velocity);
+            copy_state("torque", msg.effort);
+            msg.header.stamp = this->now();
+            real_time_publisher_->unlockAndPublish();
         }
     }
 
     void ControlManager::update(const rclcpp::Time &t, const rclcpp::Duration &period)
     {
 
+        if (!active_controller_)
+            return;
         active_controller_->update(t, period);
-        // secondary_controllers_box_.try_get([&t, &period](const auto &value)
-        //                                    {
-        //     for (auto &&controller : value)
-        //     {
-        //         if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        //         {
-        //             controller->update(t, period);
-        //         }
-        //     } });
-        const auto *secondary_snapshot = secondary_controllers_buffer_.readFromRT();
-        if (secondary_snapshot && *secondary_snapshot)
+
+        const auto snapshot_ptr = secondary_controllers_buffer_.readFromRT();
+        if (!snapshot_ptr || !*snapshot_ptr)
+            return;
+        for (const auto &controller : **snapshot_ptr)
         {
-            for (const auto &controller : **secondary_snapshot)
-            {
-                if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-                    controller->update(t, period);
-            }
+            if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                controller->update(t, period);
         }
-        // for (auto &controller : controllers_)
-        // {
-        //     if (controller->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        //     {
-        //         controller->update(t, period);
-        //     }
-        // }
     }
 
     void ControlManager::write(const rclcpp::Time &t, const rclcpp::Duration &period)
@@ -535,169 +494,160 @@ namespace control_node
     }
     void ControlManager::control_loop()
     {
-        const auto target_period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
+        // HUMBLE-FIX 07: Split hardware-paced and software-paced loops. Franka's
+        // readOnce() supplies the 1 kHz clock; UR/Diana/simulation use steady_clock.
+        using SteadyClock = std::chrono::steady_clock;
+        const auto nominal_period = std::chrono::nanoseconds(1'000'000'000LL / update_rate_);
+        const auto nominal_ros_period = rclcpp::Duration::from_nanoseconds(nominal_period.count());
         const bool hardware_paced = robot_->is_hardware_paced();
-        auto next_iteration_time = std::chrono::steady_clock::now();
-        auto previous_steady_time = next_iteration_time;
-        rclcpp::Duration measured_period(0, 0);
-        bool first_controller_update = true;
+        auto next_iteration_time = SteadyClock::now();
+        auto previous_read_time = next_iteration_time;
+        bool have_previous_read = false;
+        control_loop_active_.store(true, std::memory_order_release);
 
-        while (running_ && !robot_->is_stop()) // give robot a change to stop running
+        while (running_.load(std::memory_order_acquire) && !robot_->is_stop())
         {
-            // [HUMBLE-FIX 07] Franka readOnce() is the only 1 kHz pacer.  Its
-            // returned period is authoritative and there is no second sleep.
-            const auto read_stamp = this->now();
-            read(read_stamp, measured_period);
-            if (robot_->is_stop())
-            {
-                // [HUMBLE-FIX 52] A hardware/FCI exception is not a normal
-                // controller stop request.  Do not silently re-arm the robot in
-                // the outer lifecycle loop; shut the process down for diagnosis.
-                keep_running_.store(false, std::memory_order_release);
-                break;
-            }
+            if (!hardware_paced)
+                std::this_thread::sleep_until(next_iteration_time);
 
+            const auto read_stamp = this->now();
+            read(read_stamp, nominal_ros_period);
+            const auto after_read = SteadyClock::now();
+
+            rclcpp::Duration measured_period = nominal_ros_period;
             if (hardware_paced)
             {
-                measured_period = robot_->get_last_control_period();
+                const auto hardware_period = robot_->get_last_read_period();
+                if (hardware_period.nanoseconds() > 0)
+                    measured_period = hardware_period;
             }
-            else
+            else if (have_previous_read)
             {
-                const auto steady_now = std::chrono::steady_clock::now();
-                measured_period = rclcpp::Duration(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        steady_now - previous_steady_time));
-                previous_steady_time = steady_now;
+                const auto host_period = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    after_read - previous_read_time);
+                if (host_period.count() > 0)
+                    measured_period = rclcpp::Duration::from_nanoseconds(host_period.count());
             }
+            previous_read_time = after_read;
+            have_previous_read = true;
 
+            // ROS time is a message/controller timestamp only; the period above is
+            // derived from FCI or steady_clock and cannot jump with /clock.
             const auto current_time = this->now();
-            // [HUMBLE-FIX 45] Existing controllers use a zero first period to snapshot their
-            // hold pose/joint position.  Preserve that lifecycle convention,
-            // then provide the hardware-reported period from cycle two onward.
-            const rclcpp::Duration controller_period = first_controller_update
-                                                           ? rclcpp::Duration(0, 0)
-                                                           : measured_period;
-            first_controller_update = false;
-            update(current_time, controller_period);
+            update(current_time, measured_period);
             write(current_time, measured_period);
-            running_ = running_request_.load(std::memory_order_acquire);
+            if (active_controller_ && active_controller_->requests_stop())
+                running_.store(false, std::memory_order_release);
 
-            // Non-hardware-paced backends still require an absolute steady-clock
-            // deadline.  Absolute scheduling avoids accumulating loop drift.
             if (!hardware_paced)
             {
-                next_iteration_time += target_period;
-                std::this_thread::sleep_until(next_iteration_time);
+                next_iteration_time += nominal_period;
+                const auto now = SteadyClock::now();
+                if (now > next_iteration_time + nominal_period)
+                    next_iteration_time = now;
             }
         }
+        running_.store(false, std::memory_order_release);
     }
 
     void ControlManager::prepare_loop()
     {
-        while (keep_running_ &&
-               robot_->get_node_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        auto state = robot_->get_node_state();
+        while (keep_running_.load(std::memory_order_acquire) &&
+               state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
         {
             RCLCPP_WARN(this->get_logger(), "robot is not configured!");
             std::this_thread::sleep_for(1s);
+            state = robot_->get_node_state();
         }
-        if (!keep_running_)
+        if (!keep_running_.load(std::memory_order_acquire))
         {
-            running_ = false;
+            running_.store(false, std::memory_order_release);
             return;
         }
-        const auto activated_state = robot_->get_node()->activate();
-        if (activated_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-            throw std::runtime_error("robot activation failed");
+        const auto robot_state = robot_->get_node()->activate();
+        if (robot_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            throw std::runtime_error("failed to activate robot hardware");
+
         RCLCPP_INFO(get_logger(), "waiting for controller to be activated...");
         std::stringstream ss;
-        for (auto &&controller : controllers_)
+        ControllerList controller_snapshot;
+        {
+            std::lock_guard<std::mutex> lock(controller_management_mutex_);
+            controller_snapshot = controllers_;
+        }
+        for (const auto &controller : controller_snapshot)
         {
             ss << controller->get_node()->get_name() << " ";
         }
         RCLCPP_INFO(get_logger(), "available controllers are: %s", ss.str().c_str());
-        // std::stringstream ss2;
-        // secondary_controllers_box_.get([this, &ss2](const auto &value)
-        //                                {
-        //     for (auto &&controller : value)
-        //     {
-        //         ss2 << controller->get_node()->get_name() << " ";
-        //     } });
         std::stringstream ss2;
-        const auto *secondary_snapshot = secondary_controllers_buffer_.readFromRT();
-        if (secondary_snapshot && *secondary_snapshot)
+        const auto secondary_ptr = secondary_controllers_buffer_.readFromNonRT();
+        if (secondary_ptr && *secondary_ptr)
         {
-            for (const auto &controller : **secondary_snapshot)
+            for (const auto &controller : **secondary_ptr)
                 ss2 << controller->get_node()->get_name() << " ";
         }
         RCLCPP_INFO(get_logger(), "secondary controllers are: %s", ss2.str().c_str());
+
+        if (!default_controller_.empty())
+        {
+            const auto requested_default = default_controller_;
+            default_controller_.clear();
+            if (!activate_controller(requested_default))
+                throw std::runtime_error("failed to activate default controller " + requested_default);
+        }
+
         do
         {
-            if (robot_->is_hardware_paced())
-            {
-                // [HUMBLE-FIX 08] Keep the FCI read/write handshake alive while
-                // waiting for controller activation.  Zero torque is initialized
-                // by the hardware interface before this loop starts.
-                const auto stamp = this->now();
-                read(stamp, robot_->get_last_control_period());
-                if (robot_->is_stop())
-                {
-                    running_ = false;
-                    keep_running_.store(false, std::memory_order_release);
-                    return;
-                }
-                write(this->now(), robot_->get_last_control_period());
-            }
-            else
-            {
-                std::this_thread::sleep_for(1s);
-                read(this->now(), rclcpp::Duration::from_seconds(1.0));
-            }
-            // active_controller_box_.get([=](const auto &value)
-            //                            { active_controller_ = value; });
-            std::shared_ptr<controller_interface::ControllerInterface> value;
-            active_controller_box_.get(value);
-            active_controller_ = value;
-            if (!default_controller_.empty())
-            {
-                activate_controller(default_controller_);
-                default_controller_.clear();
-            }
-        } while (keep_running_ && !active_controller_);
-        if (!keep_running_)
+            const auto active_ptr = active_controller_buffer_.readFromRT();
+            active_controller_ = active_ptr ? *active_ptr : ControllerPtr{};
+            if (!active_controller_)
+                std::this_thread::sleep_for(20ms);
+        } while (keep_running_.load(std::memory_order_acquire) && !active_controller_);
+        if (!keep_running_.load(std::memory_order_acquire))
         {
-            running_ = false;
+            running_.store(false, std::memory_order_release);
             return;
         }
-        running_request_.store(true, std::memory_order_release);
-        running_ = true;
+
+        // HUMBLE-FIX 33: Existing controllers select their hardware mode in the
+        // first update(period=0). FC3 activation has already obtained a fresh
+        // Robot::readOnce() sample, so initialize the command and mode now. No
+        // command is sent to FCI until control_loop() performs read-update-write.
+        active_controller_->update(this->now(), rclcpp::Duration(0, 0));
+
+        // Start the SDK control stream only now, immediately before the continuous
+        // read-update-write sequence.
+        if (!robot_->begin_control())
+            throw std::runtime_error("failed to start the robot control stream");
+        running_.store(true, std::memory_order_release);
     }
 
     void ControlManager::end_loop()
     {
-        // active_controller_box_.set([=](auto &value)
-        //                            {
-        //         if (value)
-        //         {
-        //             auto state = value->get_node_state();
-        //             if(state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        //                 value->get_node()->deactivate();
+        running_.store(false, std::memory_order_release);
+        robot_->end_control();
 
-        //             value = nullptr;
-        //         } });
-        std::shared_ptr<controller_interface::ControllerInterface> value;
-        active_controller_box_.get(value);
-        if (value)
         {
-            auto state = value->get_node_state();
-            if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            std::lock_guard<std::mutex> lock(controller_management_mutex_);
+            auto active_ptr = active_controller_buffer_.readFromNonRT();
+            ControllerPtr value = active_ptr ? *active_ptr : ControllerPtr{};
+            if (value &&
+                value->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
                 value->get_node()->deactivate();
-
-            value = nullptr;
+            active_controller_buffer_.writeFromNonRT(ControllerPtr{});
+            active_controller_.reset();
         }
-        active_controller_box_.set(value);
-        auto state = robot_->get_node_state();
+
+        const auto state = robot_->get_node_state();
         if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-            robot_->get_node()->deactivate();
+        {
+            const auto inactive_state = robot_->get_node()->deactivate();
+            if (inactive_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+                RCLCPP_ERROR(get_logger(), "failed to deactivate robot hardware");
+        }
+        control_loop_active_.store(false, std::memory_order_release);
     }
 
 }
