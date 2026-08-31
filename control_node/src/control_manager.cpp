@@ -3,6 +3,10 @@
 #include <boost/numeric/odeint.hpp>
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include <algorithm>
+#include <sstream>
+#include <stdexcept>
+#include <thread>
 using namespace std::chrono_literals;
 using namespace boost::numeric::odeint;
 namespace control_node
@@ -12,9 +16,11 @@ namespace control_node
         : rclcpp::Node(node_name, name_space, option),
           executor_(executor),
           running_(false),
-          running_box_(false),
+          running_request_(false),
           keep_running_(true)
     {
+        secondary_controllers_buffer_.writeFromNonRT(
+            std::make_shared<const ControllerList>(secondary_controllers_));
         auto parameter_file = this->get_parameter_or<std::string>("parameters", "");
         if (!parameter_file.empty())
         {
@@ -34,9 +40,15 @@ namespace control_node
             }
         }
         update_rate_ = this->get_parameter_or<int>("update_rate", 1000);
+        if (update_rate_ <= 0)
+            throw std::invalid_argument("update_rate must be greater than zero");
         is_simulation_ = this->get_parameter_or<bool>("simulation", true);
         is_sim_real_time_ = this->get_parameter_or<bool>("sim_real_time", true);
         is_publish_joint_state_ = this->get_parameter_or<bool>("publish_joint_state", true);
+        const int joint_state_publish_rate =
+            this->get_parameter_or<int>("joint_state_publish_rate", 100);
+        joint_state_publish_divider_ = static_cast<std::size_t>(
+            std::max(1, update_rate_ / std::max(1, joint_state_publish_rate)));
         if (is_publish_joint_state_ || is_simulation_)
         {
             joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", rclcpp::SensorDataQoS());
@@ -61,6 +73,15 @@ namespace control_node
             auto robot_name = robot_class.substr(pos + 1);
             robot_->set_update_rate(update_rate_);
             robot_->initialize(robot_name);
+            if (real_time_publisher_)
+            {
+                auto &msg = real_time_publisher_->msg_;
+                msg.name = robot_->get_joint_names();
+                const auto dof = static_cast<std::size_t>(robot_->get_dof());
+                msg.position.resize(dof);
+                msg.velocity.resize(dof);
+                msg.effort.resize(dof);
+            }
             auto nodes = robot_->get_all_nodes();
             for (auto &no : nodes)
                 executor_->add_node(no);
@@ -109,16 +130,15 @@ namespace control_node
         //                                        (*it)->get_node()->deactivate();
         //                                        value.erase(it);
         //                                    } });
-        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> value;
-        secondary_controllers_box_.get(value);
-        auto it = std::find_if(value.begin(), value.end(), [=](auto &&v)
+        auto it = std::find_if(secondary_controllers_.begin(), secondary_controllers_.end(), [=](auto &&v)
                                { return v->get_node()->get_name() == name; });
-        if (it != value.end())
+        if (it != secondary_controllers_.end())
         {
             (*it)->get_node()->deactivate();
-            value.erase(it);
+            secondary_controllers_.erase(it);
         }
-        secondary_controllers_box_.set(value);
+        secondary_controllers_buffer_.writeFromNonRT(
+            std::make_shared<const ControllerList>(secondary_controllers_));
 
         return true;
     }
@@ -129,12 +149,11 @@ namespace control_node
         //                                    std::for_each(value.begin(), value.end(), [=](auto &&v)
         //                                                  { v->get_node()->deactivate(); });
         //                                    value.clear(); });
-        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> value;
-        secondary_controllers_box_.get(value);
-        std::for_each(value.begin(), value.end(), [=](auto &&v)
+        std::for_each(secondary_controllers_.begin(), secondary_controllers_.end(), [=](auto &&v)
                       { v->get_node()->deactivate(); });
-        value.clear();
-        secondary_controllers_box_.set(value);
+        secondary_controllers_.clear();
+        secondary_controllers_buffer_.writeFromNonRT(
+            std::make_shared<const ControllerList>(secondary_controllers_));
         return true;
     }
     bool ControlManager::add_secondary_controller(const std::string &controller_name)
@@ -170,14 +189,14 @@ namespace control_node
                 //                             if(std::find(value.begin(), value.end(), controller) == value.end())
                 //                                 value.push_back(controller);
                 //                             controller->get_node()->activate(); });
-                std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_value;
-                secondary_controllers_box_.get(sec_value);
-                if (std::find(sec_value.begin(), sec_value.end(), controller) == sec_value.end())
+                if (std::find(secondary_controllers_.begin(), secondary_controllers_.end(), controller) ==
+                    secondary_controllers_.end())
                 {
-                    sec_value.push_back(controller);
+                    secondary_controllers_.push_back(controller);
                 }
                 controller->get_node()->activate();
-                secondary_controllers_box_.set(sec_value);
+                secondary_controllers_buffer_.writeFromNonRT(
+                    std::make_shared<const ControllerList>(secondary_controllers_));
                 return true;
             }
         }
@@ -221,8 +240,7 @@ namespace control_node
     void ControlManager::interrupt()
     {
         keep_running_ = false;
-        // running_box_ = false;
-        running_box_.set(false);
+        running_request_.store(false, std::memory_order_release);
     }
     bool ControlManager::is_keep_running()
     {
@@ -245,7 +263,7 @@ namespace control_node
 
             do
             {
-                running_box_.set(false);
+                running_request_.store(false, std::memory_order_release);
                 std::this_thread::sleep_for(5ms);
                 //     active_controller_box_.get([=, &running](const auto &value)
                 //                                {
@@ -328,10 +346,9 @@ namespace control_node
             response->result = remove_secondary_controller(request->cmd_params);
         else if (cmd == "clear")
             response->result = clear_secondary_controllers();
-        else if (cmd == "stop")
+        else if (cmd == "stop" || cmd == "deactivate")
         {
-            // running_box_ = false;
-            running_box_.set(false);
+            running_request_.store(false, std::memory_order_release);
             response->result = true;
         }
     }
@@ -354,32 +371,32 @@ namespace control_node
     void control_node::ControlManager::read(const rclcpp::Time &t, const rclcpp::Duration &period)
     {
         robot_->read(t, period);
-        if (is_publish_joint_state_)
+        if (is_publish_joint_state_ &&
+            ++joint_state_publish_counter_ >= joint_state_publish_divider_)
         {
-            auto joint_state = std::make_shared<sensor_msgs::msg::JointState>();
-            joint_state->name = robot_->get_joint_names();
-            auto &state = robot_->get_state_interface().get<double>();
-            auto it = state.find("position");
-            if (it != state.end())
-            {
-                joint_state->position = it->second;
-            }
-            it = state.find("velocity");
-            if (it != state.end())
-            {
-                joint_state->velocity = it->second;
-            }
-            it = state.find("torque");
-            if (it != state.end())
-            {
-                joint_state->effort = it->second;
-            }
-            joint_state->header.stamp = t;
-            // this is faster but may block the rt thread
-            // joint_state_publisher_->publish(*joint_state);
+            joint_state_publish_counter_ = 0;
+            // [HUMBLE-FIX 06] No make_shared/vector assignment at 1 kHz.  Data
+            // are copied only after trylock succeeds and publication is decimated.
             if (real_time_publisher_->trylock())
             {
-                real_time_publisher_->msg_ = *joint_state;
+                auto &msg = real_time_publisher_->msg_;
+                const auto &state = robot_->get_state_interface().get<double>();
+                const auto position = state.find("position");
+                const auto velocity = state.find("velocity");
+                const auto torque = state.find("torque");
+                if (position != state.end())
+                    std::copy_n(position->second.begin(),
+                                std::min(position->second.size(), msg.position.size()),
+                                msg.position.begin());
+                if (velocity != state.end())
+                    std::copy_n(velocity->second.begin(),
+                                std::min(velocity->second.size(), msg.velocity.size()),
+                                msg.velocity.begin());
+                if (torque != state.end())
+                    std::copy_n(torque->second.begin(),
+                                std::min(torque->second.size(), msg.effort.size()),
+                                msg.effort.begin());
+                msg.header.stamp = t;
                 real_time_publisher_->unlockAndPublish();
             }
         }
@@ -398,13 +415,13 @@ namespace control_node
         //             controller->update(t, period);
         //         }
         //     } });
-        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
-        secondary_controllers_box_.get(sec_controllers);
-        for (auto &&controller : sec_controllers)
+        const auto *secondary_snapshot = secondary_controllers_buffer_.readFromRT();
+        if (secondary_snapshot && *secondary_snapshot)
         {
-            if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            for (const auto &controller : **secondary_snapshot)
             {
-                controller->update(t, period);
+                if (controller->get_node_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+                    controller->update(t, period);
             }
         }
         // for (auto &controller : controllers_)
@@ -518,45 +535,67 @@ namespace control_node
     }
     void ControlManager::control_loop()
     {
-        // for calculating sleep time
-        // double dt = 1.0 / update_rate_;
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
-        auto const cm_now = std::chrono::nanoseconds(this->now().nanoseconds());
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
-            next_iteration_time{cm_now};
-
-        rclcpp::Time previous_time = this->now();
+        const auto target_period = std::chrono::nanoseconds(1'000'000'000 / update_rate_);
+        const bool hardware_paced = robot_->is_hardware_paced();
+        auto next_iteration_time = std::chrono::steady_clock::now();
+        auto previous_steady_time = next_iteration_time;
         rclcpp::Duration measured_period(0, 0);
-        bool flag = false;
+        bool first_controller_update = true;
+
         while (running_ && !robot_->is_stop()) // give robot a change to stop running
         {
-            // calculate measured period
-            auto current_time = this->now();
-            if (flag)
-                measured_period = current_time - previous_time;
+            // [HUMBLE-FIX 07] Franka readOnce() is the only 1 kHz pacer.  Its
+            // returned period is authoritative and there is no second sleep.
+            const auto read_stamp = this->now();
+            read(read_stamp, measured_period);
+            if (robot_->is_stop())
+            {
+                // [HUMBLE-FIX 52] A hardware/FCI exception is not a normal
+                // controller stop request.  Do not silently re-arm the robot in
+                // the outer lifecycle loop; shut the process down for diagnosis.
+                keep_running_.store(false, std::memory_order_release);
+                break;
+            }
+
+            if (hardware_paced)
+            {
+                measured_period = robot_->get_last_control_period();
+            }
             else
-                flag = true;
-            previous_time = current_time;
+            {
+                const auto steady_now = std::chrono::steady_clock::now();
+                measured_period = rclcpp::Duration(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        steady_now - previous_steady_time));
+                previous_steady_time = steady_now;
+            }
 
-            // execute update loop
-            read(current_time, measured_period);
-            update(current_time, measured_period);
+            const auto current_time = this->now();
+            // [HUMBLE-FIX 45] Existing controllers use a zero first period to snapshot their
+            // hold pose/joint position.  Preserve that lifecycle convention,
+            // then provide the hardware-reported period from cycle two onward.
+            const rclcpp::Duration controller_period = first_controller_update
+                                                           ? rclcpp::Duration(0, 0)
+                                                           : measured_period;
+            first_controller_update = false;
+            update(current_time, controller_period);
             write(current_time, measured_period);
-            // get running state from box
-            // running_box_.try_get([this](const auto &value)
-            //                      { running_ = value; });
-            running_box_.get(running_);
+            running_ = running_request_.load(std::memory_order_acquire);
 
-            // wait until we hit the end of the period
-            next_iteration_time += period;
-            // std::this_thread::sleep_until(next_iteration_time);
+            // Non-hardware-paced backends still require an absolute steady-clock
+            // deadline.  Absolute scheduling avoids accumulating loop drift.
+            if (!hardware_paced)
+            {
+                next_iteration_time += target_period;
+                std::this_thread::sleep_until(next_iteration_time);
+            }
         }
     }
 
     void ControlManager::prepare_loop()
     {
-        auto state = robot_->get_node_state();
-        while (keep_running_ && state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        while (keep_running_ &&
+               robot_->get_node_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
         {
             RCLCPP_WARN(this->get_logger(), "robot is not configured!");
             std::this_thread::sleep_for(1s);
@@ -566,7 +605,9 @@ namespace control_node
             running_ = false;
             return;
         }
-        robot_->get_node()->activate();
+        const auto activated_state = robot_->get_node()->activate();
+        if (activated_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            throw std::runtime_error("robot activation failed");
         RCLCPP_INFO(get_logger(), "waiting for controller to be activated...");
         std::stringstream ss;
         for (auto &&controller : controllers_)
@@ -582,17 +623,35 @@ namespace control_node
         //         ss2 << controller->get_node()->get_name() << " ";
         //     } });
         std::stringstream ss2;
-        std::vector<std::shared_ptr<controller_interface::ControllerInterface>> sec_controllers;
-        secondary_controllers_box_.get(sec_controllers);
-        for (auto &&controller : sec_controllers)
+        const auto *secondary_snapshot = secondary_controllers_buffer_.readFromRT();
+        if (secondary_snapshot && *secondary_snapshot)
         {
-            ss2 << controller->get_node()->get_name() << " ";
+            for (const auto &controller : **secondary_snapshot)
+                ss2 << controller->get_node()->get_name() << " ";
         }
         RCLCPP_INFO(get_logger(), "secondary controllers are: %s", ss2.str().c_str());
         do
         {
-            std::this_thread::sleep_for(1s);
-            read(this->now(), rclcpp::Duration::from_seconds(1.0));
+            if (robot_->is_hardware_paced())
+            {
+                // [HUMBLE-FIX 08] Keep the FCI read/write handshake alive while
+                // waiting for controller activation.  Zero torque is initialized
+                // by the hardware interface before this loop starts.
+                const auto stamp = this->now();
+                read(stamp, robot_->get_last_control_period());
+                if (robot_->is_stop())
+                {
+                    running_ = false;
+                    keep_running_.store(false, std::memory_order_release);
+                    return;
+                }
+                write(this->now(), robot_->get_last_control_period());
+            }
+            else
+            {
+                std::this_thread::sleep_for(1s);
+                read(this->now(), rclcpp::Duration::from_seconds(1.0));
+            }
             // active_controller_box_.get([=](const auto &value)
             //                            { active_controller_ = value; });
             std::shared_ptr<controller_interface::ControllerInterface> value;
@@ -609,8 +668,7 @@ namespace control_node
             running_ = false;
             return;
         }
-        // running_box_ = true;
-        running_box_.set(true);
+        running_request_.store(true, std::memory_order_release);
         running_ = true;
     }
 

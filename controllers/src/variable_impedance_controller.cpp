@@ -84,7 +84,7 @@ namespace controllers
             node_->get_parameter_or<std::vector<double>>("Kn", Kn_vec_, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             node_->get_parameter_or<std::vector<double>>("Bn", Bn_vec_, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
             node_->get_parameter_or<double>("Q_weight", Q_weight_, 100000.0);
-            node_->get_parameter_or<double>("R_weight", R_weight_, 0.1);
+            node_->get_parameter_or<double>("R_weight", R_weight_, 0.01);
             node_->get_parameter_or<double>("F_des_z", F_des_z_, -2.0);
             node_->get_parameter_or<double>("F_max_z", F_max_z_, 10.0);
             node_->get_parameter_or<double>("Kp_f", Kp_f_, 0.0);
@@ -254,6 +254,7 @@ namespace controllers
                 rcl_action_server_get_default_options(), call_back_group_);
 
             pose_ = Eigen::Vector6d::Zero();
+            pose_desired_ = Eigen::Vector6d::Zero();
             force_ = Eigen::Vector6d::Zero();
             dq_ = Eigen::Vector7d::Zero();
             q_ = Eigen::Vector7d::Zero();
@@ -264,14 +265,24 @@ namespace controllers
                     DATA_WRAPPER(params_.F_target),
                     DATA_WRAPPER(F_imp_(5)),
                     DATA_WRAPPER(force_(2)),
+                    DATA_WRAPPER(Kp_f_),
+                    DATA_WRAPPER(Ki_f_),
                     // DATA_WRAPPER(pose_),
                     // DATA_WRAPPER(tau_d),
+                    DataInfo("pose_desired", [this]() -> const double *
+                             { return pose_desired_.data(); }, 6),
+                    DataInfo("pose_actual", [this]() -> const double *
+                             { return pose_.data(); }, 6),
+                    DataInfo("joint_velocity_desired", [this]() -> const double *
+                             { return dqd_.data(); }, 7),
+                    DataInfo("joint_velocity_actual", [this]() -> const double *
+                             { return dq_.data(); }, 7),
                     DATA_WRAPPER(Kx_(5)),
                     DATA_WRAPPER(Bx_(5)),
                     // DATA_WRAPPER(tau_fric_ff_),
                     // DATA_WRAPPER(dq_),
                     // DATA_WRAPPER(tau_base_),
-                    DATA_WRAPPER(xe_),
+                    // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(tau_d_est_),
                     // DATA_WRAPPER(tau_x_est_),
                     // DATA_WRAPPER(tau_null_),
@@ -417,6 +428,13 @@ namespace controllers
                 ddxd_.setZero();
             }
 
+            pose_desired_.head<3>() = pd_;
+            pose_desired_.tail<3>() = robot_math::logR(Rd_);
+
+            Eigen::Vector6d desired_body_twist;
+            desired_body_twist.head<3>() = R_.transpose() * wd_;
+            desired_body_twist.tail<3>() = R_.transpose() * vd_;
+
             Eigen::Vector3d w = (Jb_ * dq).head(3);
             Eigen::Vector3d v = (Jb_ * dq).tail(3);
 
@@ -541,7 +559,9 @@ namespace controllers
             tau_x_est_ = Jb_.transpose() * Lambda * (Jb_ * Minv_taud);
 
             ddxc_ = ddxd_ + robot_math::A_x_inv(Jb_, M_) * (robot_math::Mu_x_X(Jb_, M_, dJb_, C_, dxe_) + Bx_.asDiagonal() * dxe_ + Kx_.asDiagonal() * xe_);
-            tau_task_ = M_ * robot_math::J_sharp(Jb_, M_) * (ddxc_ - dJb_ * dq);
+            const Eigen::MatrixXd Jb_sharp = robot_math::J_sharp(Jb_, M_);
+            dqd_ = Jb_sharp * desired_body_twist;
+            tau_task_ = M_ * Jb_sharp * (ddxc_ - dJb_ * dq);
             // tau_task_ = M_ * robot_math::J_sharp_X(Jb_, M_, ddxc_- dJb_* dq);
             Eigen::LDLT<Eigen::MatrixXd> ldlt(M_);
             tau_null_ = M_ * robot_math::null_proj(Jb_, M_, ldlt.solve(Bn_.asDiagonal() * (-dq)));
@@ -686,7 +706,7 @@ namespace controllers
         int dof_;
         double time_, traj_time_;
         Eigen::MatrixXd M_, C_, Jb_, dJb_, dM_;
-        Eigen::Vector6d pose_, force_;
+        Eigen::Vector6d pose_, pose_desired_, force_;
         Eigen::VectorXd g_;
         Eigen::Matrix4d Tb_, dTb_;
         Eigen::VectorXd Kx_, Bx_, Kn_, Bn_;
@@ -721,7 +741,7 @@ namespace controllers
         robot_math::MovingFilter<double> f_filter_, t_filter_;
         bool is_contact_established_{false};
         std::deque<double> force_err_window_;
-        int integral_window_size_ = {50};
+        int integral_window_size_ = {500};
         Eigen::VectorXd z_;
         Eigen::VectorXd Y_;
         Eigen::VectorXd tau_d_est_;

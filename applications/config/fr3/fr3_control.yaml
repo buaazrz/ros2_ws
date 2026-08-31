@@ -5,6 +5,7 @@ control_node:
     simulation: false
     sim_real_time: false
     publish_joint_state: true
+    joint_state_publish_rate: 100
     robot: hardwares::FC3Robot
     controllers: 
       - controllers::TorqueController
@@ -67,8 +68,8 @@ VariableImpedanceController:
     cmd_name: "torque"
     
     # 基础阻抗参数 (XY方向及旋转方向保持固定)
-    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 2500.0] 
-    Bx: [7.0, 7.0,  7.0,  71.0,  71.0, 71.0] 
+    Kx: [500.0, 500.0, 500.0, 2500.0, 2500.0, 500.0] 
+    Bx: [7.0, 7.0,  7.0,  71.0,  71.0, 31.0] 
     Kn: [ 0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0] 
     Bn: [ 1.0,  1.0,  1.0,   1.0,  1.0, 1.0,  1.0] 
 
@@ -81,8 +82,8 @@ VariableImpedanceController:
     # --- 2. 力控参数 (Z方向) ---
     F_des_z: 3.0            # 期望接触力 (N)，根据实际需求设置正负
     F_max_z: 10.0            # 最大安全力限制 (N)
-    Kp_f: 1.2               # 力外环 P (建议先设为0，只用优化器调整)
-    Ki_f: 0.0              # 力外环 I (建议先设为0)  
+    Kp_f: 1.5               # 力外环 P (建议先设为0，只用优化器调整)
+    Ki_f: 2.0              # 力外环 I (建议先设为0)  
     kd_f: 0.0             # 力外环 D (建议先设为0)
     
     # --- 3. 刚度边界 (Z方向) ---

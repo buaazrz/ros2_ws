@@ -15,6 +15,7 @@
 #include <chrono>
 #include <atomic>
 #include "yaml-cpp/yaml.h"
+#include <vector>
 namespace control_node
 {
 
@@ -67,9 +68,13 @@ namespace control_node
         bool is_simulation_;
         bool is_sim_real_time_;
         bool is_publish_joint_state_;
+        std::size_t joint_state_publish_divider_{1};
+        std::size_t joint_state_publish_counter_{0};
         bool running_;
-        realtime_tools::RealtimeBox<bool> running_box_;
-        realtime_tools::RealtimeBox<std::vector<controller_interface::ControllerInterface::SharedPtr>> secondary_controllers_box_;
+        std::atomic<bool> running_request_{false};
+        using ControllerList = std::vector<controller_interface::ControllerInterface::SharedPtr>;
+        ControllerList secondary_controllers_;
+        realtime_tools::RealtimeBuffer<std::shared_ptr<const ControllerList>> secondary_controllers_buffer_;
         rclcpp::Time sim_start_time_;
         std::atomic<bool> keep_running_;
         std::shared_ptr<YAML::Node> config_;
