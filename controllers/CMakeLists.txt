@@ -29,6 +29,8 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+find_package(Threads REQUIRED)
+
 
 pluginlib_export_plugin_description_file(robot_controller_interface plugins.xml)
 
@@ -46,6 +48,11 @@ target_include_directories(controllers PUBLIC
 ament_target_dependencies(
   controllers
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+target_link_libraries(
+  controllers
+  Threads::Threads
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,

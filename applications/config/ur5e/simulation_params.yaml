@@ -8,12 +8,12 @@ control_node:
     robot: hardwares::SimulationRobot
     parameters: "parameters.yaml"
     controllers: 
-      - controllers::JointMotionController
+      # - controllers::JointMotionController
       - controllers::CartesianMotionController
       - controllers::CartesianTrajectoryController
       - controllers::ForwardController
       - controllers::RealtimeTestController
-      - controllers::ForceDragController
+      # - controllers::ForceDragController
       - controllers::RobotStateBroadcaster
     default_controller: ""
 

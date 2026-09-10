@@ -73,7 +73,7 @@ namespace controllers
         ~VariableImpedanceController()
         {
             if (data_logger_)
-                data_logger_->save("/home/luo/experiment_logs/variable_imp_controller/", "variable_imp_controller");
+                data_logger_->save("/home/buaazrz/experiment_logs/variable_imp_controller/", "variable_imp_controller");
         }
 
         CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
@@ -345,7 +345,9 @@ namespace controllers
                     DATA_WRAPPER(Kx_(5)),
                     DATA_WRAPPER(Bx_(5)),
                     DATA_WRAPPER(tau_fric_ff_),
-                    DATA_WRAPPER(dq_),
+                    // DATA_WRAPPER(dq_),
+                    DATA_WRAPPER(p_(2)),
+                    DATA_WRAPPER(pd_(2)),
                     // DATA_WRAPPER(tau_base_),
                     // DATA_WRAPPER(xe_),
                     // DATA_WRAPPER(tau_d_est_),
@@ -837,7 +839,7 @@ namespace controllers
 
             // 叠加指令并下发
             // tau_cmd = tau_task_ + tau_null_ - tau_x_est_ + tau_fric_ff_;
-            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_ + tau_fric_ff_;
+            tau_cmd = tau_task_ + tau_null_ + C_ * dq + g_;
             tau_cmd = saturate_torque(tau_cmd, tau_d);
             tau_d = tau_cmd;
 

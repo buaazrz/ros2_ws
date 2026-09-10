@@ -5,7 +5,7 @@
   <class type="controllers::ForwardController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a ForwardController plugin.</description>
   </class>
-    <class type="controllers::ForwardController2" base_class_type="controller_interface::ControllerInterface">
+  <class type="controllers::ForwardController2" base_class_type="controller_interface::ControllerInterface">
     <description>This is a ForwardController plugin.</description>
   </class>
   <class type="controllers::RealtimeTestController" base_class_type="controller_interface::ControllerInterface">
@@ -41,7 +41,7 @@
   <class type="controllers::CartesianImpedancePDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianImpedancePDController plugin.</description>
   </class>
-    <class type="controllers::CartesianTrajImpPDController" base_class_type="controller_interface::ControllerInterface">
+  <class type="controllers::CartesianTrajImpPDController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a CartesianTrajImpPDController plugin.</description>
   </class>
   <class type="controllers::CartesianTrajectoryDianaController" base_class_type="controller_interface::ControllerInterface">
@@ -50,7 +50,10 @@
   <class type="controllers::JointMotionControllerDiana" base_class_type="controller_interface::ControllerInterface">
     <description>This is a JointMotionControllerDiana plugin.</description>
   </class>
-    <class type="controllers::VariableImpedanceController" base_class_type="controller_interface::ControllerInterface">
+  <class type="controllers::VariableImpedanceController" base_class_type="controller_interface::ControllerInterface">
     <description>This is a VariableImpedanceController plugin.</description>
+  </class>
+  <class type="controllers::FrankaDynamicFrictionController" base_class_type="controller_interface::ControllerInterface">
+    <description>This is a FrankaDynamicFrictionController plugin.</description>
   </class>
 </library>

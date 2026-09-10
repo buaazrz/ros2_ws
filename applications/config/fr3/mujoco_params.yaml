@@ -29,6 +29,7 @@ control_node:
       # - controllers::CartesianTrajectoryController
       - controllers::CartesianTrajImpPDController
       - controllers::VariableImpedanceController
+      - controllers::FrankaDynamicFrictionController
 
     # 自动激活阻抗控制器。
     # 如果需要通过 service 手动选择控制器，保留为空字符串。
@@ -180,14 +181,54 @@ VariableImpedanceController:
     # Q_weight: 力跟踪精度权重，越大越追求力的准确
     # R_weight: 刚度平滑权重，越大刚度变化越慢、越保守
     Q_weight: 100000.0           
-    R_weight: 0.001           
+    R_weight: 0.1           
     
     # --- 2. 力控参数 (Z方向) ---
-    F_des_z: 2.0            # 期望接触力 (N)，根据实际需求设置正负
+    F_des_z: 4.0            # 期望接触力 (N)，根据实际需求设置正负
     F_max_z: 10.0            # 最大安全力限制 (N)
-    Kp_f: 1.5                 # 力外环 P (建议先设为0，只用优化器调整)
-    Ki_f: 2.0                # 力外环 I (建议先设为0)
+    Kp_f: 1.2                 # 力外环 P (建议先设为0，只用优化器调整)
+    Ki_f: 1.5                # 力外环 I (建议先设为0)
     
     # --- 3. 刚度边界 (Z方向) ---
     Kz_min: 100.0             # 最小刚度 (自由空间/软接触)
     Kz_max: 2500.0           # 最大刚度 (硬接触)
+
+
+# Append this node block to applications/config/fr3/fr3_control.yaml.
+# Loading does not start motion; activating this controller DOES start the test.
+FrankaDynamicFrictionController:
+  ros__parameters:
+    joint_number: 2             # human numbering 1..7, not zero-based
+    half_range_rad: 0.05        # center captured on activation; total travel 0.10 rad
+    test_joint_min_rad: -1.5    # conservative J2 workspace bounds, NOT universal joint limits
+    test_joint_max_rad: 1.5     # MUST reconsider these when changing joint_number
+    speeds: [0.005, 0.01, 0.02] # requested plateau speeds (rad/s), actual speeds used in analysis
+    repeats: 3                 # each repeat contains one + and one - scan
+    ramp_time_s: 1.0
+    max_acceleration: 0.04      # rad/s^2, smooth sine velocity ramps
+    reposition_speed: 0.02
+    cruise_guard_s: 0.5         # remove extra transient at BOTH edges of plateau
+    settle_time_s: 2.0         # consecutive settled duration at endpoints
+    settle_timeout_s: 15.0
+    settle_position_tol: 0.003
+    settle_velocity_tol: 0.003
+
+    kp: [100.0, 100.0, 100.0, 80.0, 50.0, 40.0, 30.0]
+    kd: [10.0, 10.0, 10.0, 8.0, 5.0, 4.0, 3.0]
+    ki: [20.0, 20.0, 20.0, 15.0, 10.0, 8.0, 5.0]
+    integral_limits: [2.0, 2.0, 2.0, 1.5, 1.0, 1.0, 0.7] # Nm; integral state stores torque
+    torque_limits: [40.0, 40.0, 40.0, 30.0, 10.0, 10.0, 10.0]  # external commanded Nm; no extra gravity
+    max_torque_rate: 100.0      # Nm/s, scaled by actual dt
+    max_velocity: 0.08         # any joint, rad/s
+    max_position_error: 0.035
+    max_other_displacement: 0.04
+    max_period_s: 0.005
+    max_duration_s: 1200.0
+
+    sample_speed_rel_tol: 0.15
+    sample_speed_abs_tol: 0.0005
+    sample_hold_position_tol: 0.003
+    sample_hold_velocity_tol: 0.003
+    require_measured_torque: false # true after adding state.tau_J interface below
+    log_directory: /home/buaazrz/experiment_logs/dynamic_friction
+
